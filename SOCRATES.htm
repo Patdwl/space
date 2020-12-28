@@ -1,0 +1,204 @@
+</script>
+
+<style>
+
+</style>
+
+</head>
+
+<body>
+
+<div class=container>
+
+<nav class="navbar navbar-expand-md lightBG navbar-light">
+	<a class="navbar-brand" href="https://celestrak.com">CelesTrak
+  <img src="/images/CT-icon-256-t.png" alt="CelesTrak" style="width: 64px;"></a>
+	<!-- Toggler/collapsibe Button -->
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+	<!-- Navbar links -->
+	<div class="collapse navbar-collapse" id="collapsibleNavbar">
+  <ul class=navbar-nav>
+  	<li class=nav-item dropdown>
+			<a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">Orbital Data</a>
+      <div class="dropdown-menu lightBG mediumSize">
+        <a class="dropdown-item" href="/NORAD/elements/">Current (TLE)</a>
+        <a class="dropdown-item" href="/NORAD/elements/gp-index.php">Current (GP Prototype)</a>
+        <a class="dropdown-item" href="/NORAD/elements/supplemental/">Supplemental (TLE)</a>
+        <a class="dropdown-item" href="/NORAD/archives/">Historical: 1980-2004</a>
+        <a class="dropdown-item" href="/NORAD/archives/request.php">Special Data Request</a>
+        <a class="dropdown-item" href="/NORAD/documentation/">Documentation</a>
+      </div>
+  	</li>
+  	<li class=nav-item dropdown>
+			<a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">Satellite Catalog</a>
+      <div class="dropdown-menu lightBG mediumSize">
+        <a class="dropdown-item" href="/satcat/search.php">Search SATCAT</a>
+        <a class="dropdown-item" href="/satcat/boxscore.php">SATCAT Boxscore</a>
+        <a class="dropdown-item" href="#">Orbit Visualization</a>
+      </div>
+  	</li>
+    <li class="nav-item">
+      <a class="nav-link" href="/SOCRATES/">SOCRATES</a>
+    </li>
+  	<li class=nav-item dropdown>
+			<a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">Space Data</a>
+      <div class="dropdown-menu lightBG mediumSize">
+        <a class="dropdown-item" href="/GPS/">GPS</a>
+        <a class="dropdown-item" href="/SpaceData/">Earth Orientation</a>
+        <a class="dropdown-item" href="/SpaceData/">Space Weather</a>
+      </div>
+  	<li class=nav-item dropdown>
+			<a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">Library</a>
+      <div class="dropdown-menu lightBG mediumSize">
+        <a class="dropdown-item" href="/columns/">Columns</a>
+        <a class="dropdown-item" href="#">Papers</a>
+        <a class="dropdown-item" href="/software/">Software</a>
+      </div>
+  	</li>
+  </ul>
+	</div>
+</nav>
+<br>
+
+<table class=center>
+<tr><td class=center width=125><a href="/SOCRATES/"><img border=0 src="/images/socrates.jpg" width=79 height=125 valign=middle></a></td>
+    <td width=400>
+    	<a href="/SOCRATES/"><h1 class=center>SOCRATES</h1></a>
+    	<h2 class=center>Search Results</h2></td>
+    <td width=125><img border=0 src="/images/cssi-logo2.gif" width=125 height=83 valign=middle></td></tr>
+</table>
+
+<hr width=50%>
+
+<table class=center width=50%>
+<tr align=left><td>
+	<p>Search parameters:
+	<ul>
+<li>Name(s): Top 20 by Maximum Probability</li>
+<li>Order by Maximum Probability</li>
+<li>Return first 20 items</li>
+</ul>
+</p>
+</td></tr>
+</table>
+
+<hr width=50%>
+
+<table class=center width=650>
+<tr align=center><td>
+<p><i>Data current as of 2020 Dec 26 16:06 UTC</i></p>
+<p>Computation Interval: Start = 2020 Dec 26 12:00:00.000, Stop = 2021 Jan 02 12:00:00.000<br>
+Computation Threshold: 5.0 km<br>
+Considering: 6,085 Primaries, 19,849 Secondaries (43,531 Conjunctions)
+</p>
+</td></tr>
+</table>
+<p class=center><a href="#notes"><em>See notes at bottom of page for data field descriptions</em></a></p>
+
+<p class=center>Re-sort results by <a href="http://celestrak.com/SOCRATES/search-results.php?IDENT=NAME&NAME_TEXT1=&NAME_TEXT2=&ORDER=MINRANGE&MAX=20">Minimum Range</a>, <a href="http://celestrak.com/SOCRATES/search-results.php?IDENT=NAME&NAME_TEXT1=&NAME_TEXT2=&ORDER=TIMEIN&MAX=20">Time In</a>.</p>
+
+<table class="center outline" cellpadding=4>
+<tr class=header>    <th rowspan=2>Action</th>    <th rowspan=2>NORAD<br>Catalog<br>Number</th>    <th rowspan=2 width=220>Name</th>    <th rowspan=2>Days<br>Since<br>Epoch</th>    <th>Max<br>Probability</th>    <th>Dilution<br>Threshold<br>(km)</th>    <th>Min<br>Range<br>(km)</th>    <th rowspan=2>Relative<br>Velocity<br>(km/sec)</th></tr><tr class=header>    <th>Start<br>(UTC)</th>    <th>TCA<br>(UTC)</th>    <th>Stop<br>(UTC)</th></tr><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="35498">35498</td>  <td><input type=hidden name="NAME1" value="COSMOS 2451">COSMOS 2451 [+]</td>  <td>5.580</td>  <td>8.675E-03</td>  <td>0.014</td>  <td>0.041</td>  <td rowspan=2><input type=hidden name="RVEL" value="11.180">11.180</td>  </tr><tr align=center>  <td><input type=hidden name="CATNR2" value="07831">07831</td>  <td><input type=hidden name="NAME2" value="SL-8 R/B">SL-8 R/B [-]</td>  <td>5.252</td>  <td><input type=hidden name="T0" value="2020 Dec 31 18:48:29.337">2020 Dec 31 18:48:29.337</td>  <td><input type=hidden name="T1" value="2020 Dec 31 18:48:29.784">2020 Dec 31 18:48:29.784</td>  <td><input type=hidden name="T2" value="2020 Dec 31 18:48:30.231">2020 Dec 31 18:48:30.231</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr class=shade align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="08709">08709</td>  <td><input type=hidden name="NAME1" value="UME (ISS)">UME (ISS) [-]</td>  <td>5.314</td>  <td>4.448E-03</td>  <td>0.009</td>  <td>0.027</td>  <td rowspan=2><input type=hidden name="RVEL" value="10.597">10.597</td>  </tr><tr class=shade align=center>  <td><input type=hidden name="CATNR2" value="10338">10338</td>  <td><input type=hidden name="NAME2" value="DELTA 1 DEB">DELTA 1 DEB [-]</td>  <td>5.490</td>  <td><input type=hidden name="T0" value="2020 Dec 31 10:18:14.180">2020 Dec 31 10:18:14.180</td>  <td><input type=hidden name="T1" value="2020 Dec 31 10:18:14.651">2020 Dec 31 10:18:14.651</td>  <td><input type=hidden name="T2" value="2020 Dec 31 10:18:15.123">2020 Dec 31 10:18:15.123</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="25478">25478</td>  <td><input type=hidden name="NAME1" value="ORBCOMM FM24">ORBCOMM FM24 [-]</td>  <td>4.780</td>  <td>3.544E-03</td>  <td>0.015</td>  <td>0.059</td>  <td rowspan=2><input type=hidden name="RVEL" value="5.523">5.523</td>  </tr><tr align=center>  <td><input type=hidden name="CATNR2" value="43256">43256</td>  <td><input type=hidden name="NAME2" value="IRIDIUM 142">IRIDIUM 142 [+]</td>  <td>5.410</td>  <td><input type=hidden name="T0" value="2020 Dec 31 07:16:37.691">2020 Dec 31 07:16:37.691</td>  <td><input type=hidden name="T1" value="2020 Dec 31 07:16:38.596">2020 Dec 31 07:16:38.596</td>  <td><input type=hidden name="T2" value="2020 Dec 31 07:16:39.501">2020 Dec 31 07:16:39.501</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr class=shade align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="03669">03669</td>  <td><input type=hidden name="NAME1" value="ISIS 1">ISIS 1 [?]</td>  <td>1.847</td>  <td>3.027E-03</td>  <td>0.180</td>  <td>0.712</td>  <td rowspan=2><input type=hidden name="RVEL" value="5.808">5.808</td>  </tr><tr class=shade align=center>  <td><input type=hidden name="CATNR2" value="31137">31137</td>  <td><input type=hidden name="NAME2" value="ERS-2 DEB">ERS-2 DEB [-]</td>  <td>1.618</td>  <td><input type=hidden name="T0" value="2020 Dec 27 06:47:40.240">2020 Dec 27 06:47:40.240</td>  <td><input type=hidden name="T1" value="2020 Dec 27 06:47:41.092">2020 Dec 27 06:47:41.092</td>  <td><input type=hidden name="T2" value="2020 Dec 27 06:47:41.944">2020 Dec 27 06:47:41.944</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="20580">20580</td>  <td><input type=hidden name="NAME1" value="HST">HST [+]</td>  <td>5.081</td>  <td>2.377E-03</td>  <td>0.088</td>  <td>0.303</td>  <td rowspan=2><input type=hidden name="RVEL" value="9.408">9.408</td>  </tr><tr align=center>  <td><input type=hidden name="CATNR2" value="36495">36495</td>  <td><input type=hidden name="NAME2" value="IRIDIUM 33 DEB">IRIDIUM 33 DEB [-]</td>  <td>5.123</td>  <td><input type=hidden name="T0" value="2020 Dec 31 04:45:29.335">2020 Dec 31 04:45:29.335</td>  <td><input type=hidden name="T1" value="2020 Dec 31 04:45:29.865">2020 Dec 31 04:45:29.865</td>  <td><input type=hidden name="T2" value="2020 Dec 31 04:45:30.396">2020 Dec 31 04:45:30.396</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr class=shade align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="31698">31698</td>  <td><input type=hidden name="NAME1" value="TERRASAR-X">TERRASAR-X [+]</td>  <td>0.428</td>  <td>1.859E-03</td>  <td>0.011</td>  <td>0.049</td>  <td rowspan=2><input type=hidden name="RVEL" value="0.000">0.000</td>  </tr><tr class=shade align=center>  <td><input type=hidden name="CATNR2" value="36605">36605</td>  <td><input type=hidden name="NAME2" value="TANDEM-X">TANDEM-X [+]</td>  <td>0.293</td>  <td><input type=hidden name="T0" value="2020 Dec 26 12:00:00.000">2020 Dec 26 12:00:00.000</td>  <td><input type=hidden name="T1" value="2020 Dec 26 17:43:00.616">2020 Dec 26 17:43:00.616</td>  <td><input type=hidden name="T2" value="2020 Dec 29 08:50:10.902">2020 Dec 29 08:50:10.902</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="45402">45402</td>  <td><input type=hidden name="NAME1" value="STARLINK-1257">STARLINK-1257 [+]</td>  <td>3.194</td>  <td>1.843E-03</td>  <td>0.013</td>  <td>0.043</td>  <td rowspan=2><input type=hidden name="RVEL" value="10.504">10.504</td>  </tr><tr align=center>  <td><input type=hidden name="CATNR2" value="46345">46345</td>  <td><input type=hidden name="NAME2" value="STARLINK-1767">STARLINK-1767 [+]</td>  <td>3.376</td>  <td><input type=hidden name="T0" value="2020 Dec 29 15:00:47.547">2020 Dec 29 15:00:47.547</td>  <td><input type=hidden name="T1" value="2020 Dec 29 15:00:48.023">2020 Dec 29 15:00:48.023</td>  <td><input type=hidden name="T2" value="2020 Dec 29 15:00:48.499">2020 Dec 29 15:00:48.499</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr class=shade align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="25652">25652</td>  <td><input type=hidden name="NAME1" value="GLOBALSTAR M037">GLOBALSTAR M037 [+]</td>  <td>6.075</td>  <td>1.332E-03</td>  <td>0.047</td>  <td>0.186</td>  <td rowspan=2><input type=hidden name="RVEL" value="5.089">5.089</td>  </tr><tr class=shade align=center>  <td><input type=hidden name="CATNR2" value="32264">32264</td>  <td><input type=hidden name="NAME2" value="GLOBALSTAR M070">GLOBALSTAR M070 [+]</td>  <td>5.956</td>  <td><input type=hidden name="T0" value="2021 Jan 01 03:20:43.225">2021 Jan 01 03:20:43.225</td>  <td><input type=hidden name="T1" value="2021 Jan 01 03:20:44.207">2021 Jan 01 03:20:44.207</td>  <td><input type=hidden name="T2" value="2021 Jan 01 03:20:45.189">2021 Jan 01 03:20:45.189</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="45049">45049</td>  <td><input type=hidden name="NAME1" value="STARLINK-1135">STARLINK-1135 [+]</td>  <td>1.905</td>  <td>1.234E-03</td>  <td>0.014</td>  <td>0.058</td>  <td rowspan=2><input type=hidden name="RVEL" value="5.115">5.115</td>  </tr><tr align=center>  <td><input type=hidden name="CATNR2" value="45740">45740</td>  <td><input type=hidden name="NAME2" value="STARLINK-1479">STARLINK-1479 [+]</td>  <td>2.044</td>  <td><input type=hidden name="T0" value="2020 Dec 27 18:47:38.406">2020 Dec 27 18:47:38.406</td>  <td><input type=hidden name="T1" value="2020 Dec 27 18:47:39.383">2020 Dec 27 18:47:39.383</td>  <td><input type=hidden name="T2" value="2020 Dec 27 18:47:40.361">2020 Dec 27 18:47:40.361</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr class=shade align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="44933">44933</td>  <td><input type=hidden name="NAME1" value="STARLINK-1144">STARLINK-1144 [+]</td>  <td>6.918</td>  <td>1.172E-03</td>  <td>0.015</td>  <td>0.060</td>  <td rowspan=2><input type=hidden name="RVEL" value="4.149">4.149</td>  </tr><tr class=shade align=center>  <td><input type=hidden name="CATNR2" value="44955">44955</td>  <td><input type=hidden name="NAME2" value="STARLINK-1069">STARLINK-1069 [+]</td>  <td>6.457</td>  <td><input type=hidden name="T0" value="2021 Jan 01 23:44:42.041">2021 Jan 01 23:44:42.041</td>  <td><input type=hidden name="T1" value="2021 Jan 01 23:44:43.246">2021 Jan 01 23:44:43.246</td>  <td><input type=hidden name="T2" value="2021 Jan 01 23:44:44.451">2021 Jan 01 23:44:44.451</td>  </tr>  </form><tr class=header>    <th rowspan=2>Action</th>    <th rowspan=2>NORAD<br>Catalog<br>Number</th>    <th rowspan=2 width=220>Name</th>    <th rowspan=2>Days<br>Since<br>Epoch</th>    <th>Max<br>Probability</th>    <th>Dilution<br>Threshold<br>(km)</th>    <th>Min<br>Range<br>(km)</th>    <th rowspan=2>Relative<br>Velocity<br>(km/sec)</th></tr><tr class=header>    <th>Start<br>(UTC)</th>    <th>TCA<br>(UTC)</th>    <th>Stop<br>(UTC)</th></tr><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="46950">46950</td>  <td><input type=hidden name="NAME1" value="SPACEBEE-27">SPACEBEE-27 [+]</td>  <td>2.920</td>  <td>9.302E-04</td>  <td>0.016</td>  <td>0.069</td>  <td rowspan=2><input type=hidden name="RVEL" value="0.000">0.000</td>  </tr><tr align=center>  <td><input type=hidden name="CATNR2" value="46953">46953</td>  <td><input type=hidden name="NAME2" value="SPACEBEE-22">SPACEBEE-22 [+]</td>  <td>2.722</td>  <td><input type=hidden name="T0" value="2020 Dec 28 14:20:22.670">2020 Dec 28 14:20:22.670</td>  <td><input type=hidden name="T1" value="2020 Dec 29 01:03:27.349">2020 Dec 29 01:03:27.349</td>  <td><input type=hidden name="T2" value="2020 Dec 29 09:35:34.389">2020 Dec 29 09:35:34.389</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr class=shade align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="46341">46341</td>  <td><input type=hidden name="NAME1" value="STARLINK-1760">STARLINK-1760 [+]</td>  <td>6.797</td>  <td>9.051E-04</td>  <td>0.018</td>  <td>0.063</td>  <td rowspan=2><input type=hidden name="RVEL" value="9.278">9.278</td>  </tr><tr class=shade align=center>  <td><input type=hidden name="CATNR2" value="46718">46718</td>  <td><input type=hidden name="NAME2" value="STARLINK-1821">STARLINK-1821 [+]</td>  <td>7.047</td>  <td><input type=hidden name="T0" value="2021 Jan 02 07:07:05.552">2021 Jan 02 07:07:05.552</td>  <td><input type=hidden name="T1" value="2021 Jan 02 07:07:06.091">2021 Jan 02 07:07:06.091</td>  <td><input type=hidden name="T2" value="2021 Jan 02 07:07:06.629">2021 Jan 02 07:07:06.629</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="14064">14064</td>  <td><input type=hidden name="NAME1" value="COSMOS 1461">COSMOS 1461 [?]</td>  <td>0.841</td>  <td>8.677E-04</td>  <td>0.317</td>  <td>1.044</td>  <td rowspan=2><input type=hidden name="RVEL" value="10.165">10.165</td>  </tr><tr align=center>  <td><input type=hidden name="CATNR2" value="20580">20580</td>  <td><input type=hidden name="NAME2" value="HST">HST [+]</td>  <td>1.152</td>  <td><input type=hidden name="T0" value="2020 Dec 27 06:27:39.089">2020 Dec 27 06:27:39.089</td>  <td><input type=hidden name="T1" value="2020 Dec 27 06:27:39.570">2020 Dec 27 06:27:39.570</td>  <td><input type=hidden name="T2" value="2020 Dec 27 06:27:40.051">2020 Dec 27 06:27:40.051</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr class=shade align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="47175">47175</td>  <td><input type=hidden name="NAME1" value="STARLINK-1895">STARLINK-1895 [+]</td>  <td>4.307</td>  <td>8.027E-04</td>  <td>0.018</td>  <td>0.074</td>  <td rowspan=2><input type=hidden name="RVEL" value="0.001">0.001</td>  </tr><tr class=shade align=center>  <td><input type=hidden name="CATNR2" value="47177">47177</td>  <td><input type=hidden name="NAME2" value="STARLINK-1907">STARLINK-1907 [+]</td>  <td>4.307</td>  <td><input type=hidden name="T0" value="2020 Dec 30 13:59:57.168">2020 Dec 30 13:59:57.168</td>  <td><input type=hidden name="T1" value="2020 Dec 30 19:22:34.010">2020 Dec 30 19:22:34.010</td>  <td><input type=hidden name="T2" value="2020 Dec 31 02:21:33.514">2020 Dec 31 02:21:33.514</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="46947">46947</td>  <td><input type=hidden name="NAME1" value="SPACEBEE-31">SPACEBEE-31 [+]</td>  <td>4.088</td>  <td>8.026E-04</td>  <td>0.018</td>  <td>0.074</td>  <td rowspan=2><input type=hidden name="RVEL" value="0.000">0.000</td>  </tr><tr align=center>  <td><input type=hidden name="CATNR2" value="46949">46949</td>  <td><input type=hidden name="NAME2" value="SPACEBEE-29">SPACEBEE-29 [+]</td>  <td>4.088</td>  <td><input type=hidden name="T0" value="2020 Dec 28 23:56:11.949">2020 Dec 28 23:56:11.949</td>  <td><input type=hidden name="T1" value="2020 Dec 30 05:05:15.610">2020 Dec 30 05:05:15.610</td>  <td><input type=hidden name="T2" value="2020 Dec 31 15:42:04.330">2020 Dec 31 15:42:04.330</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr class=shade align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="17066">17066</td>  <td><input type=hidden name="NAME1" value="COSMOS 1791">COSMOS 1791 [?]</td>  <td>1.171</td>  <td>7.462E-04</td>  <td>0.050</td>  <td>0.210</td>  <td rowspan=2><input type=hidden name="RVEL" value="2.759">2.759</td>  </tr><tr class=shade align=center>  <td><input type=hidden name="CATNR2" value="11736">11736</td>  <td><input type=hidden name="NAME2" value="SL-8 R/B">SL-8 R/B [-]</td>  <td>1.181</td>  <td><input type=hidden name="T0" value="2020 Dec 27 01:17:20.883">2020 Dec 27 01:17:20.883</td>  <td><input type=hidden name="T1" value="2020 Dec 27 01:17:22.694">2020 Dec 27 01:17:22.694</td>  <td><input type=hidden name="T2" value="2020 Dec 27 01:17:24.505">2020 Dec 27 01:17:24.505</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="07718">07718</td>  <td><input type=hidden name="NAME1" value="COSMOS 723">COSMOS 723 [?]</td>  <td>6.578</td>  <td>7.338E-04</td>  <td>0.063</td>  <td>0.252</td>  <td rowspan=2><input type=hidden name="RVEL" value="5.173">5.173</td>  </tr><tr align=center>  <td><input type=hidden name="CATNR2" value="30259">30259</td>  <td><input type=hidden name="NAME2" value="FENGYUN 1C DEB">FENGYUN 1C DEB [-]</td>  <td>7.151</td>  <td><input type=hidden name="T0" value="2021 Jan 02 02:00:41.211">2021 Jan 02 02:00:41.211</td>  <td><input type=hidden name="T1" value="2021 Jan 02 02:00:42.177">2021 Jan 02 02:00:42.177</td>  <td><input type=hidden name="T2" value="2021 Jan 02 02:00:43.142">2021 Jan 02 02:00:43.142</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr class=shade align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="43643">43643</td>  <td><input type=hidden name="NAME1" value="YAOGAN 32 B">YAOGAN 32 B [+]</td>  <td>5.735</td>  <td>7.169E-04</td>  <td>0.033</td>  <td>0.121</td>  <td rowspan=2><input type=hidden name="RVEL" value="8.712">8.712</td>  </tr><tr class=shade align=center>  <td><input type=hidden name="CATNR2" value="13075">13075</td>  <td><input type=hidden name="NAME2" value="SL-6 R/B(2)">SL-6 R/B(2) [-]</td>  <td>7.065</td>  <td><input type=hidden name="T0" value="2021 Jan 01 03:26:51.594">2021 Jan 01 03:26:51.594</td>  <td><input type=hidden name="T1" value="2021 Jan 01 03:26:52.168">2021 Jan 01 03:26:52.168</td>  <td><input type=hidden name="T2" value="2021 Jan 01 03:26:52.742">2021 Jan 01 03:26:52.742</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="06965">06965</td>  <td><input type=hidden name="NAME1" value="COSMOS 614">COSMOS 614 [?]</td>  <td>6.825</td>  <td>6.951E-04</td>  <td>0.037</td>  <td>0.096</td>  <td rowspan=2><input type=hidden name="RVEL" value="12.478">12.478</td>  </tr><tr align=center>  <td><input type=hidden name="CATNR2" value="35287">35287</td>  <td><input type=hidden name="NAME2" value="COSMOS 2251 DEB">COSMOS 2251 DEB [-]</td>  <td>6.566</td>  <td><input type=hidden name="T0" value="2021 Jan 01 15:24:48.654">2021 Jan 01 15:24:48.654</td>  <td><input type=hidden name="T1" value="2021 Jan 01 15:24:49.054">2021 Jan 01 15:24:49.054</td>  <td><input type=hidden name="T2" value="2021 Jan 01 15:24:49.455">2021 Jan 01 15:24:49.455</td>  </tr>  </form><form action="conjunction.php" method=post onSubmit=openWindow() target="conjunction"><tr class=shade align=center><td rowspan=2><input type=submit name="ACTION" value="Analysis"></td>  <td><input type=hidden name="CATNR1" value="46950">46950</td>  <td><input type=hidden name="NAME1" value="SPACEBEE-27">SPACEBEE-27 [+]</td>  <td>1.179</td>  <td>6.448E-04</td>  <td>0.020</td>  <td>0.083</td>  <td rowspan=2><input type=hidden name="RVEL" value="0.000">0.000</td>  </tr><tr class=shade align=center>  <td><input type=hidden name="CATNR2" value="46951">46951</td>  <td><input type=hidden name="NAME2" value="SPACEBEE-25">SPACEBEE-25 [+]</td>  <td>0.982</td>  <td><input type=hidden name="T0" value="2020 Dec 26 21:16:08.537">2020 Dec 26 21:16:08.537</td>  <td><input type=hidden name="T1" value="2020 Dec 27 07:16:56.265">2020 Dec 27 07:16:56.265</td>  <td><input type=hidden name="T2" value="2020 Dec 27 19:44:46.695">2020 Dec 27 19:44:46.695</td>  </tr>  </form></table>
+
+<p class=center>20 records found</p>
+
+<table class=center width=650>
+<tr align=left><td>
+<a name="notes">Data Fields:</a>
+<ul>
+<li><em>Action:</em> The Analysis button links to a page which provides a
+capability to build an interactive 3-D <a target="_BLANK"
+href="http://www.agi.com/products/stk/modules/default.aspx/id/stk-conjunction-analysis-tools">STK/CAT
+(Conjunction Analysis Tools)</a> scenario detailing the conjunction.</li>
+
+<li><em>NORAD Catalog Number:</em> NORAD Catalog Numbers of the two conjuncting
+objects.</li>
+
+<li><em>Name:</em> Common names of the two conjuncting objects. Operational
+status of each object is shown in brackets, using the <A
+href="/satcat/status.php">standard CelesTrak SATCAT codes</a>.</li>
+
+<li><em>Days Since Epoch:</em> The number of days from the epoch of the NORAD
+two-line element set or operator ephemerides (green) used to produce the
+prediction until the time of closest approach for the conjunction.</li>
+
+<li><em>Max Probability:</em> Given fixed spherical object radii and relative
+distance at the time of closest approach (TCA), the projected covariance ellipse is
+sized and oriented to produce the maximum probability.  For these reports the
+ratio of major-to-minor axes of the projected covariance ellipse is set using
+radial, in-track, and cross-track values of 100 m, 300 m, 100 m, respectively.
+If the combined object radius is greater than the relative distance, the maximum
+probability will be one; such occurrences are not addressed here.</li>
+
+<li><em>Dilution Threshold (km):</em> The standard deviation that produces the
+maximum probability defines the threshold of dilution.  A smaller or larger
+standard deviation will produce a smaller probability.  In the case of computing
+true probability with a smaller standard deviation, the data is of sufficient
+quality to associate low probability with low risk.  For a larger standard
+deviation, this is not the case and the resulting true probability calculation
+becomes "diluted."  If operating in this dilution region, the recommendation is
+to obtain better data and reassess the encounter.  If time or resources do not
+permit, then the maximum probability should be used in place of the true
+probability.</li>
+
+<li><em>Min Range (km):</em> The distance between the two conjuncting objects at the
+time of closest approach.</li>
+
+<li><em>Start (UTC):</em> Time when the two conjuncting objects come within the
+computation threshold from each other.</li>
+
+<li><em>TCA (UTC):</em> Time of closest approach.</li>
+
+<li><em>Stop (UTC):</em> Time when the two conjuncting objects move beyond the
+computation threshold from each other.</li>
+
+<li><em>Relative Velocity (km/sec):</em> Relative velocity of the two
+conjuncting objects at the time of closest approach.</li>
+</ul>
+</td></tr>
+</table>
+
+
+<br>
+<footer class="footer lightBG">
+	<div class="d-flex justify-content-between align-items-center">
+		<span class=NOmobile>
+		<img src="/images/CT-icon-256-t.png" alt="CelesTrak" height=100 style="padding-left: 25px; padding-right: 50px;">
+		</span>
+  	<span class="center mediumSize" style="padding-top: 10px; padding-bottom: 10px; font-style: italic; margin: auto;">
+    	<a href="/webmaster.php" title="About the Webmaster">Dr. T.S. Kelso</a> 
+    	<a href="/cdn-cgi/l/email-protection#0f5b5c21446a637c604f6c6a636a7c7b7d6e64216c6062">[<span class="__cf_email__" data-cfemail="99cdcab7d2fcf5eaf6d9fafcf5fceaedebf8f2b7faf6f4">[email&#160;protected]</span>]</a><br>
+  		Follow CelesTrak on Twitter <a href="https://twitter.com/TSKelso">@TSKelso</a><br>
+  		  Last updated: 2020 Dec 26 19:47:58 UTC<br>
+  Accessed 1 times<br>
+  Current system time: 2020 Dec 26 21:00:02 UTC<br>
+  		<a tabindex="0" title="CelesTrak's Simple Privacy Policy" data-toggle="popover" data-trigger="focus"
+  		data-placement="top" data-content="We do not use cookies on CelesTrak and
+  		we do not collect any personal information, other than IP addresses, which
+  		are used to detect and block malicious activity and to assess system
+  		performance. We do not use IP addresses for tracking or any other
+  		purposes. No personal data is shared with third parties. For further
+  		details, see AGI's privacy policy.">CelesTrak's Simple Privacy Policy</a>
+  	</span>
+  	<span class=NOmobile>
+  		<a href="http://comspoc.com" target="ComSpOC">
+			<img src="/images/ComSpOC-Dark.png" alt="ComSpOC" height=100 style="padding-right: 25px;"></a>
+		</span>
+	</div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+$(document).ready(function(){
+    $('[data-toggle="popover"]').popover();   
+});
+$('.popover-dismiss').popover({
+  trigger: 'focus'
+});
+</script>
+</div>
+
+</body>
+
+</html>
