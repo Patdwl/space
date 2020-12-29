@@ -13,11 +13,10 @@
  * https://github.com/shashwatak/satellite-js
  * License: MIT
  */
-
 (function (global, factory) {
-   true ? module.exports = factory() :
-  0;
-}(this, (function () { 'use strict';
+   true ? module.exports = factory() : 0;
+})(this, function () {
+  'use strict';
 
   var pi = Math.PI;
   var twoPi = pi * 2;
@@ -36,7 +35,6 @@
   var j4 = -0.00000161098761;
   var j3oj2 = j3 / j2;
   var x2o3 = 2.0 / 3.0;
-
   var constants = /*#__PURE__*/Object.freeze({
     __proto__: null,
     pi: pi,
@@ -55,7 +53,6 @@
     j3oj2: j3oj2,
     x2o3: x2o3
   });
-
   /* -----------------------------------------------------------------------------
    *
    *                           procedure days2mdhms
@@ -92,6 +89,7 @@
    *  coupling      :
    *    none.
    * --------------------------------------------------------------------------- */
+
   function days2mdhms(year, days) {
     var lmonth = [31, year % 4 === 0 ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
     var dayofyr = Math.floor(days); //  ----------------- find month and day of month ----------------
@@ -153,6 +151,7 @@
    *
    * --------------------------------------------------------------------------- */
 
+
   function jdayInternal(year, mon, day, hr, minute, sec) {
     var msec = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 0;
     return 367.0 * year - Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) + Math.floor(275 * mon / 9.0) + day + 1721013.5 + ((msec / 60000 + sec / 60.0 + minute) / 60.0 + hr) / 24.0 // ut in days
@@ -209,6 +208,7 @@
    *    vallado       2007, 208, alg 22, ex 3-13
    * --------------------------------------------------------------------------- */
 
+
   function invjday(jd, asArray) {
     // --------------- find year and days of the year -
     var temp = jd - 2415019.5;
@@ -238,7 +238,6 @@
 
     return new Date(Date.UTC(year, mon - 1, day, hr, minute, Math.floor(sec)));
   }
-
   /* -----------------------------------------------------------------------------
    *
    *                           procedure dpper
@@ -305,6 +304,7 @@
    *    hoots, schumacher and glover 2004
    *    vallado, crawford, hujsak, kelso  2006
    ----------------------------------------------------------------------------*/
+
 
   function dpper(satrec, options) {
     var e3 = satrec.e3,
@@ -486,7 +486,6 @@
       mp: mp
     };
   }
-
   /*-----------------------------------------------------------------------------
    *
    *                           procedure dscom
@@ -554,6 +553,7 @@
    *    hoots, schumacher and glover 2004
    *    vallado, crawford, hujsak, kelso  2006
    ----------------------------------------------------------------------------*/
+
 
   function dscom(options) {
     var epoch = options.epoch,
@@ -864,7 +864,6 @@
       zmos: zmos
     };
   }
-
   /*-----------------------------------------------------------------------------
    *
    *                           procedure dsinit
@@ -944,6 +943,7 @@
    *    hoots, schumacher and glover 2004
    *    vallado, crawford, hujsak, kelso  2006
    ----------------------------------------------------------------------------*/
+
 
   function dsinit(options) {
     var cosim = options.cosim,
@@ -1263,7 +1263,6 @@
       xni: xni
     };
   }
-
   /* -----------------------------------------------------------------------------
    *
    *                           function gstime
@@ -1290,6 +1289,7 @@
    *    vallado       2004, 191, eq 3-45
    * --------------------------------------------------------------------------- */
 
+
   function gstimeInternal(jdut1) {
     var tut1 = (jdut1 - 2451545.0) / 36525.0;
     var temp = -6.2e-6 * tut1 * tut1 * tut1 + 0.093104 * tut1 * tut1 + (876600.0 * 3600 + 8640184.812866) * tut1 + 67310.54841; // # sec
@@ -1311,7 +1311,6 @@
 
     return gstimeInternal.apply(void 0, arguments);
   }
-
   /*-----------------------------------------------------------------------------
    *
    *                           procedure initl
@@ -1362,6 +1361,7 @@
    *    hoots, schumacher and glover 2004
    *    vallado, crawford, hujsak, kelso  2006
    ----------------------------------------------------------------------------*/
+
 
   function initl(options) {
     var ecco = options.ecco,
@@ -1435,7 +1435,6 @@
       gsto: gsto
     };
   }
-
   /*-----------------------------------------------------------------------------
    *
    *                           procedure dspace
@@ -1508,6 +1507,7 @@
    *    hoots, schumacher and glover 2004
    *    vallado, crawford, hujsak, kelso  2006
    ----------------------------------------------------------------------------*/
+
 
   function dspace(options) {
     var irez = options.irez,
@@ -1671,7 +1671,6 @@
       nm: nm
     };
   }
-
   /*----------------------------------------------------------------------------
    *
    *                             procedure sgp4
@@ -1758,6 +1757,7 @@
    *    hoots, schumacher and glover 2004
    *    vallado, crawford, hujsak, kelso  2006
    ----------------------------------------------------------------------------*/
+
 
   function sgp4(satrec, tsince) {
     /* eslint-disable no-param-reassign */
@@ -2076,7 +2076,6 @@
     };
     /* eslint-enable no-param-reassign */
   }
-
   /*-----------------------------------------------------------------------------
    *
    *                             procedure sgp4init
@@ -2158,6 +2157,7 @@
    *    hoots, schumacher and glover 2004
    *    vallado, crawford, hujsak, kelso  2006
    ----------------------------------------------------------------------------*/
+
 
   function sgp4init(satrec, options) {
     /* eslint-disable no-param-reassign */
@@ -2694,7 +2694,6 @@
     satrec.init = 'n';
     /* eslint-enable no-param-reassign */
   }
-
   /* -----------------------------------------------------------------------------
    *
    *                           function twoline2rv
@@ -2750,6 +2749,7 @@
    * to the algorithm.  If you want to turn some of these off and go
    * back into "afspc" mode, then set `afspc_mode` to `True`.
    */
+
 
   function twoline2satrec(longstr1, longstr2) {
     var opsmode = 'i';
@@ -2848,7 +2848,9 @@
   function _arrayLikeToArray(arr, len) {
     if (len == null || len > arr.length) len = arr.length;
 
-    for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+    for (var i = 0, arr2 = new Array(len); i < len; i++) {
+      arr2[i] = arr[i];
+    }
 
     return arr2;
   }
@@ -2860,9 +2862,9 @@
   function propagate() {
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
-    }
+    } // Return a position and velocity vector for a given date and time.
 
-    // Return a position and velocity vector for a given date and time.
+
     var satrec = args[0];
     var date = Array.prototype.slice.call(args, 1);
     var j = jday.apply(void 0, _toConsumableArray(date));
@@ -2897,9 +2899,11 @@
   function radiansToDegrees(radians) {
     return radians * rad2deg;
   }
+
   function degreesToRadians(degrees) {
     return degrees * deg2rad;
   }
+
   function degreesLat(radians) {
     if (radians < -pi / 2 || radians > pi / 2) {
       throw new RangeError('Latitude radians must be in range [-pi/2; pi/2].');
@@ -2907,6 +2911,7 @@
 
     return radiansToDegrees(radians);
   }
+
   function degreesLong(radians) {
     if (radians < -pi || radians > pi) {
       throw new RangeError('Longitude radians must be in range [-pi; pi].');
@@ -2914,6 +2919,7 @@
 
     return radiansToDegrees(radians);
   }
+
   function radiansLat(degrees) {
     if (degrees < -90 || degrees > 90) {
       throw new RangeError('Latitude degrees must be in range [-90; 90].');
@@ -2921,6 +2927,7 @@
 
     return degreesToRadians(degrees);
   }
+
   function radiansLong(degrees) {
     if (degrees < -180 || degrees > 180) {
       throw new RangeError('Longitude degrees must be in range [-180; 180].');
@@ -2928,6 +2935,7 @@
 
     return degreesToRadians(degrees);
   }
+
   function geodeticToEcf(geodetic) {
     var longitude = geodetic.longitude,
         latitude = geodetic.latitude,
@@ -2946,6 +2954,7 @@
       z: z
     };
   }
+
   function eciToGeodetic(eci, gmst) {
     // http://www.celestrak.com/columns/v02n03/
     var a = 6378.137;
@@ -2981,6 +2990,7 @@
       height: height
     };
   }
+
   function ecfToEci(ecf, gmst) {
     // ccar.colorado.edu/ASEN5070/handouts/coordsys.doc
     //
@@ -2997,6 +3007,7 @@
       z: Z
     };
   }
+
   function eciToEcf(eci, gmst) {
     // ccar.colorado.edu/ASEN5070/handouts/coordsys.doc
     //
@@ -3090,11 +3101,8 @@
     ecfToEci: ecfToEci,
     ecfToLookAngles: ecfToLookAngles
   };
-
   return indexUmd;
-
-})));
-
+});
 
 /***/ }),
 
@@ -3114,169 +3122,142 @@ __webpack_require__.r(__webpack_exports__);
 var propRealTime;
 var propOffset;
 var propRate;
-
 /** CONSTANTS */
+
 var TAU = 2 * Math.PI; // PI * 2 -- This makes understanding the formulas easier
+
 var DEG2RAD = TAU / 360; // Used to convert degrees to radians
 // var RAD2DEG = 360 / TAU;          // Used to convert radians to degrees
+
 var RADIUS_OF_EARTH = 6371; // Radius of Earth in kilometers
 
 var NUM_SEGS;
 var satCache = [];
-let orbitFadeFactor = 1.0;
+var orbitFadeFactor = 1.0;
 
-onmessage = function (m) {
-    if (m.data.isUpdate) {
-        // Add Satellites
-        if (m.data.missile != true && m.data.satId < 99999) {
-            satCache[m.data.satId] = _app_js_lib_satellite_js__WEBPACK_IMPORTED_MODULE_0__.twoline2satrec(
-                m.data.TLE1,
-                m.data.TLE2
-            );
-        }
-        // Add Missiles
-        if (m.data.missile) {
-            satCache[m.data.satId] = m.data;
-        }
-        // Don't Add Anything Else
+onmessage = function onmessage(m) {
+  if (m.data.isUpdate) {
+    // Add Satellites
+    if (m.data.missile != true && m.data.satId < 99999) {
+      satCache[m.data.satId] = _app_js_lib_satellite_js__WEBPACK_IMPORTED_MODULE_0__.twoline2satrec(m.data.TLE1, m.data.TLE2);
+    } // Add Missiles
+
+
+    if (m.data.missile) {
+      satCache[m.data.satId] = m.data;
+    } // Don't Add Anything Else
+
+  }
+
+  if (m.data.isInit) {
+    var satData = JSON.parse(m.data.satData);
+    orbitFadeFactor = JSON.parse(m.data.orbitFadeFactor);
+    var sLen = satData.length - 1;
+    var i = -1;
+
+    while (i < sLen) {
+      i++;
+      delete satData[i]['id'];
+
+      if (satData[i].static || satData[i].missile) {
+        satCache[i] = satData[i];
+      } else {
+        satCache[i] = _app_js_lib_satellite_js__WEBPACK_IMPORTED_MODULE_0__.twoline2satrec(satData[i].TLE1, satData[i].TLE2);
+      }
     }
 
-    if (m.data.isInit) {
-        var satData = JSON.parse(m.data.satData);
-        orbitFadeFactor = JSON.parse(m.data.orbitFadeFactor);
-        var sLen = satData.length - 1;
-        let i = -1;
-        while (i < sLen) {
-            i++;
-            delete satData[i]['id'];
-            if (satData[i].static || satData[i].missile) {
-                satCache[i] = satData[i];
-            } else {
-                satCache[i] = _app_js_lib_satellite_js__WEBPACK_IMPORTED_MODULE_0__.twoline2satrec(
-                    satData[i].TLE1,
-                    satData[i].TLE2
-                );
-            }
-        }
+    NUM_SEGS = m.data.numSegs;
+  } else {
+    //  var start = performance.now();
+    // IDEA: figure out how to calculate the orbit points on constant
+    // position slices, not timeslices (ugly perigees on HEOs)
+    var satId = m.data.satId;
+    propRealTime = m.data.realTime;
+    propOffset = m.data.offset;
+    propRate = m.data.rate;
+    var pointsOut = new Float32Array((NUM_SEGS + 1) * 4);
+    var nowDate = propTime();
+    var nowJ = jday(nowDate.getUTCFullYear(), nowDate.getUTCMonth() + 1, nowDate.getUTCDate(), nowDate.getUTCHours(), nowDate.getUTCMinutes(), nowDate.getUTCSeconds());
+    nowJ += nowDate.getUTCMilliseconds() * 1.15741e-8; // days per millisecond
 
-        NUM_SEGS = m.data.numSegs;
+    var now = (nowJ - satCache[satId].jdsatepoch) * 1440.0; // in minutes
+
+    var len = NUM_SEGS + 1;
+    var _i = 0;
+
+    if (satCache[satId].missile) {
+      var timeslice = satCache[satId].altList.length / NUM_SEGS;
+
+      while (_i < len) {
+        var x = parseInt(satCache[satId].altList.length * (_i / NUM_SEGS));
+        var missileTime = propTime();
+        var j = jday(missileTime.getUTCFullYear(), missileTime.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+        missileTime.getUTCDate(), missileTime.getUTCHours(), missileTime.getUTCMinutes(), missileTime.getUTCSeconds());
+        j += missileTime.getUTCMilliseconds() * 1.15741e-8; // days per millisecond
+
+        var gmst = _app_js_lib_satellite_js__WEBPACK_IMPORTED_MODULE_0__.gstime(j);
+        var cosLat = Math.cos(satCache[satId].latList[x] * DEG2RAD);
+        var sinLat = Math.sin(satCache[satId].latList[x] * DEG2RAD);
+        var cosLon = Math.cos(satCache[satId].lonList[x] * DEG2RAD + gmst);
+        var sinLon = Math.sin(satCache[satId].lonList[x] * DEG2RAD + gmst);
+        pointsOut[_i * 4] = (RADIUS_OF_EARTH + satCache[satId].altList[x]) * cosLat * cosLon;
+        pointsOut[_i * 4 + 1] = (RADIUS_OF_EARTH + satCache[satId].altList[x]) * cosLat * sinLon;
+        pointsOut[_i * 4 + 2] = (RADIUS_OF_EARTH + satCache[satId].altList[x]) * sinLat;
+        pointsOut[_i * 4 + 3] = Math.min(orbitFadeFactor * (len / (_i + 1)), 1.0);
+        _i++;
+      }
     } else {
-        //  var start = performance.now();
-        // IDEA: figure out how to calculate the orbit points on constant
-        // position slices, not timeslices (ugly perigees on HEOs)
+      var period = 2 * Math.PI / satCache[satId].no; // convert rads/min to min
 
-        var satId = m.data.satId;
-        propRealTime = m.data.realTime;
-        propOffset = m.data.offset;
-        propRate = m.data.rate;
-        var pointsOut = new Float32Array((NUM_SEGS + 1) * 4);
+      var _timeslice = period / NUM_SEGS;
 
-        var nowDate = propTime();
-        var nowJ = jday(
-            nowDate.getUTCFullYear(),
-            nowDate.getUTCMonth() + 1,
-            nowDate.getUTCDate(),
-            nowDate.getUTCHours(),
-            nowDate.getUTCMinutes(),
-            nowDate.getUTCSeconds()
-        );
-        nowJ += nowDate.getUTCMilliseconds() * 1.15741e-8; // days per millisecond
-        var now = (nowJ - satCache[satId].jdsatepoch) * 1440.0; // in minutes
+      while (_i < len) {
+        var t = now + _i * _timeslice;
+        var p = _app_js_lib_satellite_js__WEBPACK_IMPORTED_MODULE_0__.sgp4(satCache[satId], t).position;
 
-        var len = NUM_SEGS + 1;
-        let i = 0;
-        if (satCache[satId].missile) {
-            let timeslice = satCache[satId].altList.length / NUM_SEGS;
-            while (i < len) {
-                var x = parseInt(
-                    satCache[satId].altList.length * (i / NUM_SEGS)
-                );
-
-                var missileTime = propTime();
-                var j = jday(
-                    missileTime.getUTCFullYear(),
-                    missileTime.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
-                    missileTime.getUTCDate(),
-                    missileTime.getUTCHours(),
-                    missileTime.getUTCMinutes(),
-                    missileTime.getUTCSeconds()
-                );
-                j += missileTime.getUTCMilliseconds() * 1.15741e-8; // days per millisecond
-                var gmst = _app_js_lib_satellite_js__WEBPACK_IMPORTED_MODULE_0__.gstime(j);
-
-                var cosLat = Math.cos(satCache[satId].latList[x] * DEG2RAD);
-                var sinLat = Math.sin(satCache[satId].latList[x] * DEG2RAD);
-                var cosLon = Math.cos(
-                    satCache[satId].lonList[x] * DEG2RAD + gmst
-                );
-                var sinLon = Math.sin(
-                    satCache[satId].lonList[x] * DEG2RAD + gmst
-                );
-
-                pointsOut[i * 4] = (RADIUS_OF_EARTH + satCache[satId].altList[x]) * cosLat * cosLon;
-                pointsOut[i * 4 + 1] = (RADIUS_OF_EARTH + satCache[satId].altList[x]) * cosLat * sinLon;
-                pointsOut[i * 4 + 2] = (RADIUS_OF_EARTH + satCache[satId].altList[x]) * sinLat;
-                pointsOut[i * 4 + 3] = Math.min(orbitFadeFactor * (len/(i + 1)),1.0);
-                i++;
-            }
-        } else {
-            var period = (2 * Math.PI) / satCache[satId].no; // convert rads/min to min
-            let timeslice = period / NUM_SEGS;
-
-            while (i < len) {
-                var t = now + i * timeslice;
-                var p = _app_js_lib_satellite_js__WEBPACK_IMPORTED_MODULE_0__.sgp4(satCache[satId], t).position;
-                try {
-                    pointsOut[i * 4] = p.x;
-                    pointsOut[i * 4 + 1] = p.y;
-                    pointsOut[i * 4 + 2] = p.z;
-                    pointsOut[i * 4 + 3] = Math.min(orbitFadeFactor * (len/(i + 1)),1.0);
-                } catch (ex) {
-                    pointsOut[i * 4] = 0;
-                    pointsOut[i * 4 + 1] = 0;
-                    pointsOut[i * 4 + 2] = 0;
-                    pointsOut[i * 4 + 3] = 0;
-                }
-                i++;
-            }
+        try {
+          pointsOut[_i * 4] = p.x;
+          pointsOut[_i * 4 + 1] = p.y;
+          pointsOut[_i * 4 + 2] = p.z;
+          pointsOut[_i * 4 + 3] = Math.min(orbitFadeFactor * (len / (_i + 1)), 1.0);
+        } catch (ex) {
+          pointsOut[_i * 4] = 0;
+          pointsOut[_i * 4 + 1] = 0;
+          pointsOut[_i * 4 + 2] = 0;
+          pointsOut[_i * 4 + 3] = 0;
         }
-        postMessage(
-            {
-                pointsOut: pointsOut.buffer,
-                satId: satId,
-            },
-            [pointsOut.buffer]
-        );
-        //  console.log('cop: ' + (performance.now() - start )+ ' ms');
+
+        _i++;
+      }
     }
+
+    postMessage({
+      pointsOut: pointsOut.buffer,
+      satId: satId
+    }, [pointsOut.buffer]); //  console.log('cop: ' + (performance.now() - start )+ ' ms');
+  }
 };
 
 function jday(year, mon, day, hr, minute, sec) {
-    // from satellite.js
-    'use strict';
-    return (
-        367.0 * year -
-        Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) +
-        Math.floor((275 * mon) / 9.0) +
-        day +
-        1721013.5 +
-        ((sec / 60.0 + minute) / 60.0 + hr) / 24.0 //  ut in days
-        // #  - 0.5*sgn(100.0*year + mon - 190002.5) + 0.5;
-    );
+  // from satellite.js
+  'use strict';
+
+  return 367.0 * year - Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) + Math.floor(275 * mon / 9.0) + day + 1721013.5 + ((sec / 60.0 + minute) / 60.0 + hr) / 24.0 //  ut in days
+  // #  - 0.5*sgn(100.0*year + mon - 190002.5) + 0.5;
+  ;
 }
 
 function propTime() {
-    'use strict';
+  'use strict';
 
-    var now = new Date();
-    var realElapsedMsec = Number(now) - Number(propRealTime);
-    var scaledMsec = realElapsedMsec * propRate;
-    now.setTime(Number(propRealTime) + propOffset + scaledMsec);
-    // next line will slow things down tremendously!
-    // console.log('orbit propTime: ' + now + ' elapsed=' + realElapsedMsec/1000);
-    return now;
+  var now = new Date();
+  var realElapsedMsec = Number(now) - Number(propRealTime);
+  var scaledMsec = realElapsedMsec * propRate;
+  now.setTime(Number(propRealTime) + propOffset + scaledMsec); // next line will slow things down tremendously!
+  // console.log('orbit propTime: ' + now + ' elapsed=' + realElapsedMsec/1000);
+
+  return now;
 }
-
 
 /***/ })
 
