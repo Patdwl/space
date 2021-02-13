@@ -9,7 +9,7 @@
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "satelliteList": () => /* binding */ satelliteList
+/* harmony export */   "satelliteList": () => (/* binding */ satelliteList)
 /* harmony export */ });
 var satelliteList = [{
   ON: 'Canyon 2',
