@@ -1056,6 +1056,7 @@ numeric.toCSV = function toCSV(A) {
 
 numeric.getURL = function getURL(url) {
   var client = new XMLHttpRequest();
+  client.overrideMimeType("text/html");
   client.open('GET', url, false);
   client.send();
   return client;
