@@ -7616,7 +7616,7 @@ class SunCalc {
         angle = Math.atan2(Math.cos(s.dec) * Math.sin(s.ra - m.ra), Math.sin(s.dec) * Math.cos(m.dec) - Math.cos(s.dec) * Math.sin(m.dec) * Math.cos(s.ra - m.ra));
     return {
       fraction: (1 + Math.cos(inc)) / 2,
-      phase: 0.5 + 0.5 * inc * (angle < 0 ? -1 : 1) / Math.SunCalc.TAU / 2,
+      phase: 0.5 + 0.5 * inc * (angle < 0 ? -1 : 1) / SunCalc.TAU / 2,
       angle: angle
     };
   } // calculations for moon rise/set times are based on http://www.stargazing.net/kepler/moonrise.html article
