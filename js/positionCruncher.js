@@ -10952,7 +10952,7 @@ var satelliteSelected = [-1]; // Array used to determine which satellites are se
 
 var globalPropagationRate = 1000; // Limits how often the propagation loop runs
 
-var globalPropagationRateMultiplier = 1; // Used to slow down propagation rate on slow computers
+var globalPropagationRateMultiplier = 5; // Used to slow down propagation rate on slow computers
 
 var propagationRunning = false; // Prevent Propagation From Running Twice
 
