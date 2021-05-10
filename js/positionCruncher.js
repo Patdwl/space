@@ -10952,7 +10952,7 @@ var satelliteSelected = [-1]; // Array used to determine which satellites are se
 
 var globalPropagationRate = 1000; // Limits how often the propagation loop runs
 
-var globalPropagationRateMultiplier = 5; // Used to slow down propagation rate on slow computers
+var globalPropagationRateMultiplier = 1; // Used to slow down propagation rate on slow computers
 
 var propagationRunning = false; // Prevent Propagation From Running Twice
 
@@ -11014,7 +11014,7 @@ onmessage = function onmessage(m) {
   }
 
   if (m.data.isSlowCPUModeEnabled) {
-    globalPropagationRateMultiplier = 2;
+    globalPropagationRateMultiplier *= 2;
   }
 
   if (m.data.isLowPerf) {
@@ -11575,8 +11575,10 @@ var propagateCruncher = () => {
 
       sensorMarkerArray = [];
 
-      for (s = 0; s < mSensor.length; s++) {
-        sensorMarkerArray.push(i);
+      for (s = 0; s < mSensor.length + 1; s++) {
+        sensorMarkerArray.push(i); // We intentionally go past the last sensor so we can record the last marker's id
+
+        if (s == mSensor.length) break;
         sensor = mSensor[s];
         sensor.observerGd = {
           longitude: sensor.long * DEG2RAD,
@@ -12046,16 +12048,22 @@ var propagateCruncher = () => {
 
   if (sensor.observerGd !== defaultGd) {
     postMessageArray.satInView = satInView;
+  } else {
+    postMessageArray.satInView = [];
   } // Add Sun View Data if Enabled
 
 
   if (isSunlightView) {
     postMessageArray.satInSun = satInSun;
+  } else {
+    postMessageArray.satInSun = [];
   } // If there is at least one sensor showing markers
 
 
   if (sensorMarkerArray.length >= 1) {
     postMessageArray.sensorMarkerArray = sensorMarkerArray;
+  } else {
+    postMessageArray.sensorMarkerArray = [];
   }
 
   postMessage(postMessageArray); // The longer the delay the more jitter at higher speeds of propagation
