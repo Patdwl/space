@@ -10998,7 +10998,10 @@ sensor.defaultGd = defaultGd;
 sensor.observerGd = defaultGd; // Handles Incomming Messages to sat-cruncher from main thread
 
 onmessage = function onmessage(m) {
-  propRealTime = Date.now();
+  // Set propRealTime Once
+  if (typeof propRealTime == 'undefined') {
+    propRealTime = Date.now();
+  }
 
   if (m.data.isSunlightView) {
     isSunlightView = m.data.isSunlightView; // if (isSunlightView == false) isResetSunlight = true;
@@ -11090,11 +11093,20 @@ onmessage = function onmessage(m) {
     isMultiSensor = false;
   }
 
+  var oldPropRate = propRate;
+
   switch (m.data.typ) {
     case 'offset':
       propOffset = Number(m.data.dat.split(' ')[0]);
       propRate = Number(m.data.dat.split(' ')[1]);
-      divisor = Math.max(propRate, 0.1);
+
+      if (!(oldPropRate == 0 && propRate == 0)) {
+        // Update propRealTime only if updating propOffset
+        propRealTime = Date.now();
+      } // Changing this to 0.1 caused issues...
+
+
+      divisor = 1;
       return;
 
     case 'satdata':
