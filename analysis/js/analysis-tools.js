@@ -4701,16 +4701,16 @@ settingsManager.init = () => {
 
 
   if (!settingsManager.disableUI) {
-    Promise.all(/*! import() */[__webpack_require__.e("vendors-node_modules_css-loader_dist_runtime_api_js-node_modules_css-loader_dist_runtime_cssW-926fd9"), __webpack_require__.e("src_css_fonts_css")]).then(__webpack_require__.bind(__webpack_require__, /*! @app/css/fonts.css */ "./src/css/fonts.css")).then(resp => resp);
-    Promise.all(/*! import() */[__webpack_require__.e("vendors-node_modules_css-loader_dist_runtime_api_js-node_modules_css-loader_dist_runtime_cssW-926fd9"), __webpack_require__.e("src_css_materialize_css")]).then(__webpack_require__.bind(__webpack_require__, /*! @app/css/materialize.css */ "./src/css/materialize.css")).then(resp => resp);
-    Promise.all(/*! import() */[__webpack_require__.e("vendors-node_modules_css-loader_dist_runtime_api_js-node_modules_css-loader_dist_runtime_cssW-926fd9"), __webpack_require__.e("src_css_materialize-local_css")]).then(__webpack_require__.bind(__webpack_require__, /*! @app/css/materialize-local.css */ "./src/css/materialize-local.css")).then(resp => resp);
-    Promise.all(/*! import() */[__webpack_require__.e("vendors-node_modules_css-loader_dist_runtime_api_js-node_modules_css-loader_dist_runtime_cssW-926fd9"), __webpack_require__.e("src_js_lib_external_colorPick_css")]).then(__webpack_require__.bind(__webpack_require__, /*! @app/js/lib/external/colorPick.css */ "./src/js/lib/external/colorPick.css")).then(resp => resp);
-    Promise.all(/*! import() */[__webpack_require__.e("vendors-node_modules_css-loader_dist_runtime_api_js-node_modules_css-loader_dist_runtime_cssW-926fd9"), __webpack_require__.e("src_css_perfect-scrollbar_min_css")]).then(__webpack_require__.bind(__webpack_require__, /*! @app/css/perfect-scrollbar.min.css */ "./src/css/perfect-scrollbar.min.css")).then(resp => resp);
-    Promise.all(/*! import() */[__webpack_require__.e("vendors-node_modules_css-loader_dist_runtime_api_js-node_modules_css-loader_dist_runtime_cssW-926fd9"), __webpack_require__.e("src_css_jquery-ui_min_css")]).then(__webpack_require__.bind(__webpack_require__, /*! @app/css/jquery-ui.min.css */ "./src/css/jquery-ui.min.css")).then(resp => resp);
-    Promise.all(/*! import() */[__webpack_require__.e("vendors-node_modules_css-loader_dist_runtime_api_js-node_modules_css-loader_dist_runtime_cssW-926fd9"), __webpack_require__.e("src_css_jquery-ui-timepicker-addon_css")]).then(__webpack_require__.bind(__webpack_require__, /*! @app/css/jquery-ui-timepicker-addon.css */ "./src/css/jquery-ui-timepicker-addon.css")).then(resp => resp);
-    Promise.all(/*! import() */[__webpack_require__.e("vendors-node_modules_css-loader_dist_runtime_api_js-node_modules_css-loader_dist_runtime_cssW-926fd9"), __webpack_require__.e("src_css_style_css")]).then(__webpack_require__.bind(__webpack_require__, /*! @app/css/style.css */ "./src/css/style.css")).then(Promise.all(/*! import() */[__webpack_require__.e("vendors-node_modules_css-loader_dist_runtime_api_js-node_modules_css-loader_dist_runtime_cssW-926fd9"), __webpack_require__.e("src_css_responsive_css")]).then(__webpack_require__.bind(__webpack_require__, /*! @app/css/responsive.css */ "./src/css/responsive.css")).then(resp => resp));
+    __webpack_require__.e(/*! import() */ "src_css_fonts_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/fonts.css */ "./src/css/fonts.css")).then(resp => resp);
+    __webpack_require__.e(/*! import() */ "src_css_materialize_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/materialize.css */ "./src/css/materialize.css")).then(resp => resp);
+    __webpack_require__.e(/*! import() */ "src_css_materialize-local_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/materialize-local.css */ "./src/css/materialize-local.css")).then(resp => resp);
+    __webpack_require__.e(/*! import() */ "src_js_lib_external_colorPick_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/js/lib/external/colorPick.css */ "./src/js/lib/external/colorPick.css")).then(resp => resp);
+    __webpack_require__.e(/*! import() */ "src_css_perfect-scrollbar_min_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/perfect-scrollbar.min.css */ "./src/css/perfect-scrollbar.min.css")).then(resp => resp);
+    __webpack_require__.e(/*! import() */ "src_css_jquery-ui_min_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/jquery-ui.min.css */ "./src/css/jquery-ui.min.css")).then(resp => resp);
+    __webpack_require__.e(/*! import() */ "src_css_jquery-ui-timepicker-addon_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/jquery-ui-timepicker-addon.css */ "./src/css/jquery-ui-timepicker-addon.css")).then(resp => resp);
+    __webpack_require__.e(/*! import() */ "src_css_style_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/style.css */ "./src/css/style.css")).then(__webpack_require__.e(/*! import() */ "src_css_responsive_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/responsive.css */ "./src/css/responsive.css")).then(resp => resp));
   } else if (settingsManager.enableLimitedUI) {
-    Promise.all(/*! import() */[__webpack_require__.e("vendors-node_modules_css-loader_dist_runtime_api_js-node_modules_css-loader_dist_runtime_cssW-926fd9"), __webpack_require__.e("src_css_limitedUI_css")]).then(__webpack_require__.bind(__webpack_require__, /*! @app/css/limitedUI.css */ "./src/css/limitedUI.css")).then(resp => resp);
+    __webpack_require__.e(/*! import() */ "src_css_limitedUI_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/limitedUI.css */ "./src/css/limitedUI.css")).then(resp => resp);
   } else {// console.log('ERROR');
   }
 };
@@ -4750,7 +4750,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "VERSION_DATE": () => (/* binding */ VERSION_DATE)
 /* harmony export */ });
 // THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
-var VERSION_DATE = 'June 30, 2021';
+var VERSION_DATE = 'July 4, 2021';
 
 /***/ }),
 
