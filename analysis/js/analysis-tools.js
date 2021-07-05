@@ -303,118 +303,6 @@ var saveAs = saveAs || function (e) {
 
 /***/ }),
 
-/***/ "./src/js/lib/helpers.js":
-/*!*******************************!*\
-  !*** ./src/js/lib/helpers.js ***!
-  \*******************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "stringPad": () => (/* binding */ stringPad),
-/* harmony export */   "saveVariable": () => (/* binding */ saveVariable),
-/* harmony export */   "saveCsv": () => (/* binding */ saveCsv),
-/* harmony export */   "saveAs": () => (/* reexport safe */ _app_js_lib_external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__.saveAs),
-/* harmony export */   "parseRgba": () => (/* binding */ parseRgba),
-/* harmony export */   "hex2RgbA": () => (/* binding */ hex2RgbA),
-/* harmony export */   "rgbCss": () => (/* binding */ rgbCss)
-/* harmony export */ });
-/* harmony import */ var _app_js_lib_external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @app/js/lib/external/file-saver.min.js */ "./src/js/lib/external/file-saver.min.js");
-
-var stringPad = {};
-
-stringPad.pad = (val, len) => {
-  val = String(val);
-  len = len || 2;
-
-  while (val.length < len) {
-    val = '0' + val;
-  }
-
-  return val;
-};
-
-stringPad.padEmpty = (num, size) => {
-  var s = '   ' + num;
-  return s.substr(s.length - size);
-};
-
-stringPad.pad0 = (str, max) => str.length < max ? stringPad.pad0('0' + str, max) : str;
-
-var saveVariable = (variable, filename) => {
-  try {
-    filename = typeof filename == 'undefined' ? 'variable.txt' : filename;
-    variable = JSON.stringify(variable);
-    var blob = new Blob([variable], {
-      type: 'text/plain;charset=utf-8'
-    });
-    (0,_app_js_lib_external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__.saveAs)(blob, filename);
-  } catch (e) {
-    console.debug('Unable to Save File!');
-  }
-};
-
-var saveCsv = (items, name) => {
-  try {
-    var replacer = (key, value) => value === null ? '' : value; // specify how you want to handle null values here
-
-
-    var header = Object.keys(items[0]);
-    var csv = items.map(row => header.map(fieldName => JSON.stringify(row[fieldName], replacer)).join(','));
-    csv.unshift(header.join(','));
-    csv = csv.join('\r\n');
-    var blob = new Blob([csv], {
-      type: 'text/plain;charset=utf-8'
-    });
-    (0,_app_js_lib_external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__.saveAs)(blob, "".concat(name, ".csv"));
-  } catch (error) {
-    console.debug('Unable to Save File!');
-  }
-};
-
-var parseRgba = str => {
-  // eslint-disable-next-line no-useless-escape
-  var [r, g, b, a] = str.match(/[\.0-9]+/g);
-  r = parseInt(r) / 255;
-  g = parseInt(g) / 255;
-  b = parseInt(b) / 255;
-  a = parseFloat(a);
-
-  if (isNaN(r) || isNaN(g) || isNaN(b) || isNaN(a)) {
-    console.warn('Bad RGBA! Using White Instead.');
-    return [1, 1, 1, 1];
-  } else {
-    return [r, g, b, a];
-  }
-};
-
-var hex2RgbA = hex => {
-  // eslint-disable-next-line prefer-named-capture-group
-  if (/^#([0-9A-Fa-f]{3}){1,2}$/.test(hex)) {
-    var c = hex.substring(1).split('');
-
-    if (c.length == 3) {
-      c = [c[0], c[0], c[1], c[1], c[2], c[2]];
-    }
-
-    c = '0x' + c.join('');
-    var r = (c >> 16 & 255) / 255;
-    var g = (c >> 8 & 255) / 255;
-    var b = (c & 255) / 255;
-    return [r, g, b, 1];
-  }
-
-  console.warn('Bad Hex! Using White Instead.');
-  return [1, 1, 1, 1];
-};
-
-var rgbCss = values => "rgba(".concat(values[0] * 255, ",").concat(values[1] * 255, ",").concat(values[2] * 255, ",").concat(values[3], ")");
-
-
-
-/***/ }),
-
 /***/ "./src/js/lib/lookangles.js":
 /*!**********************************!*\
   !*** ./src/js/lib/lookangles.js ***!
@@ -429,7 +317,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var ootk__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ootk */ "./node_modules/ootk/dist/ootk.js");
 /* harmony import */ var ootk__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(ootk__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @app/js/lib/constants.js */ "./src/js/lib/constants.js");
-/* harmony import */ var _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @app/js/lib/helpers.js */ "./src/js/lib/helpers.js");
+/* harmony import */ var _helpers_ts__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./helpers.ts */ "./src/js/lib/helpers.ts");
 /* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
 /* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(jquery__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _app_js_lib_external_dateFormat_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @app/js/lib/external/dateFormat.js */ "./src/js/lib/external/dateFormat.js");
@@ -554,10 +442,10 @@ satellite.currentEpoch = currentDate => {
   currentDate = new Date(currentDate);
   var epochYear = currentDate.getUTCFullYear();
   epochYear = parseInt(epochYear.toString().substr(2, 2));
-  var epochDay = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(_app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.getDayOfYear(currentDate), 3);
+  var epochDay = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(_app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.getDayOfYear(currentDate), 3);
   var timeOfDay = (currentDate.getUTCHours() * 60 + currentDate.getUTCMinutes()) / 1440;
   epochDay = (epochDay + timeOfDay).toFixed(8);
-  epochDay = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(epochDay, 12);
+  epochDay = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(epochDay, 12);
   return [epochYear, epochDay];
 };
 
@@ -1424,7 +1312,7 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
     meana[0] = meana[0].substr(-3, 3);
     meana[1] = meana[1].substr(0, 4);
     meana = (meana[0] + '.' + meana[1]).toString();
-    meana = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(meana, 8);
+    meana = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(meana, 8);
     var rasc;
 
     if (typeof mainRasc == 'undefined') {
@@ -1437,7 +1325,7 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
     rasc[0] = rasc[0].substr(-3, 3);
     rasc[1] = rasc[1].substr(0, 4);
     rasc = (rasc[0] + '.' + rasc[1]).toString();
-    rasc = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(rasc, 8);
+    rasc = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(rasc, 8);
     mainRasc = rasc;
     var scc = sat.SCC_NUM;
     var intl = sat.TLE1.substr(9, 8);
@@ -1446,14 +1334,14 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
     inc[0] = inc[0].substr(-3, 3);
     inc[1] = inc[1].substr(0, 4);
     inc = (inc[0] + '.' + inc[1]).toString();
-    inc = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(inc, 8);
+    inc = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(inc, 8);
     var epochyr = sat.TLE1.substr(18, 2);
     var epochday = sat.TLE1.substr(20, 12);
     var meanmo = sat.TLE2.substr(52, 11);
     var ecen = sat.eccentricity.toPrecision(7).substr(2, 7);
     argPe = argPe / 10;
     argPe = parseFloat(argPe).toPrecision(7);
-    argPe = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(argPe, 8);
+    argPe = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(argPe, 8);
     var TLE1Ending = sat.TLE1.substr(32, 39);
     mainTLE1 = '1 ' + scc + 'U ' + intl + ' ' + epochyr + epochday + TLE1Ending; // M' and M'' are both set to 0 to put the object in a perfect stable orbit
 
@@ -1475,14 +1363,14 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
 
     meana = meana / 10;
     meana = parseFloat(meana).toPrecision(7);
-    meana = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(meana, 8);
+    meana = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(meana, 8);
     var rasc = (sat.raan * RAD2DEG).toPrecision(7);
     mainRasc = rasc;
     rasc = rasc.toString().split('.');
     rasc[0] = rasc[0].substr(-3, 3);
     rasc[1] = rasc[1].substr(0, 4);
     rasc = (rasc[0] + '.' + rasc[1]).toString();
-    rasc = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(rasc, 8);
+    rasc = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(rasc, 8);
     var scc = sat.SCC_NUM;
     var intl = sat.TLE1.substr(9, 8);
     var inc = (sat.inclination * RAD2DEG).toPrecision(7);
@@ -1490,7 +1378,7 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
     inc[0] = inc[0].substr(-3, 3);
     inc[1] = inc[1].substr(0, 4);
     inc = (inc[0] + '.' + inc[1]).toString();
-    inc = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(inc, 8);
+    inc = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(inc, 8);
     var epochyr = sat.TLE1.substr(18, 2);
     var epochday = sat.TLE1.substr(20, 12);
     var meanmo = sat.TLE2.substr(52, 11);
@@ -1507,7 +1395,7 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
     argPe[0] = argPe[0].substr(-3, 3);
     argPe[1] = argPe[1].substr(0, 4);
     argPe = (argPe[0] + '.' + argPe[1]).toString();
-    argPe = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(argPe, 8);
+    argPe = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(argPe, 8);
     var TLE1Ending = sat.TLE1.substr(32, 39);
     var TLE1 = '1 ' + scc + 'U ' + intl + ' ' + epochyr + epochday + TLE1Ending; // M' and M'' are both set to 0 to put the object in a perfect stable orbit
 
@@ -1542,7 +1430,7 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
     rasc[0] = rasc[0].substr(-3, 3);
     rasc[1] = rasc[1].substr(0, 4);
     rasc = (rasc[0] + '.' + rasc[1]).toString();
-    rasc = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(rasc, 8);
+    rasc = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(rasc, 8);
     mainRasc = rasc;
     var scc = sat.SCC_NUM;
     var intl = sat.TLE1.substr(9, 8);
@@ -1551,7 +1439,7 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
     inc[0] = inc[0].substr(-3, 3);
     inc[1] = inc[1].substr(0, 4);
     inc = (inc[0] + '.' + inc[1]).toString();
-    inc = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(inc, 8);
+    inc = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(inc, 8);
     var epochyr = sat.TLE1.substr(18, 2);
     var epochday = sat.TLE1.substr(20, 12);
     var meanmo = sat.TLE2.substr(52, 11);
@@ -1568,7 +1456,7 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
     argPe[0] = argPe[0].substr(-3, 3);
     argPe[1] = argPe[1].substr(0, 4);
     argPe = (argPe[0] + '.' + argPe[1]).toString();
-    argPe = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(argPe, 8);
+    argPe = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(argPe, 8);
     var TLE1Ending = sat.TLE1.substr(32, 39);
     mainTLE1 = '1 ' + scc + 'U ' + intl + ' ' + epochyr + epochday + TLE1Ending; // M' and M'' are both set to 0 to put the object in a perfect stable orbit
 
@@ -1593,7 +1481,7 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
       rasc[0] = rasc[0].substr(-3, 3);
       rasc[1] = rasc[1].substr(0, 4);
       rasc = (rasc[0] + '.' + rasc[1]).toString();
-      rasc = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(rasc, 8);
+      rasc = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(rasc, 8);
       mainRasc = rasc;
       mainTLE2 = '2 ' + scc + ' ' + inc + ' ' + rasc + ' ' + ecen + ' ' + argPe + ' ' + meana + ' ' + meanmo + '    10';
       sat.TLE2 = mainTLE2;
@@ -1900,7 +1788,7 @@ satellite.findBestPasses = (sats, sensor) => {
     sortedTableSatTimes[_i7].stopTime = sortedTableSatTimes[_i7].stopTime.toISOString().split('T')[1].split('.')[0];
   }
 
-  (0,_app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.saveCsv)(sortedTableSatTimes, 'bestSatTimes');
+  (0,_helpers_ts__WEBPACK_IMPORTED_MODULE_2__.saveCsv)(sortedTableSatTimes, 'bestSatTimes');
 };
 
 satellite.findBestPass = (sat, sensor, propOffset) => {
@@ -2175,10 +2063,10 @@ satellite.genMlData.eci2inc = (start, stop) => {
   console.log(trainTarget.length);
   console.log(testData.length);
   console.log(testTarget.length);
-  (0,_app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.saveVariable)(trainData, 'train-data.json');
-  (0,_app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.saveVariable)(trainTarget, 'train-target.json');
-  (0,_app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.saveVariable)(testData, 'test-data.json');
-  (0,_app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.saveVariable)(testTarget, 'test-target.json');
+  (0,_helpers_ts__WEBPACK_IMPORTED_MODULE_2__.saveVariable)(trainData, 'train-data.json');
+  (0,_helpers_ts__WEBPACK_IMPORTED_MODULE_2__.saveVariable)(trainTarget, 'train-target.json');
+  (0,_helpers_ts__WEBPACK_IMPORTED_MODULE_2__.saveVariable)(testData, 'test-data.json');
+  (0,_helpers_ts__WEBPACK_IMPORTED_MODULE_2__.saveVariable)(testTarget, 'test-target.json');
 };
 /* istanbul ignore next */
 
@@ -2228,7 +2116,7 @@ satellite.genMlData.tlePredict = (start, stop) => {
   }
 
   console.log(satEciDataArray.length);
-  (0,_app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.saveVariable)(satEciDataArray, 'metObs.json');
+  (0,_helpers_ts__WEBPACK_IMPORTED_MODULE_2__.saveVariable)(satEciDataArray, 'metObs.json');
 };
 
 satellite.eci2Rae = (now, eci, sensor) => {
@@ -2381,7 +2269,7 @@ satellite.createManeuverAnalyst = (satId, incVariation, meanmoVariation, rascVar
   }
 
   inc = (inc[0] + '.' + inc[1]).toString();
-  inc = _app_js_lib_helpers_js__WEBPACK_IMPORTED_MODULE_2__.stringPad.padEmpty(inc, 8); // For the second 30
+  inc = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.padEmpty(inc, 8); // For the second 30
 
   var meanmo = iTLE2.substr(52, 10);
   meanmo = parseFloat(meanmo * meanmoVariation).toPrecision(10); // meanmo = parseFloat(meanmo - (0.005 / 10) + (0.01 * ((meanmoIterat + 1) / 10))).toPrecision(10);
@@ -4750,7 +4638,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "VERSION_DATE": () => (/* binding */ VERSION_DATE)
 /* harmony export */ });
 // THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
-var VERSION_DATE = 'July 4, 2021';
+var VERSION_DATE = 'July 5, 2021';
 
 /***/ }),
 
@@ -19708,6 +19596,120 @@ __nested_webpack_require_124921__.r(__webpack_exports__);
 /******/ })()
 ;
 });
+
+/***/ }),
+
+/***/ "./src/js/lib/helpers.ts":
+/*!*******************************!*\
+  !*** ./src/js/lib/helpers.ts ***!
+  \*******************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.truncateString = exports.rgbCss = exports.hex2RgbA = exports.parseRgba = exports.saveCsv = exports.saveVariable = exports.stringPad = exports.saveAs = void 0;
+var file_saver_min_js_1 = __webpack_require__(/*! ./external/file-saver.min.js */ "./src/js/lib/external/file-saver.min.js");
+Object.defineProperty(exports, "saveAs", ({ enumerable: true, get: function () { return file_saver_min_js_1.saveAs; } }));
+exports.stringPad = {
+    pad: function (val, len) {
+        val = String(val);
+        len = len || 2;
+        while (val.length < len)
+            val = '0' + val;
+        return val;
+    },
+    padEmpty: function (num, size) {
+        var s = '   ' + num;
+        return s.substr(s.length - size);
+    },
+    pad0: function (str, max) { return (str.length < max ? exports.stringPad.pad0('0' + str, max) : str); },
+};
+var saveVariable = function (variable, filename) {
+    try {
+        filename = typeof filename == 'undefined' ? 'variable.txt' : filename;
+        variable = JSON.stringify(variable);
+        var blob = new Blob([variable], { type: 'text/plain;charset=utf-8' });
+        if (!file_saver_min_js_1.saveAs)
+            throw new Error('saveAs is unavailable!');
+        file_saver_min_js_1.saveAs(blob, filename);
+    }
+    catch (e) {
+        console.debug('Unable to Save File!');
+    }
+};
+exports.saveVariable = saveVariable;
+var saveCsv = function (items, name) {
+    try {
+        var replacer_1 = function (key, value) { return (value === null ? '' : value); }; // specify how you want to handle null values here
+        var header_1 = Object.keys(items[0]);
+        var csv = items.map(function (row) { return header_1.map(function (fieldName) { return JSON.stringify(row[fieldName], replacer_1); }).join(','); });
+        csv.unshift(header_1.join(','));
+        csv = csv.join('\r\n');
+        var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
+        if (!file_saver_min_js_1.saveAs)
+            throw new Error('saveAs is unavailable!');
+        file_saver_min_js_1.saveAs(blob, name + ".csv");
+    }
+    catch (error) {
+        console.debug('Unable to Save File!');
+    }
+};
+exports.saveCsv = saveCsv;
+var parseRgba = function (str) {
+    // eslint-disable-next-line no-useless-escape
+    var _a = str.match(/[\d\.]+/gu), r = _a[0], g = _a[1], b = _a[2], a = _a[3];
+    r = (parseInt(r) / 255);
+    g = parseInt(g) / 255;
+    b = parseInt(b) / 255;
+    a = parseFloat(a);
+    if (isNaN(r) || isNaN(g) || isNaN(b) || isNaN(a)) {
+        console.warn('Bad RGBA! Using White Instead.');
+        return [1, 1, 1, 1];
+    }
+    else {
+        return [r, g, b, a];
+    }
+};
+exports.parseRgba = parseRgba;
+var hex2RgbA = function (hex) {
+    // eslint-disable-next-line prefer-named-capture-group
+    if (/^#([A-Fa-f0-9]{3}){1,2}$/u.test(hex)) {
+        var c = hex.substring(1).split('');
+        if (c.length == 3) {
+            c = [c[0], c[0], c[1], c[1], c[2], c[2]];
+        }
+        c = '0x' + c.join('');
+        var r = ((parseInt(c) >> 16) & 255) / 255;
+        var g = ((parseInt(c) >> 8) & 255) / 255;
+        var b = (parseInt(c) & 255) / 255;
+        return [r, g, b, 1];
+    }
+    console.warn('Bad Hex! Using White Instead.');
+    return [1, 1, 1, 1];
+};
+exports.hex2RgbA = hex2RgbA;
+var rgbCss = function (values) { return "rgba(" + values[0] * 255 + "," + values[1] * 255 + "," + values[2] * 255 + "," + values[3] + ")"; };
+exports.rgbCss = rgbCss;
+/**
+ *
+ * @param {string} str Input string
+ * @param {number} num Maximum length of the string
+ * @returns {string} Trunicated string
+ */
+var truncateString = function (str, num) {
+    if (typeof str == 'undefined')
+        return 'Unknown';
+    // If the length of str is less than or equal to num
+    // just return str--don't truncate it.
+    if (str.length <= num) {
+        return str;
+    }
+    // Return str truncated with '...' concatenated to the end of str.
+    return str.slice(0, num) + '...';
+};
+exports.truncateString = truncateString;
+
 
 /***/ })
 
