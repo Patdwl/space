@@ -321,25 +321,27 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
 /* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(jquery__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _app_js_lib_external_dateFormat_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @app/js/lib/external/dateFormat.js */ "./src/js/lib/external/dateFormat.js");
-/* harmony import */ var _app_js_settingsManager_settingsManager_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @app/js/settingsManager/settingsManager.js */ "./src/js/settingsManager/settingsManager.js");
-/* harmony import */ var _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @app/js/timeManager/timeManager.js */ "./src/js/timeManager/timeManager.js");
+/* harmony import */ var _app_js_api_externalApi_ts__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @app/js/api/externalApi.ts */ "./src/js/api/externalApi.ts");
+/* harmony import */ var _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @app/js/timeManager/timeManager.ts */ "./src/js/timeManager/timeManager.ts");
 /**
- * /* /////////////////////////////////////////////////////////////////////////////
+ * /////////////////////////////////////////////////////////////////////////////
  *
  * lookangles.js is an expansion library for satellite.js providing tailored
  * functions for calculating orbital data.
  * http://keeptrack.space
  *
- * Copyright (C) 2016-2021 Theodore Kruczek
- * Copyright (C) 2020 Heather Kruczek
+ * @Copyright (C) 2016-2021 Theodore Kruczek
+ * @Copyright (C) 2020 Heather Kruczek
  *
- * This program is free software: you can redistribute it and/or modify it under
+ * KeepTrack is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
+ * KeepTrack is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with
+ * KeepTrack. If not, see <http://www.gnu.org/licenses/>.
  *
  * /////////////////////////////////////////////////////////////////////////////
  */
@@ -349,7 +351,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
- // import { satellite as satelliteBase } from 'sgp4-js/src/satellite';
 
 
 
@@ -359,7 +360,8 @@ var TAU = 2 * Math.PI;
 var DEG2RAD = TAU / 360;
 var RAD2DEG = 360 / TAU;
 var MINUTES_PER_DAY = 1440;
-var MILLISECONDS_PER_DAY = 1.15741e-8; // Legacy API
+var MILLISECONDS_PER_DAY = 1.15741e-8;
+var settingsManager; // Legacy API
 
 satellite.sgp4 = ootk__WEBPACK_IMPORTED_MODULE_0__.Sgp4.propagate;
 satellite.gstime = ootk__WEBPACK_IMPORTED_MODULE_0__.Sgp4.gstime;
@@ -373,11 +375,12 @@ satellite.degreesLong = ootk__WEBPACK_IMPORTED_MODULE_0__.Transforms.getDegLon;
 satellite.ecfToLookAngles = ootk__WEBPACK_IMPORTED_MODULE_0__.Transforms.ecf2rae;
 var satSet, satCruncher, sensorManager, groupsManager;
 
-satellite.initLookangles = (satSetRef, satCruncherRef, sensorManagerRef, groupsManagerRef) => {
-  satSet = satSetRef;
-  satCruncher = satCruncherRef;
-  sensorManager = sensorManagerRef;
-  groupsManager = groupsManagerRef;
+satellite.initLookangles = () => {
+  satSet = _app_js_api_externalApi_ts__WEBPACK_IMPORTED_MODULE_5__.keepTrackApi.programs.satSet;
+  satCruncher = _app_js_api_externalApi_ts__WEBPACK_IMPORTED_MODULE_5__.keepTrackApi.programs.satCruncher;
+  sensorManager = _app_js_api_externalApi_ts__WEBPACK_IMPORTED_MODULE_5__.keepTrackApi.programs.sensorManager;
+  groupsManager = _app_js_api_externalApi_ts__WEBPACK_IMPORTED_MODULE_5__.keepTrackApi.programs.groupsManager;
+  settingsManager = _app_js_api_externalApi_ts__WEBPACK_IMPORTED_MODULE_5__.keepTrackApi.programs.settingsManager;
 };
 
 var _propagate = (propTempOffset, satrec, sensor) => {
@@ -442,7 +445,7 @@ satellite.currentEpoch = currentDate => {
   currentDate = new Date(currentDate);
   var epochYear = currentDate.getUTCFullYear();
   epochYear = parseInt(epochYear.toString().substr(2, 2));
-  var epochDay = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(_app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.getDayOfYear(currentDate), 3);
+  var epochDay = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(_app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.getDayOfYear(currentDate), 3);
   var timeOfDay = (currentDate.getUTCHours() * 60 + currentDate.getUTCMinutes()) / 1440;
   epochDay = (epochDay + timeOfDay).toFixed(8);
   epochDay = _helpers_ts__WEBPACK_IMPORTED_MODULE_2__.stringPad.pad0(epochDay, 12);
@@ -504,8 +507,8 @@ satellite.setobs = sensor => {
     sensorManager.currentSensor.observerGd = {
       // Array to calculate look angles in propagate()
       lat: sensor.lat * DEG2RAD,
-      lon: sensor.long * DEG2RAD,
-      alt: parseFloat(sensor.obshei) // Converts from string to number
+      lon: sensor.lon * DEG2RAD,
+      alt: parseFloat(sensor.alt) // Converts from string to number
 
     };
   } catch (error) {
@@ -533,8 +536,8 @@ satellite.calculateVisMag = (sat, sensor, propTime, sun) => {
 satellite.altitudeCheck = (tle1, tle2, propOffset) => {
   var satrec = satellite.twoline2satrec(tle1, tle2); // perform and store sat init calcs
 
-  var propTime = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propOffset, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
-  var j = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(propTime.getUTCFullYear(), propTime.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
+  var propTime = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propOffset, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
+  var j = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(propTime.getUTCFullYear(), propTime.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
   propTime.getUTCDate(), propTime.getUTCHours(), propTime.getUTCMinutes(), propTime.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
 
   j += propTime.getUTCMilliseconds() * MILLISECONDS_PER_DAY;
@@ -572,9 +575,9 @@ satellite.getTEARR = (sat, sensor, propTime) => {
   if (typeof sensor.observerGd == 'undefined') {
     try {
       sensor.observerGd = {
-        alt: sensor.obshei,
+        alt: sensor.alt,
         lat: sensor.lat,
-        lon: sensor.long
+        lon: sensor.lon
       };
     } catch (e) {
       throw 'observerGd is not set and could not be guessed.';
@@ -602,10 +605,10 @@ satellite.getTEARR = (sat, sensor, propTime) => {
   if (typeof propTime != 'undefined') {
     now = propTime;
   } else {
-    now = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime();
+    now = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime();
   }
 
-  var j = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
+  var j = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
   now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
 
   j += now.getUTCMilliseconds() * MILLISECONDS_PER_DAY;
@@ -645,7 +648,7 @@ satellite.nextpassList = satArray => {
   var nextPassArray = [];
 
   for (var s = 0; s < satArray.length; s++) {
-    var time = satellite.nextNpasses(satArray[s], null, 1000 * 60 * 60 * 24, satellite.lookanglesInterval, _app_js_settingsManager_settingsManager_js__WEBPACK_IMPORTED_MODULE_5__.settingsManager.nextNPassesCount); // Only do 1 day looks
+    var time = satellite.nextNpasses(satArray[s], null, 1000 * 60 * 60 * 24, satellite.lookanglesInterval, settingsManager.nextNPassesCount); // Only do 1 day looks
 
     for (var i = 0; i < time.length; i++) {
       nextPassArray.push({
@@ -672,9 +675,9 @@ satellite.nextpass = (sat, sensor, searchLength, interval) => {
   if (typeof sensor.observerGd == 'undefined') {
     try {
       sensor.observerGd = {
-        alt: sensor.obshei,
+        alt: sensor.alt,
         lat: sensor.lat,
-        lon: sensor.long
+        lon: sensor.lon
       };
     } catch (e) {
       throw 'observerGd is not set and could not be guessed.';
@@ -684,7 +687,7 @@ satellite.nextpass = (sat, sensor, searchLength, interval) => {
 
   if (typeof searchLength == 'undefined') searchLength = satellite.lookanglesLength;
   if (typeof interval == 'undefined') interval = satellite.lookanglesInterval;
-  var propOffset = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset();
+  var propOffset = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset();
   var propTempOffset = 0;
   var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
 
@@ -692,7 +695,7 @@ satellite.nextpass = (sat, sensor, searchLength, interval) => {
     // 5second Looks
     propTempOffset = i * 1000 + propOffset; // Offset in seconds (msec * 1000)
 
-    var now = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propTempOffset, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
+    var now = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propTempOffset, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
     var aer = satellite.getRae(now, satrec, sensor);
     var isInFOV = satellite.checkIsInFOV(sensor, aer);
 
@@ -718,9 +721,9 @@ satellite.nextNpasses = (sat, sensor, searchLength, interval, numPasses) => {
   if (typeof sensor.observerGd == 'undefined') {
     try {
       sensor.observerGd = {
-        alt: sensor.obshei,
+        alt: sensor.alt,
         lat: sensor.lat,
-        lon: sensor.long
+        lon: sensor.lon
       };
     } catch (e) {
       throw 'observerGd is not set and could not be guessed.';
@@ -732,7 +735,7 @@ satellite.nextNpasses = (sat, sensor, searchLength, interval, numPasses) => {
   interval = interval || satellite.lookanglesInterval;
   numPasses = numPasses || 1;
   var passTimesArray = [];
-  var propOffset = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset();
+  var propOffset = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset();
   var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
 
   var orbitalPeriod = MINUTES_PER_DAY / (satrec.no * MINUTES_PER_DAY / TAU); // Seconds in a day divided by mean motion
@@ -746,7 +749,7 @@ satellite.nextNpasses = (sat, sensor, searchLength, interval, numPasses) => {
 
     var propTempOffset = i + propOffset; // Offset in seconds (msec * 1000)
 
-    var now = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propTempOffset * 1000, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
+    var now = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propTempOffset * 1000, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
     var aer = satellite.getRae(now, satrec, sensor);
     var isInFOV = satellite.checkIsInFOV(sensor, aer);
 
@@ -770,7 +773,7 @@ satellite.getlookangles = sat => {
 
   var sensor = sensorManager.currentSensor; // Set default timing settings. These will be changed to find look angles at different times in future.
 
-  var propOffset = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset();
+  var propOffset = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset();
   var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
   // const orbitalPeriod = MINUTES_PER_DAY / ((satrec.no * MINUTES_PER_DAY) / TAU); // Seconds in a day divided by mean motion
   // Use custom interval unless doing rise/set lookangles - then use 1 second
@@ -887,7 +890,7 @@ satellite.getlookanglesMultiSite = sat => {
   var _propagateMultiSite = (offset, satrec, sensor) => {
     // Setup Realtime and Offset Time
     var propRealTimeTemp = Date.now();
-    var now = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(offset, propRealTimeTemp);
+    var now = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(offset, propRealTimeTemp);
     var aer = satellite.getRae(now, satrec, sensor);
     var isInFOV = satellite.checkIsInFOV(sensor, aer);
 
@@ -907,7 +910,7 @@ satellite.getlookanglesMultiSite = sat => {
 
   sensorManager.tempSensor = sensorManager.currentSensor; // Determine time offset from real time
 
-  var propOffset = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset(); // Get Satellite Info
+  var propOffset = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset(); // Get Satellite Info
 
   var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
 
@@ -1167,8 +1170,10 @@ satellite.getlookanglesMultiSite = sat => {
 
 
 satellite.findCloseObjects = () => {
+  var searchRadius = 50; // km
+
   var csoList = [];
-  var satList = [];
+  var satList = []; // Short internal function to find the satellites position
 
   var _getSatPos = (propTempOffset, satrec) => {
     var now = new Date(); // Make a time variable
@@ -1183,37 +1188,46 @@ satellite.findCloseObjects = () => {
 
     var m = (j - satrec.jdsatepoch) * MINUTES_PER_DAY;
     return satellite.sgp4(satrec, m);
-  };
+  }; // Loop through all the satellites
+
 
   for (var i = 0; i < satSet.numSats; i++) {
-    var sat = satSet.getSat(i);
-    if (typeof sat.TLE1 == 'undefined') continue;
-    if (sat.apogee > 5556) continue;
-    sat.satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2);
+    // Get the satellite
+    var sat = satSet.getSat(i); // Avoid unnecessary errors
 
-    var pos = _getSatPos(0, sat.satrec, sensorManager.currentSensor, satellite.lookanglesInterval);
+    if (typeof sat.TLE1 == 'undefined') continue; // Only look at satellites in LEO
 
-    sat.position = pos.position;
-    if (typeof sat.position == 'undefined') continue;
+    if (sat.apogee > 5556) continue; // Find where the satellite is right now
+
+    sat.position = _getSatPos(0, sat.satrec, sensorManager.currentSensor, satellite.lookanglesInterval).position; // If it fails, skip it
+
+    if (typeof sat.position == 'undefined') continue; // Add the satellite to the list
+
     satList.push(sat);
-  }
+  } // Loop through all the satellites with valid positions
+
 
   for (var _i3 = 0; _i3 < satList.length; _i3++) {
     var sat1 = satList[_i3];
-    var pos1 = sat1.position;
-    var posXmin = pos1.x - 20;
-    var posXmax = pos1.x + 20;
-    var posYmin = pos1.y - 20;
-    var posYmax = pos1.y + 20;
-    var posZmin = pos1.z - 20;
-    var posZmax = pos1.z + 20;
+    var pos1 = sat1.position; // Calculate the area around the satellite
+
+    var posXmin = pos1.x - searchRadius;
+    var posXmax = pos1.x + searchRadius;
+    var posYmin = pos1.y - searchRadius;
+    var posYmax = pos1.y + searchRadius;
+    var posZmin = pos1.z - searchRadius;
+    var posZmax = pos1.z + searchRadius; // Loop through the list again
 
     for (var j = 0; j < satList.length; j++) {
-      var sat2 = satList[j];
-      if (sat1 == sat2) continue;
-      var pos2 = sat2.position;
+      // Get the second satellite
+      var sat2 = satList[j]; // Skip the same satellite
+
+      if (sat1 == sat2) continue; // Get the second satellite's position
+
+      var pos2 = sat2.position; // Check to see if the second satellite is in the search area
 
       if (pos2.x < posXmax && pos2.x > posXmin && pos2.y < posYmax && pos2.y > posYmin && pos2.z < posZmax && pos2.z > posZmin) {
+        // Add the second satellite to the list if it is close
         csoList.push({
           sat1: sat1,
           sat2: sat2
@@ -1226,47 +1240,54 @@ satellite.findCloseObjects = () => {
   csoList = []; // Clear CSO List
 
   satList = []; // Clear CSO List
+  // Loop through the possible CSOs
 
   for (var _i4 = 0; _i4 < csoListUnique.length; _i4++) {
+    // Calculate the first CSO's position 30 minutes later
     var _sat = csoListUnique[_i4].sat1;
 
-    var _pos = _getSatPos(1000 * 60 * 30, _sat.satrec, sensorManager.currentSensor, satellite.lookanglesInterval);
+    var pos = _getSatPos(1000 * 60 * 30, _sat.satrec, sensorManager.currentSensor, satellite.lookanglesInterval);
 
-    csoListUnique[_i4].sat1.position = _pos.position;
+    csoListUnique[_i4].sat1.position = pos.position; // Calculate the second CSO's position 30 minutes later
+
     _sat = csoListUnique[_i4].sat2;
-    _pos = _getSatPos(1000 * 60 * 30, _sat.satrec, sensorManager.currentSensor, satellite.lookanglesInterval);
-    _sat.position = _pos.position;
-    csoListUnique[_i4].sat2.position = _pos.position;
-  }
+    pos = _getSatPos(1000 * 60 * 30, _sat.satrec, sensorManager.currentSensor, satellite.lookanglesInterval);
+    _sat.position = pos.position;
+    csoListUnique[_i4].sat2.position = pos.position;
+  } // Remove duplicates
 
-  satList = Array.from(new Set(satList)); // Remove duplicates
+
+  satList = Array.from(new Set(satList)); // Loop through the CSOs
 
   for (var _i5 = 0; _i5 < csoListUnique.length; _i5++) {
+    // Check the first CSO
     var _sat2 = csoListUnique[_i5].sat1;
-    var _pos2 = _sat2.position;
-    if (typeof _pos2 == 'undefined') continue;
+    var _pos = _sat2.position;
+    if (typeof _pos == 'undefined') continue; // Calculate the area around the CSO
 
-    var _posXmin = _pos2.x - 20;
+    var _posXmin = _pos.x - searchRadius;
 
-    var _posXmax = _pos2.x + 20;
+    var _posXmax = _pos.x + searchRadius;
 
-    var _posYmin = _pos2.y - 20;
+    var _posYmin = _pos.y - searchRadius;
 
-    var _posYmax = _pos2.y + 20;
+    var _posYmax = _pos.y + searchRadius;
 
-    var _posZmin = _pos2.z - 20;
+    var _posZmin = _pos.z - searchRadius;
 
-    var _posZmax = _pos2.z + 20;
+    var _posZmax = _pos.z + searchRadius; // Get the second CSO object
+
 
     var _sat3 = csoListUnique[_i5].sat2;
-    var _pos3 = _sat3.position;
-    if (typeof _pos3 == 'undefined') continue;
+    var _pos2 = _sat3.position;
+    if (typeof _pos2 == 'undefined') continue; // If it is still in the search area, add it to the list
 
-    if (_pos3.x < _posXmax && _pos3.x > _posXmin && _pos3.y < _posYmax && _pos3.y > _posYmin && _pos3.z < _posZmax && _pos3.z > _posZmin) {
+    if (_pos2.x < _posXmax && _pos2.x > _posXmin && _pos2.y < _posYmax && _pos2.y > _posYmin && _pos2.z < _posZmax && _pos2.z > _posZmin) {
       csoList.push(_sat2.SCC_NUM);
       csoList.push(_sat3.SCC_NUM);
     }
-  }
+  } // Generate the search string
+
 
   csoListUnique = Array.from(new Set(csoList));
   var searchStr = '';
@@ -1493,9 +1514,9 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
   };
 
   var getOrbitByLatLonPropagate = (propOffset, satrec, type) => {
-    _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime = Date.now();
-    var now = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propOffset, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
-    var j = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
+    _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime = Date.now();
+    var now = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propOffset, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
+    var j = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
     now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
 
     j += now.getUTCMilliseconds() * MILLISECONDS_PER_DAY;
@@ -1586,9 +1607,9 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
         // If Object is moving opposite of the goal direction (upOrDown)
         i = i + 20; // Move 2 Degrees ahead in the orbit to prevent being close on the next lattiude check
       } else {
-          // meanAiValue = i;
-          break; // Stop changing the Mean Anomaly
-        }
+        // meanAiValue = i;
+        break; // Stop changing the Mean Anomaly
+      }
     }
 
     if (meanACalcResults === 5) {
@@ -1621,9 +1642,9 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
             break; // Stop changing ArgPer
           }
         } else {// console.log('Found Wrong Lat');
-          }
-      } else {// console.log('Failed Arg of Per Calc');
         }
+      } else {// console.log('Failed Arg of Per Calc');
+      }
 
       if (argPerCalcResults === 5) {
         i += 5 * 10; // Change ArgPer faster
@@ -1643,8 +1664,8 @@ satellite.getOrbitByLatLon = (sat, goalLat, goalLon, upOrDown, propOffset, goalA
             // If Object is moving opposite of the goal direction (upOrDown)
             j = j + 20; // Move 2 Degrees ahead in the orbit to prevent being close on the next lattiude check
           } else {
-              break; // Stop changing the Mean Anomaly
-            }
+            break; // Stop changing the Mean Anomaly
+          }
         }
 
         if (meanACalcResults === 5) {
@@ -1696,8 +1717,8 @@ satellite.calculateLookAngles = (sat, sensor, propOffset) => {
       sensor.observerGd = {
         // Array to calculate look angles in propagate()
         lat: sensor.lat * DEG2RAD,
-        lon: sensor.long * DEG2RAD,
-        alt: parseFloat(sensor.obshei)
+        lon: sensor.lon * DEG2RAD,
+        alt: parseFloat(sensor.alt)
       };
     }
 
@@ -1812,8 +1833,8 @@ satellite.findBestPass = (sat, sensor, propOffset) => {
       sensor.observerGd = {
         // Array to calculate look angles in propagate()
         lat: sensor.lat * DEG2RAD,
-        lon: sensor.long * DEG2RAD,
-        alt: parseFloat(sensor.obshei)
+        lon: sensor.lon * DEG2RAD,
+        alt: parseFloat(sensor.alt)
       };
     }
 
@@ -2004,7 +2025,7 @@ satellite.genMlData = {};
 /* istanbul ignore next */
 
 satellite.genMlData.eci2inc = (start, stop) => {
-  var startTime = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime();
+  var startTime = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime();
   var trainData = [];
   var trainTarget = [];
   var testData = [];
@@ -2072,7 +2093,7 @@ satellite.genMlData.eci2inc = (start, stop) => {
 
 
 satellite.genMlData.tlePredict = (start, stop) => {
-  var startTime = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime();
+  var startTime = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime();
   var satEciDataArray = [];
   var satEciData = []; //   let propLength = 1000 * 60 * 1440; //ms
 
@@ -2185,7 +2206,7 @@ satellite.findClosestApproachTime = (sat1, sat2, propOffset, propLength) => {
 
   for (var t = 0; t < propLength; t++) {
     var propTempOffset = propOffset + t * 1000;
-    var now = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propTempOffset, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
+    var now = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propTempOffset, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
     var sat1Pos = satellite.getEci(sat1, now);
     var sat2Pos = satellite.getEci(sat2, now);
     var distance = Math.sqrt((sat1Pos.position.x - sat2Pos.position.x) ** 2 + (sat1Pos.position.y - sat2Pos.position.y) ** 2 + (sat1Pos.position.z - sat2Pos.position.z) ** 2);
@@ -2229,14 +2250,14 @@ satellite.createManeuverAnalyst = (satId, incVariation, meanmoVariation, rascVar
   launchLon = satellite.degreesLong(TEARR.lon);
   alt = TEARR.alt;
   var upOrDown = mainsat.getDirection();
-  var currentEpoch = satellite.currentEpoch(_app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime());
+  var currentEpoch = satellite.currentEpoch(_app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime());
   mainsat.TLE1 = mainsat.TLE1.substr(0, 18) + currentEpoch[0] + currentEpoch[1] + mainsat.TLE1.substr(32);
   var TLEs; // Ignore argument of perigee for round orbits OPTIMIZE
 
   if (mainsat.apogee - mainsat.perigee < 300) {
-    TLEs = satellite.getOrbitByLatLon(mainsat, launchLat, launchLon, upOrDown, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propOffset);
+    TLEs = satellite.getOrbitByLatLon(mainsat, launchLat, launchLon, upOrDown, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propOffset);
   } else {
-    TLEs = satellite.getOrbitByLatLon(mainsat, launchLat, launchLon, upOrDown, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propOffset, alt);
+    TLEs = satellite.getOrbitByLatLon(mainsat, launchLat, launchLon, upOrDown, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propOffset, alt);
   }
 
   var TLE1 = TLEs[0];
@@ -2249,9 +2270,9 @@ satellite.createManeuverAnalyst = (satId, incVariation, meanmoVariation, rascVar
   var iTLEs; // Ignore argument of perigee for round orbits OPTIMIZE
 
   if (sat.apogee - sat.perigee < 300) {
-    iTLEs = satellite.getOrbitByLatLon(sat, launchLat, launchLon, upOrDown, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propOffset, 0, rascVariation);
+    iTLEs = satellite.getOrbitByLatLon(sat, launchLat, launchLon, upOrDown, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propOffset, 0, rascVariation);
   } else {
-    iTLEs = satellite.getOrbitByLatLon(sat, launchLat, launchLon, upOrDown, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propOffset, alt, rascVariation);
+    iTLEs = satellite.getOrbitByLatLon(sat, launchLat, launchLon, upOrDown, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propOffset, alt, rascVariation);
   }
 
   iTLE1 = iTLEs[0];
@@ -2290,7 +2311,7 @@ satellite.createManeuverAnalyst = (satId, incVariation, meanmoVariation, rascVar
   sat.TLE2 = iTLE2;
   sat.active = true;
 
-  if (satellite.altitudeCheck(iTLE1, iTLE2, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propOffset) > 1) {
+  if (satellite.altitudeCheck(iTLE1, iTLE2, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propOffset) > 1) {
     satCruncher.postMessage({
       typ: 'satEdit',
       id: satId,
@@ -2370,7 +2391,7 @@ satellite.getDOPsTable = (lat, lon, alt) => {
     tbl.innerHTML = ''; // Clear the table from old object data
     // let tblLength = 0;
 
-    var propOffset = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset();
+    var propOffset = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset();
     var propTempOffset = 0;
     var tr = tbl.insertRow();
     var tdT = tr.insertCell();
@@ -2385,7 +2406,7 @@ satellite.getDOPsTable = (lat, lon, alt) => {
     for (var t = 0; t < 1440; t++) {
       propTempOffset = t * 1000 * 60 + propOffset; // Offset in seconds (msec * 1000)
 
-      now = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propTempOffset, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
+      now = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propTempOffset, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
       var dops = satellite.getDOPs(lat, lon, alt, now);
       tr = tbl.insertRow();
       tdT = tr.insertCell();
@@ -2428,8 +2449,8 @@ satellite.getDOPs = (lat, lon, alt, propTime) => {
       groupsManager.GPSGroup = groupsManager.createGroup('nameRegex', /NAV[S\u017F]TAR/i);
     }
 
-    if (typeof propTime == 'undefined') propTime = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime();
-    var j = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(propTime.getUTCFullYear(), propTime.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
+    if (typeof propTime == 'undefined') propTime = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime();
+    var j = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(propTime.getUTCFullYear(), propTime.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
     propTime.getUTCDate(), propTime.getUTCHours(), propTime.getUTCMinutes(), propTime.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
 
     j += propTime.getUTCMilliseconds() * 1.15741e-8;
@@ -2445,7 +2466,7 @@ satellite.getDOPs = (lat, lon, alt, propTime) => {
       sat.az = lookAngles.az * RAD2DEG;
       sat.el = lookAngles.el * RAD2DEG;
 
-      if (sat.el > _app_js_settingsManager_settingsManager_js__WEBPACK_IMPORTED_MODULE_5__.settingsManager.gpselMask) {
+      if (sat.el > settingsManager.gpsElevationMask) {
         inViewList.push(sat);
       }
     }
@@ -2557,9 +2578,9 @@ satellite.getSunTimes = (sat, sensor, searchLength, interval) => {
   if (typeof sensor.observerGd == 'undefined') {
     try {
       sensor.observerGd = {
-        alt: sensor.obshei,
+        alt: sensor.alt,
         lat: sensor.lat,
-        lon: sensor.long
+        lon: sensor.lon
       };
     } catch (e) {
       throw 'observerGd is not set and could not be guessed.';
@@ -2569,7 +2590,7 @@ satellite.getSunTimes = (sat, sensor, searchLength, interval) => {
 
   if (typeof searchLength == 'undefined') searchLength = satellite.lookanglesLength;
   if (typeof interval == 'undefined') interval = satellite.lookanglesInterval;
-  var propOffset = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset();
+  var propOffset = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset();
   var propTempOffset = 0;
   var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
 
@@ -2579,8 +2600,8 @@ satellite.getSunTimes = (sat, sensor, searchLength, interval) => {
     // 5second Looks
     propTempOffset = i * 1000 + propOffset; // Offset in seconds (msec * 1000)
 
-    var now = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propTempOffset, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
-    var j = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
+    var now = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propTempOffset, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
+    var j = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
     now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
 
     j += now.getUTCMilliseconds() * MILLISECONDS_PER_DAY;
@@ -2654,8 +2675,8 @@ satellite.lookAnglesToEcf = (azDeg, elDeg, slantrng, obsLat, obsLong, obsAlt) =>
 
 
 satellite.eci2ll = (x, y, z) => {
-  var propTime = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime();
-  var j = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(propTime.getUTCFullYear(), propTime.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
+  var propTime = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime();
+  var j = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(propTime.getUTCFullYear(), propTime.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
   propTime.getUTCDate(), propTime.getUTCHours(), propTime.getUTCMinutes(), propTime.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
 
   j += propTime.getUTCMilliseconds() * 1.15741e-8;
@@ -2675,14 +2696,14 @@ satellite.eci2ll = (x, y, z) => {
 
 satellite.map = (sat, i) => {
   // Set default timing settings. These will be changed to find look angles at different times in future.
-  var propOffset = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset();
+  var propOffset = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.getPropOffset();
   var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
 
   var propTempOffset = i * sat.period / 50 * 60 * 1000 + propOffset; // Offset in seconds (msec * 1000)
 
   var propagate = (propOffset, satrec) => {
-    var now = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propOffset, _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
-    var j = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
+    var now = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTimeCheck(propOffset, _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propRealTime);
+    var j = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
     now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
 
     j += now.getUTCMilliseconds() * MILLISECONDS_PER_DAY;
@@ -2727,7 +2748,7 @@ satellite.map = (sat, i) => {
 satellite.calculateSensorPos = sensor => {
   sensor = sensor || sensorManager.currentSensor;
   if (typeof sensor == 'undefined') return;
-  var now = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime();
+  var now = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_6__.timeManager.propTime();
 
   var jday = (year, mon, day, hr, minute, sec) => 367.0 * year - Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) + Math.floor(275 * mon / 9.0) + day + 1721013.5 + ((sec / 60.0 + minute) / 60.0 + hr) / 24.0; //  ut in days
 
@@ -2739,15 +2760,15 @@ satellite.calculateSensorPos = sensor => {
   var gmst = satellite.gstime(j);
   var cosLat = Math.cos(sensor.lat * DEG2RAD);
   var sinLat = Math.sin(sensor.lat * DEG2RAD);
-  var cosLon = Math.cos(sensor.long * DEG2RAD + gmst);
-  var sinLon = Math.sin(sensor.long * DEG2RAD + gmst);
+  var cosLon = Math.cos(sensor.lon * DEG2RAD + gmst);
+  var sinLon = Math.sin(sensor.lon * DEG2RAD + gmst);
   var pos = {};
   pos.x = (_app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__.RADIUS_OF_EARTH + _app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__.PLANETARIUM_DIST) * cosLat * cosLon;
   pos.y = (_app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__.RADIUS_OF_EARTH + _app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__.PLANETARIUM_DIST) * cosLat * sinLon;
   pos.z = (_app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__.RADIUS_OF_EARTH + _app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__.PLANETARIUM_DIST) * sinLat;
   pos.gmst = gmst;
   pos.lat = sensor.lat;
-  pos.long = sensor.long;
+  pos.lon = sensor.lon;
   return pos;
 }; // function _Nearest180(arr) {
 //     let maxDiff = null;
@@ -2787,10 +2808,10 @@ window.satellite = satellite;
 
 /***/ }),
 
-/***/ "./src/js/sensorManager/sensorList.js":
-/*!********************************************!*\
-  !*** ./src/js/sensorManager/sensorList.js ***!
-  \********************************************/
+/***/ "./src/js/plugins/sensor/sensorList.js":
+/*!*********************************************!*\
+  !*** ./src/js/plugins/sensor/sensorList.js ***!
+  \*********************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2804,8 +2825,8 @@ sensorList.COD = {
   shortName: 'COD',
   type: 'Phased Array Radar',
   lat: 41.754785,
-  long: -70.539151,
-  obshei: 0.060966,
+  lon: -70.539151,
+  alt: 0.060966,
   obsminaz: 347,
   obsmaxaz: 227,
   obsminel: 3,
@@ -2828,8 +2849,8 @@ sensorList.BLE = {
   shortName: 'BLE',
   type: 'Phased Array Radar',
   lat: 39.136064,
-  long: -121.351237,
-  obshei: 0.112,
+  lon: -121.351237,
+  alt: 0.112,
   // Open Street Maps
   obsminaz: 126,
   obsmaxaz: 6,
@@ -2851,8 +2872,8 @@ sensorList.CLR = {
   shortName: 'CLR',
   type: 'Phased Array Radar',
   lat: 64.290556,
-  long: -149.186944,
-  obshei: 0.175,
+  lon: -149.186944,
+  alt: 0.175,
   // Open Street Maps
   obsminaz: 184,
   obsmaxaz: 64,
@@ -2874,8 +2895,8 @@ sensorList.EGL = {
   shortName: 'EGL',
   type: 'Phased Array Radar',
   lat: 30.572411,
-  long: -86.214836,
-  obshei: 0.039,
+  lon: -86.214836,
+  alt: 0.039,
   // Open Street Maps
   obsminaz: 120,
   obsmaxaz: 240,
@@ -2896,8 +2917,8 @@ sensorList.FYL = {
   shortName: 'FYL',
   type: 'Phased Array Radar',
   lat: 54.361758,
-  long: -0.670051,
-  obshei: 0.26,
+  lon: -0.670051,
+  alt: 0.26,
   // Open Street Maps
   obsminaz: 0,
   obsmaxaz: 360,
@@ -2919,8 +2940,8 @@ sensorList.CAV = {
   shortName: 'CAV',
   type: 'Phased Array Radar',
   lat: 48.724567,
-  long: -97.899755,
-  obshei: 0.352,
+  lon: -97.899755,
+  alt: 0.352,
   // Open Street Maps
   obsminaz: 298,
   obsmaxaz: 78,
@@ -2943,8 +2964,8 @@ sensorList.THL = {
   shortName: 'THL',
   type: 'Phased Array Radar',
   lat: 76.570322,
-  long: -68.299211,
-  obshei: 0.392,
+  lon: -68.299211,
+  alt: 0.392,
   // Open Street Maps
   obsminaz: 297,
   obsmaxaz: 177,
@@ -2967,8 +2988,8 @@ sensorList.CDN = {
   shortName: 'CDN',
   type: 'Phased Array Radar',
   lat: 52.737,
-  long: 174.092,
-  obshei: 0.066,
+  lon: 174.092,
+  alt: 0.066,
   // Open Street Maps
   obsminaz: 259,
   obsmaxaz: 19,
@@ -2994,8 +3015,8 @@ sensorList.ALT = {
   shortName: 'ALT',
   type: 'Mechanical',
   lat: 8.716667,
-  long: 167.733333,
-  obshei: 0,
+  lon: 167.733333,
+  alt: 0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 1,
@@ -3015,8 +3036,8 @@ sensorList.MMW = {
   shortName: 'MMW',
   type: 'Mechanical',
   lat: 8.756668,
-  long: 167.773334,
-  obshei: 0,
+  lon: 167.773334,
+  alt: 0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 1,
@@ -3036,8 +3057,8 @@ sensorList.ALC = {
   shortName: 'ALC',
   type: 'Mechanical',
   lat: 8.716668,
-  long: 167.773334,
-  obshei: 0,
+  lon: 167.773334,
+  alt: 0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 1,
@@ -3057,8 +3078,8 @@ sensorList.TDX = {
   shortName: 'TDX',
   type: 'Mechanical',
   lat: 8.756668,
-  long: 167.733334,
-  obshei: 0,
+  lon: 167.733334,
+  alt: 0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 1,
@@ -3078,8 +3099,8 @@ sensorList.MIL = {
   shortName: 'MIL',
   type: 'Mechanical',
   lat: 42.6233,
-  long: -71.4882,
-  obshei: 0.131,
+  lon: -71.4882,
+  alt: 0.131,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 1,
@@ -3097,8 +3118,8 @@ sensorList.DGC = {
   shortName: 'DGC',
   type: 'Optical',
   lat: -7.29648,
-  long: 72.390153,
-  obshei: 0.0,
+  lon: 72.390153,
+  alt: 0.0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 20,
@@ -3116,8 +3137,8 @@ sensorList.MAU = {
   shortName: 'MAU',
   type: 'Optical',
   lat: 20.70835,
-  long: -156.257595,
-  obshei: 3.0,
+  lon: -156.257595,
+  alt: 3.0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 20,
@@ -3135,8 +3156,8 @@ sensorList.SOC = {
   shortName: 'SOC',
   type: 'Optical',
   lat: 33.817233,
-  long: -106.659961,
-  obshei: 1.24,
+  lon: -106.659961,
+  alt: 1.24,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 20,
@@ -3154,8 +3175,8 @@ sensorList.ASC = {
   shortName: 'ASC',
   type: 'Mechanical',
   lat: -7.969444,
-  long: -14.393889,
-  obshei: 0.0,
+  lon: -14.393889,
+  alt: 0.0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 1,
@@ -3173,8 +3194,8 @@ sensorList.GLB = {
   shortName: 'GLB',
   type: 'Mechanical',
   lat: 70.3671,
-  long: 31.1271,
-  obshei: 0.0,
+  lon: 31.1271,
+  alt: 0.0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 1,
@@ -3192,8 +3213,8 @@ sensorList.HOL = {
   shortName: 'HOL',
   type: 'Mechanical',
   lat: -21.816195,
-  long: 114.165637,
-  obshei: 0.0,
+  lon: 114.165637,
+  alt: 0.0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 1,
@@ -3214,8 +3235,8 @@ sensorList.HAR = {
   shortName: 'HAR',
   type: 'Phased Array Radar',
   lat: 30.995807,
-  long: 34.496062,
-  obshei: 0.173,
+  lon: 34.496062,
+  alt: 0.173,
   obsminaz: 5,
   obsmaxaz: 125,
   obsminel: 5,
@@ -3233,8 +3254,8 @@ sensorList.QTR = {
   shortName: 'QTR',
   type: 'Phased Array Radar',
   lat: 25.31598,
-  long: 51.146515,
-  obshei: 0.01,
+  lon: 51.146515,
+  alt: 0.01,
   obsminaz: 335,
   obsmaxaz: 95,
   obsminel: 0,
@@ -3252,8 +3273,8 @@ sensorList.KUR = {
   shortName: 'KUR',
   type: 'Phased Array Radar',
   lat: 38.349444,
-  long: 37.793611,
-  obshei: 1.969,
+  lon: 37.793611,
+  alt: 1.969,
   obsminaz: 40,
   obsmaxaz: 160,
   obsminel: 0,
@@ -3271,8 +3292,8 @@ sensorList.SHA = {
   shortName: 'SHA',
   type: 'Phased Array Radar',
   lat: 40.88809,
-  long: 140.337698,
-  obshei: 0.01,
+  lon: 140.337698,
+  alt: 0.01,
   obsminaz: 230,
   obsmaxaz: 350,
   obsminel: 0,
@@ -3290,8 +3311,8 @@ sensorList.KCS = {
   shortName: 'KCS',
   type: 'Phased Array Radar',
   lat: 35.766667,
-  long: 135.195278,
-  obshei: 0.01,
+  lon: 135.195278,
+  alt: 0.01,
   obsminaz: 210,
   obsmaxaz: 330,
   obsminel: 0,
@@ -3309,8 +3330,8 @@ sensorList.SBX = {
   shortName: 'SBX',
   type: 'Phased Array Radar',
   lat: 36.5012,
-  long: 169.6941,
-  obshei: 0.0,
+  lon: 169.6941,
+  alt: 0.0,
   obsminaz: 275,
   obsmaxaz: 300,
   obsminel: 0,
@@ -3331,8 +3352,8 @@ sensorList.MSR = {
   shortName: 'MSR',
   type: 'Phased Array Radar',
   lat: 31.9643,
-  long: -103.233245,
-  obshei: 0.855,
+  lon: -103.233245,
+  alt: 0.855,
   obsminaz: 70,
   obsmaxaz: 72,
   obsminel: 30,
@@ -3358,8 +3379,8 @@ sensorList.PFISR = {
   shortName: 'PFISR',
   type: 'Phased Array Radar',
   lat: 65.130029,
-  long: -147.470992,
-  obshei: 0.23,
+  lon: -147.470992,
+  alt: 0.23,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 45,
@@ -3378,8 +3399,8 @@ sensorList.KSR = {
   shortName: 'KSR',
   type: 'Phased Array Radar',
   lat: -45.038725,
-  long: 170.095673,
-  obshei: 0.0,
+  lon: 170.095673,
+  alt: 0.0,
   obsminaz: 269,
   obsmaxaz: 271,
   obsminel: 20,
@@ -3406,8 +3427,8 @@ sensorList.GRV = {
   shortName: 'GRV',
   type: 'Phased Array',
   lat: 47.347778,
-  long: 5.51638,
-  obshei: 0.0,
+  lon: 5.51638,
+  alt: 0.0,
   obsminaz: 90,
   obsmaxaz: 270,
   obsminel: 20,
@@ -3426,8 +3447,8 @@ sensorList.TIR = {
   shortName: 'TIR',
   type: 'Mechanical',
   lat: 50.6166,
-  long: 7.1296,
-  obshei: 0.0,
+  lon: 7.1296,
+  alt: 0.0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 1.5,
@@ -3447,8 +3468,8 @@ sensorList.NRC = {
   shortName: 'NRC',
   type: 'Bistatic Radio Telescope',
   lat: 44.5208,
-  long: 11.6469,
-  obshei: 0.025,
+  lon: 11.6469,
+  alt: 0.025,
   obsminaz: 89.1,
   obsmaxaz: 90.9,
   obsminel: 45,
@@ -3472,8 +3493,8 @@ sensorList.TRO = {
   shortName: 'TRO',
   type: 'Optical',
   lat: 34.912778,
-  long: 32.883889,
-  obshei: 0,
+  lon: 32.883889,
+  alt: 0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 10,
@@ -3491,8 +3512,8 @@ sensorList.SDT = {
   shortName: 'SDT',
   type: 'Optical',
   lat: 28.3,
-  long: -16.5097,
-  obshei: 0,
+  lon: -16.5097,
+  alt: 0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 10,
@@ -3513,8 +3534,8 @@ sensorList.ARM = {
   shortName: 'ARM',
   type: 'Phased Array Radar',
   lat: 44.925106,
-  long: 40.983894,
-  obshei: 0.0,
+  lon: 40.983894,
+  alt: 0.0,
   obsminaz: 55,
   // All Information via russianforces.org
   obsmaxaz: 295,
@@ -3532,8 +3553,8 @@ sensorList.BAL = {
   shortName: 'BAL',
   type: 'Phased Array Radar',
   lat: 46.603076,
-  long: 74.530985,
-  obshei: 0.0,
+  lon: 74.530985,
+  alt: 0.0,
   obsminaz: 91,
   // All Information via russianforces.org
   obsmaxaz: 151,
@@ -3551,8 +3572,8 @@ sensorList.GAN = {
   shortName: 'GAN',
   type: 'Phased Array Radar',
   lat: 52.85,
-  long: 26.48,
-  obshei: 0.0,
+  lon: 26.48,
+  alt: 0.0,
   obsminaz: 190,
   // All Information via russianforces.org
   obsmaxaz: 310,
@@ -3570,8 +3591,8 @@ sensorList.LEK = {
   shortName: 'LEK',
   type: 'Phased Array Radar',
   lat: 60.275458,
-  long: 30.546017,
-  obshei: 0.0,
+  lon: 30.546017,
+  alt: 0.0,
   obsminaz: 245,
   obsmaxaz: 355,
   obsminel: 2,
@@ -3588,8 +3609,8 @@ sensorList.MIS = {
   shortName: 'MIS',
   type: 'Phased Array Radar',
   lat: 52.8555,
-  long: 103.2317,
-  obshei: 0.0,
+  lon: 103.2317,
+  alt: 0.0,
   obsminaz: 41,
   // All Information via russianforces.org
   obsmaxaz: 219,
@@ -3607,8 +3628,8 @@ sensorList.OLE = {
   shortName: 'OLE',
   type: 'Phased Array Radar',
   lat: 68.1141,
-  long: 33.9102,
-  obshei: 0.0,
+  lon: 33.9102,
+  alt: 0.0,
   obsminaz: 280,
   // All Information via russianforces.org
   obsmaxaz: 340,
@@ -3626,8 +3647,8 @@ sensorList.PEC = {
   shortName: 'PEC',
   type: 'Phased Array Radar',
   lat: 65.21,
-  long: 57.295,
-  obshei: 0.0,
+  lon: 57.295,
+  alt: 0.0,
   obsminaz: 305,
   // All Information via russianforces.org
   obsmaxaz: 55,
@@ -3645,8 +3666,8 @@ sensorList.PIO = {
   shortName: 'PIO',
   type: 'Phased Array Radar',
   lat: 54.857294,
-  long: 20.18235,
-  obshei: 0.0,
+  lon: 20.18235,
+  alt: 0.0,
   obsminaz: 187.5,
   // All Information via russianforces.org
   obsmaxaz: 292.5,
@@ -3664,8 +3685,8 @@ sensorList.XUA = {
   shortName: 'XUA',
   type: 'Phased Array Radar',
   lat: 40.446944,
-  long: 115.116389,
-  obshei: 1.6,
+  lon: 115.116389,
+  alt: 1.6,
   obsminaz: 300,
   // Information via global ssa sensors amos 2010.pdf (sinodefence.com/special/airdefense/project640.asp)
   obsmaxaz: 60,
@@ -3688,8 +3709,8 @@ sensorList.MLS = {
   shortName: 'MLS',
   type: 'Optical',
   lat: 32.442,
-  long: -110.789,
-  obshei: 2.791,
+  lon: -110.789,
+  alt: 2.791,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 10,
@@ -3706,8 +3727,8 @@ sensorList.PMO = {
   shortName: 'PMO',
   type: 'Optical',
   lat: 32.064946,
-  long: 118.829677,
-  obshei: 0.267,
+  lon: 118.829677,
+  alt: 0.267,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 10,
@@ -3724,8 +3745,8 @@ sensorList.PO = {
   shortName: 'PO',
   type: 'Optical',
   lat: 33.3564,
-  long: -116.865,
-  obshei: 1.712,
+  lon: -116.865,
+  alt: 1.712,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 10,
@@ -3742,8 +3763,8 @@ sensorList.LSO = {
   shortName: 'LSO',
   type: 'Optical',
   lat: 37.9839,
-  long: -2.5644,
-  obshei: 0,
+  lon: -2.5644,
+  alt: 0,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 10,
@@ -3761,8 +3782,8 @@ sensorList.MAY = {
   shortName: 'MAY',
   type: 'Optical',
   lat: 32.9039,
-  long: -105.5289,
-  obshei: 2.225,
+  lon: -105.5289,
+  alt: 2.225,
   obsminaz: 0,
   obsmaxaz: 360,
   obsminel: 10,
@@ -3779,8 +3800,8 @@ sensorList.TAI = {
   shortName: 'TAI',
   type: 'Phased Array Radar',
   lat: 24.499,
-  long: 121.072,
-  obshei: 0.060966,
+  lon: 121.072,
+  alt: 0.060966,
   // Find accurate altitude
   obsminaz: 180,
   obsmaxaz: 60,
@@ -3797,1058 +3818,6 @@ sensorList.TAI = {
   sun: 'No Impact',
   volume: false
 };
-
-
-/***/ }),
-
-/***/ "./src/js/settingsManager/settingsManager.js":
-/*!***************************************************!*\
-  !*** ./src/js/settingsManager/settingsManager.js ***!
-  \***************************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "db": () => (/* binding */ db),
-/* harmony export */   "settingsManager": () => (/* binding */ settingsManager)
-/* harmony export */ });
-/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
-/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(jquery__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @app/js/lib/constants.js */ "./src/js/lib/constants.js");
-/* harmony import */ var _app_js_settingsManager_version_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @app/js/settingsManager/version.js */ "./src/js/settingsManager/version.js");
-/* harmony import */ var _app_js_settingsManager_versionDate_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @app/js/settingsManager/versionDate.js */ "./src/js/settingsManager/versionDate.js");
-/**
-// /////////////////////////////////////////////////////////////////////////////
-
-Copyright (C) 2016-2021 Theodore Kruczek
-Copyright (C) 2020 Heather Kruczek
-
-This program is free software: you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-// /////////////////////////////////////////////////////////////////////////////
-*/
-
-/*global gremlins, randomizer*/
-
-
-
- // Settings Manager Setup
-
-var settingsManager = {};
-var db = {};
-
-settingsManager.init = () => {
-  //  Version Control
-  settingsManager.versionNumber = _app_js_settingsManager_version_js__WEBPACK_IMPORTED_MODULE_2__.VERSION;
-  settingsManager.versionDate = _app_js_settingsManager_versionDate_js__WEBPACK_IMPORTED_MODULE_3__.VERSION_DATE;
-  settingsManager.pTime = []; // Install Folder Settings
-
-  {
-    switch (window.location.host) {
-      case 'keeptrack.space':
-      case 'www.keeptrack.space':
-        settingsManager.installDirectory = '/';
-        settingsManager.isOfficialWebsite = true;
-        break;
-
-      case 'localhost':
-      case '10.0.0.34':
-        // Is node running? This must be some kind of test
-        if (typeof process !== 'undefined') {
-          settingsManager.installDirectory = 'http://127.0.0.1:8080/';
-        } else {
-          // Comment Out the Next Two Lines if you are testing on a local server
-          // and have the keeptrack files installed in a subdirectory
-          settingsManager.installDirectory = '/'; // settingsManager.offline = true;
-
-          settingsManager.breakTheLaw = true;
-        }
-
-        break;
-
-      case 'thkruz.github.io':
-      case 'www.thkruz.github.io':
-        settingsManager.installDirectory = '/keeptrack.space/';
-        break;
-
-      case '':
-        settingsManager.offline = true;
-        settingsManager.breakTheLaw = true;
-        settingsManager.installDirectory = './';
-        break;
-
-      default:
-        settingsManager.installDirectory = '/';
-        break;
-    }
-
-    if (typeof settingsManager.installDirectory == 'undefined') {
-      // Put Your Custom Install Directory Here
-      settingsManager.installDirectory = '/';
-    }
-  }
-  settingsManager.lowPerf = false;
-
-  if (window.location.hostname === 'keeptrack.space' || window.location.hostname === 'localhost' || window.location.hostname === 'thkruz.github.io') {
-    settingsManager.unofficial = false;
-  } else {
-    settingsManager.unofficial = true;
-  } // //////////////////////////////////////////////////////////////////////////
-  // Most Commonly Used Settings
-  // //////////////////////////////////////////////////////////////////////////
-  // This needed to be increased to support large number of CSpOC sensors
-
-
-  settingsManager.maxFieldOfViewMarkers = 500000;
-  settingsManager.maxMissiles = 500;
-  settingsManager.maxAnalystSats = 256; // Enable/Disable gs.json catalog Information
-
-  settingsManager.isEnableGsCatalog = true; // Enable/Disable radarData Information
-
-  settingsManager.isEnableRadarData = false;
-  settingsManager.maxRadarData = 1; // 70000;
-  // Adjust to change camera speed of auto rotate around earth
-
-  settingsManager.autoRotateSpeed = 1.0 * 0.000075; // Disable main user interface. Currently an all or nothing package.
-
-  settingsManager.disableUI = false; // Currently only disables panning. In the future it will disable all camera
-  // movement
-
-  settingsManager.disableCameraControls = false; // Disable normal browser events from keyboard/mouse
-
-  settingsManager.disableNormalEvents = false; // Disable Scrolling the Window Object
-
-  settingsManager.disableWindowScroll = true; // Disable Zoom Keyboard Keys
-
-  settingsManager.disableZoomControls = true; // Disable Touch Move Causing Drag Errors on Desktop
-
-  settingsManager.disableWindowTouchMove = true; // Enable limited UI features
-
-  settingsManager.enableLimitedUI = false; // Allows canvas will steal focus on load
-
-  settingsManager.startWithFocus = false; // Shows an overlay with object information
-
-  settingsManager.enableHoverOverlay = true; // Shows the oribt of the object when highlighted
-
-  settingsManager.enableHoverOrbits = true; // Updates Orbit of selected satellite on every draw.
-  // Performance hit, but makes it clear what direction the satellite is going
-
-  settingsManager.enableConstantSelectedSatRedraw = true; // How much an orbit fades over time
-
-  settingsManager.orbitFadeFactor = 0.6; // 1.0 == No Fade
-  // Automatically display all of the orbits
-
-  settingsManager.startWithOrbitsDisplayed = false; // Maximum orbits allowed on fullsize screens
-
-  settingsManager.maxOribtsDisplayedDesktop = 100000; // Maximum orbits allowed on smaller screens
-
-  settingsManager.maxOrbitsDisplayedMobile = 1500; // Canvas will autoresize on screen resize to width/height of window
-
-  settingsManager.isAutoResizeCanvas = true; // Changing the zoom with the mouse wheel will stop the camera from following
-  // the satellite.
-
-  settingsManager.isZoomStopsSnappedOnSat = false; // How many draw calls to wait before updating orbit overlay if last draw
-  // time was greater than 20ms
-
-  settingsManager.updateHoverDelayLimitSmall = 3; // How many draw calls to wait before updating orbit overlay if last draw
-  // time was greater than 50ms
-
-  settingsManager.updateHoverDelayLimitBig = 5;
-  settingsManager.fieldOfViewMin = 0.04; // 4 Degrees (I think)
-
-  settingsManager.fieldOfViewMax = 1.2; // 120 Degrees (I think)
-
-  settingsManager.minZoomDistance = 6800;
-  settingsManager.maxZoomDistance = 120000; // Minimum fps or sun/moon/atmosphere are skipped
-
-  settingsManager.fpsThrottle1 = 0; // Minimum fps or satellite velocities are ignored
-
-  settingsManager.fpsThrottle2 = 10;
-  settingsManager.timeMachineDelay = 5000; // settingsManager.earthPanningBufferDistance = 100 // Needs work in main.js
-  // Use to Override TLE Settings
-  // settingsManager.tleSource = settingsManager.installDirectory + 'tle/TLEdebris.json'
-  // Use these to default smallest resolution maps and limited "extras" like
-  // the atmosphere and sun. Really useful on small screens and for faster
-  // loading times
-  // settingsManager.isDrawLess = true;
-  // settingsManager.smallImages = true;
-  // //////////////////////////////////////////////////////////////////////////
-  // Mobile Settings
-  // //////////////////////////////////////////////////////////////////////////
-
-  settingsManager.desktopMinimumWidth = 1300;
-  settingsManager.isMobileModeEnabled = false;
-
-  if (window.innerWidth <= settingsManager.desktopMinimumWidth) {
-    settingsManager.disableWindowTouchMove = false;
-    settingsManager.isMobileModeEnabled = true;
-    settingsManager.maxFieldOfViewMarkers = 20000; // settingsManager.smallImages = true;
-
-    settingsManager.isDrawLess = true;
-    settingsManager.noMeshManager = true;
-    settingsManager.camDistBuffer = 100;
-  } // //////////////////////////////////////////////////////////////////////////
-  // Shader Settings
-  // //////////////////////////////////////////////////////////////////////////
-
-
-  settingsManager.showOrbitThroughEarth = false;
-  settingsManager.earthNumLatSegs = 64;
-  settingsManager.earthNumLonSegs = 64;
-  settingsManager.atmospherelatSegs = 64;
-  settingsManager.atmospherelonSegs = 64;
-  settingsManager.atmosphereSize = _app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__.RADIUS_OF_EARTH + 250;
-  settingsManager.atmosphereColor = 'vec3(0.35,0.8,1.0)';
-  settingsManager.satShader = {};
-  settingsManager.satShader.largeObjectMinZoom = 0.37;
-  settingsManager.satShader.largeObjectMaxZoom = 0.58;
-  settingsManager.satShader.minSize = 5.5;
-  settingsManager.satShader.minSizePlanetarium = 20.0;
-  settingsManager.satShader.maxSizePlanetarium = 20.0; // Max size dynamically changes based on zoom level
-
-  settingsManager.satShader.maxAllowedSize = 35.0;
-  settingsManager.satShader.isUseDynamicSizing = false;
-  settingsManager.satShader.dynamicSizeScalar = 1.0;
-  settingsManager.satShader.starSize = '20.0'; // Has to be a string
-  // NOTE: Use floats not integers because some settings get sent to graphics card
-  // Must be a string for GPU to read.
-
-  settingsManager.satShader.distanceBeforeGrow = '14000.0'; // Km allowed before grow
-  // Used for Satellites
-
-  settingsManager.satShader.blurFactor1 = '0.53';
-  settingsManager.satShader.blurFactor2 = '0.5'; // Used for Stars
-
-  settingsManager.satShader.blurFactor3 = '0.43';
-  settingsManager.satShader.blurFactor4 = '0.25'; // //////////////////////////////////////////////////////////////////////////
-  // Embed Overrides - FOR TESTING ONLY
-  // //////////////////////////////////////////////////////////////////////////
-
-  var pageName = location.href.split('/').slice(-1);
-  pageName = pageName[0].split('?').slice(0);
-
-  if (pageName[0] == 'embed.html') {
-    settingsManager.disableUI = true;
-    settingsManager.enableLimitedUI = true;
-    settingsManager.startWithOrbitsDisplayed = true;
-    settingsManager.isAutoResizeCanvas = true;
-    settingsManager.enableHoverOverlay = true;
-    settingsManager.enableHoverOrbits = true;
-    settingsManager.isDrawLess = true;
-    settingsManager.smallImages = true;
-    settingsManager.hiresNoCloudsImages = false;
-    settingsManager.tleSource = 'tle/TLEdebris.json';
-    settingsManager.updateHoverDelayLimitSmall = 25;
-    settingsManager.updateHoverDelayLimitBig = 45;
-  } // //////////////////////////////////////////////////////////////////////////
-  // GPU Powered Math from gpu.js
-  // //////////////////////////////////////////////////////////////////////////
-
-
-  settingsManager.gpujsMode = 'webgl'; // settingsManager.gpujsMode = 'dev';
-  // settingsManager.gpujsMode = 'cpu';
-  // //////////////////////////////////////////////////////////////////////////
-  // Map settings
-  // //////////////////////////////////////////////////////////////////////////
-  // settingsManager.smallImages = false;
-
-  settingsManager.nasaImages = false;
-  settingsManager.blueImages = false;
-  settingsManager.lowresImages = false;
-  settingsManager.hiresImages = false;
-  settingsManager.hiresNoCloudsImages = false;
-  settingsManager.vectorImages = false;
-  settingsManager.isLoadLastMap = true;
-
-  if (settingsManager.disableUI) {
-    settingsManager.isLoadLastMap = false;
-  } // //////////////////////////////////////////////////////////////////////////
-  // Color Settings
-  // //////////////////////////////////////////////////////////////////////////
-
-
-  settingsManager.currentColorScheme = null;
-
-  settingsManager.setCurrentColorScheme = val => {
-    settingsManager.currentColorScheme = val;
-  };
-
-  settingsManager.hoverColor = [1.0, 1.0, 0.0, 1.0]; // Yellow
-
-  settingsManager.selectedColor = [1.0, 0.0, 0.0, 1.0]; // Red
-
-  settingsManager.reColorMinimumTime = 1000;
-  settingsManager.colors = {};
-  settingsManager.colors = JSON.parse(localStorage.getItem('settingsManager-colors'));
-
-  if (settingsManager.colors == null || settingsManager.colors.version !== '1.0.3') {
-    settingsManager.colors = {};
-    settingsManager.colors.version = '1.0.3';
-    settingsManager.colors.facility = [0.64, 0.0, 0.64, 1.0];
-    settingsManager.colors.starHi = [1.0, 1.0, 1.0, 1.0];
-    settingsManager.colors.starMed = [1.0, 1.0, 1.0, 0.35];
-    settingsManager.colors.starLow = [1.0, 1.0, 1.0, 0.15];
-    settingsManager.colors.sensor = [1.0, 0.0, 0.0, 1.0];
-    settingsManager.colors.marker = [[0.2, 1.0, 1.0, 1.0], [1.0, 0.2, 1.0, 1.0], [1.0, 1.0, 0.2, 1.0], [0.2, 0.2, 1.0, 1.0], [0.2, 1.0, 0.2, 1.0], [1.0, 0.2, 0.2, 1.0], [0.5, 0.6, 1.0, 1.0], [0.6, 0.5, 1.0, 1.0], [1.0, 0.6, 0.5, 1.0], [1.0, 1.0, 1.0, 1.0], [0.2, 1.0, 1.0, 1.0], [1.0, 0.2, 1.0, 1.0], [1.0, 1.0, 0.2, 1.0], [0.2, 0.2, 1.0, 1.0], [0.2, 1.0, 0.2, 1.0], [1.0, 0.2, 0.2, 1.0], [0.5, 0.6, 1.0, 1.0], [0.6, 0.5, 1.0, 1.0]];
-    settingsManager.colors.deselected = [1.0, 1.0, 1.0, 0];
-    settingsManager.colors.inview = [0.85, 0.5, 0.0, 1.0];
-    settingsManager.colors.inviewAlt = [0.2, 0.4, 1.0, 1];
-    settingsManager.colors.radarData = [0.0, 1.0, 1.0, 1.0];
-    settingsManager.colors.radarDataMissile = [1.0, 0.0, 0.0, 1.0];
-    settingsManager.colors.radarDataSatellite = [0.0, 1.0, 0.0, 1.0];
-    settingsManager.colors.payload = [0.2, 1.0, 0.0, 0.5];
-    settingsManager.colors.rocketBody = [0.2, 0.4, 1.0, 1];
-    settingsManager.colors.debris = [0.5, 0.5, 0.5, 1];
-    settingsManager.colors.unknown = [0.5, 0.5, 0.5, 0.85];
-    settingsManager.colors.trusat = [1.0, 0.0, 0.6, 1.0];
-    settingsManager.colors.analyst = [1.0, 1.0, 1.0, 0.8];
-    settingsManager.colors.missile = [1.0, 1.0, 0.0, 1.0];
-    settingsManager.colors.missileInview = [1.0, 0.0, 0.0, 1.0];
-    settingsManager.colors.transparent = [1.0, 1.0, 1.0, 0.1];
-    settingsManager.colors.satHi = [1.0, 1.0, 1.0, 1.0];
-    settingsManager.colors.satMed = [1.0, 1.0, 1.0, 0.8];
-    settingsManager.colors.satLow = [1.0, 1.0, 1.0, 0.6];
-    settingsManager.colors.sunlightInview = [0.85, 0.5, 0.0, 1.0];
-    settingsManager.colors.penumbral = [1.0, 1.0, 1.0, 0.3];
-    settingsManager.colors.umbral = [1.0, 1.0, 1.0, 0.1]; // DEBUG Colors
-    // settingsManager.colors.sunlight = [0.2, 0.4, 1.0, 1]
-    // settingsManager.colors.penumbral = [0.5, 0.5, 0.5, 0.85]
-    // settingsManager.colors.umbral = [0.2, 1.0, 0.0, 0.5]
-
-    settingsManager.colors.gradientAmt = 0; // Gradients Must be Edited in color-scheme.js
-    // settingsManager.colors.apogeeGradient = [1.0 - settingsManager.colors.gradientAmt, settingsManager.colors.gradientAmt, 0.0, 1.0]
-    // settingsManager.colors.velGradient = [1.0 - settingsManager.colors.gradientAmt, settingsManager.colors.gradientAmt, 0.0, 1.0]
-
-    settingsManager.colors.satSmall = [0.2, 1.0, 0.0, 0.65];
-    settingsManager.colors.rcsSmall = [1.0, 0, 0, 0.6];
-    settingsManager.colors.rcsMed = [0.2, 0.4, 1.0, 1];
-    settingsManager.colors.rcsLarge = [0, 1.0, 0, 0.6];
-    settingsManager.colors.rcsUnknown = [1.0, 1.0, 0, 0.6];
-    settingsManager.colors.ageNew = [0, 1.0, 0, 0.9];
-    settingsManager.colors.ageMed = [1.0, 1.0, 0.0, 0.9];
-    settingsManager.colors.ageOld = [1.0, 0.6, 0, 0.9];
-    settingsManager.colors.ageLost = [1.0, 0.0, 0, 0.9];
-    settingsManager.colors.lostobjects = [0.2, 1.0, 0.0, 0.65];
-    settingsManager.colors.satLEO = [0.2, 1.0, 0.0, 0.65];
-    settingsManager.colors.satGEO = [0.2, 1.0, 0.0, 0.65];
-    settingsManager.colors.inGroup = [1.0, 0.0, 0.0, 1.0];
-    settingsManager.colors.countryPRC = [1.0, 0, 0, 0.6];
-    settingsManager.colors.countryUS = [0.2, 0.4, 1.0, 1];
-    settingsManager.colors.countryCIS = [1.0, 1.0, 1.0, 1.0];
-    settingsManager.colors.countryOther = [0, 1.0, 0, 0.6];
-    localStorage.setItem('settingsManager-colors', JSON.stringify(settingsManager.colors));
-  } // //////////////////////////////////////////////////////////////////////////
-  // Orbit Color Settings
-  // //////////////////////////////////////////////////////////////////////////
-
-
-  settingsManager.orbitSelectColor = [1.0, 0.0, 0.0, 0.9];
-  settingsManager.orbitHoverColor = [1.0, 1.0, 0.0, 0.9]; // settingsManager.orbitHoverColor = [0.5, 0.5, 1.0, 1.0]
-
-  settingsManager.orbitInViewColor = [1.0, 1.0, 1.0, 0.7]; // WHITE
-
-  settingsManager.orbitPlanetariumColor = [1.0, 1.0, 1.0, 0.2]; // Transparent White
-  // settingsManager.orbitInViewColor = [1.0, 1.0, 0.0, 1.0] // Applies to Planetarium View
-  //settingsManager.orbitGroupColor = [0.3, 0.5, 1.0, 0.4]
-
-  settingsManager.orbitGroupColor = [1.0, 1.0, 0.0, 0.7]; // //////////////////////////////////////////////////////////////////////////
-  // UI Settings
-  // //////////////////////////////////////////////////////////////////////////
-
-  settingsManager.nextNPassesCount = 5;
-  settingsManager.minimumSearchCharacters = 2; // Searches after 3 characters typed
-
-  settingsManager.searchLimit = 400;
-  settingsManager.nameOfSpecialSats = 'Special Sats';
-  settingsManager.cameraMovementSpeed = 0.003;
-  settingsManager.cameraMovementSpeedMin = 0.005;
-  settingsManager.cameraDecayFactor = 5; // Reduce this give momentum to camera changes
-
-  settingsManager.offsetCameraModeX = 15000;
-  settingsManager.offsetCameraModeZ = -6000;
-  settingsManager.fpsForwardSpeed = 3;
-  settingsManager.fpsSideSpeed = 3;
-  settingsManager.fpsVertSpeed = 3;
-  settingsManager.fpsPitchRate = 0.02;
-  settingsManager.fpsYawRate = 0.02;
-  settingsManager.fpsRotateRate = 0.02;
-  settingsManager.fitTleSteps = 3; // Increasing this will kill performance
-
-  settingsManager.gpsElevationMask = 15;
-  settingsManager.daysUntilObjectLost = 60;
-  settingsManager.mobileMaxLabels = 100;
-  settingsManager.desktopMaxLabels = 20000;
-  settingsManager.maxLabels = 20000;
-  settingsManager.isAlwaysHidePropRate = false; // //////////////////////////////////////////////////////////////////////////
-  // Advanced Settings Below This Point
-  // Feel free to change these, but they could break something
-  // //////////////////////////////////////////////////////////////////////////
-
-  settingsManager.modelsOnSatelliteViewOverride = false; // Frames Per Second Limiter
-
-  settingsManager.minimumDrawDt = 0.0; // 20 FPS // 60 FPS = 0.01667
-
-  settingsManager.camDistBuffer = 75;
-  settingsManager.zNear = 1.0;
-  settingsManager.zFar = 450000.0; // //////////////////////////////////////////////////////////////////////////
-  // Defaults that should never be changed
-  // //////////////////////////////////////////////////////////////////////////
-  // Nominal max size - overwritten by settingsManager.satShader.maxAllowedSize
-
-  settingsManager.satShader.maxSize = settingsManager.satShader.maxAllowedSize * 2;
-  settingsManager.fieldOfView = 0.6; // Determines if the Loading is complete
-
-  settingsManager.cruncherReady = false;
-  settingsManager.altLoadMsgs = true;
-
-  settingsManager.loadStr = str => {
-    if (str == '') {
-      jquery__WEBPACK_IMPORTED_MODULE_0___default()('#loader-text').html('');
-      return;
-    }
-
-    if (str == 'math') {
-      jquery__WEBPACK_IMPORTED_MODULE_0___default()('#loader-text').html('Attempting to Math...');
-    }
-
-    if (settingsManager.altLoadMsgs) {
-      if (typeof settingsManager.altMsgNum !== 'undefined') return;
-      settingsManager.altMsgNum = Math.random();
-      var msg = '';
-
-      if (settingsManager.altMsgNum > 0) {
-        msg = "KeepTrack is on the front page of <a style=\"color: #48f3e3 !important;\" href=\"https://clearspace.today\" target=\"_blank\">ClearSpace-1's Website</a>!";
-      }
-
-      if (settingsManager.altMsgNum > 0.33) {
-        msg = "KeepTrack provided visuals for Studio Roosegaarde's <a style=\"color: #48f3e3 !important;\" href=\"https://www.studioroosegaarde.net/project/space-waste-lab\" target=\"_blank\">Space Waste Lab</a>!";
-      }
-
-      if (settingsManager.altMsgNum > 0.66) {
-        msg = "KeepTrack was used by the <a style=\"color: #48f3e3 !important;\" href=\"https://www.youtube.com/embed/OfvkKBNup5A?autoplay=0&start=521&modestbranding=1\" target=\"_blank\">Joint Space Operations Center</a>!";
-      }
-
-      jquery__WEBPACK_IMPORTED_MODULE_0___default()('#loader-text').html(msg);
-      return;
-    }
-
-    switch (str) {
-      case 'science':
-        jquery__WEBPACK_IMPORTED_MODULE_0___default()('#loader-text').html('Locating Science...');
-        break;
-
-      case 'dots':
-        jquery__WEBPACK_IMPORTED_MODULE_0___default()('#loader-text').html('Drawing Dots in Space...');
-        break;
-
-      case 'satIntel':
-        jquery__WEBPACK_IMPORTED_MODULE_0___default()('#loader-text').html('Integrating Satellite Intel...');
-        break;
-
-      case 'radarData':
-        jquery__WEBPACK_IMPORTED_MODULE_0___default()('#loader-text').html('Importing Radar Data...');
-        break;
-
-      case 'painting':
-        jquery__WEBPACK_IMPORTED_MODULE_0___default()('#loader-text').html('Painting the Earth...');
-        break;
-
-      case 'coloring':
-        jquery__WEBPACK_IMPORTED_MODULE_0___default()('#loader-text').html('Coloring Inside the Lines...');
-        break;
-
-      case 'elsets':
-        jquery__WEBPACK_IMPORTED_MODULE_0___default()('#loader-text').html('Locating ELSETs...');
-        break;
-
-      case 'easterEgg':
-        jquery__WEBPACK_IMPORTED_MODULE_0___default()('#loader-text').html('Llama Llama Llama Duck!');
-    }
-  };
-
-  settingsManager.lkVerify = Date.now(); // If No UI Reduce Overhead
-
-  if (settingsManager.disableUI) {
-    // LEAVE AT LEAST ONE TO PREVENT ERRORS
-    settingsManager.maxFieldOfViewMarkers = 1;
-    settingsManager.maxMissiles = 1;
-    settingsManager.maxAnalystSats = 1;
-  }
-
-  if (settingsManager.enableLimitedUI) {
-    settingsManager.zFar = 150000;
-  }
-
-  settingsManager.legendMenuOpen = false;
-  settingsManager.limitSats = '';
-  settingsManager.geolocation = {};
-  settingsManager.geolocationUsed = false;
-  settingsManager.mapWidth = 800;
-  settingsManager.mapHeight = 600;
-  settingsManager.currentLegend = 'default';
-  settingsManager.socratesOnSatCruncher = null;
-  settingsManager.queuedScreenshot = false;
-  settingsManager.isResizing = false;
-
-  if (typeof settingsManager.isOfficialWebsite == 'undefined') {
-    settingsManager.isOfficialWebsite = false;
-  }
-
-  settingsManager.vertShadersSize = 12;
-  settingsManager.isEditTime = false;
-  settingsManager.isPropRateChange = false;
-  settingsManager.isOnlyFOVChecked = false;
-  settingsManager.isBottomMenuOpen = false;
-  settingsManager.isForceColorScheme = false;
-  settingsManager.isDemoModeOn = false;
-  settingsManager.demoModeInterval = 3000; // in ms (3 second default)
-
-  settingsManager.isSatLabelModeOn = true;
-  settingsManager.satLabelInterval = 100; //  in ms (0.5 second default)
-
-  settingsManager.isSatOverflyModeOn = false;
-  settingsManager.isFOVBubbleModeOn = false;
-  settingsManager.isMapUpdateOverride = false;
-  settingsManager.lastMapUpdateTime = 0;
-  settingsManager.lastSearchResults = []; // Export settingsManager to everyone else
-
-  window.settingsManager = settingsManager; // This is an initial parse of the GET variables
-  // to determine critical settings. Other variables are checked later during
-  // satSet.init
-
-  if (!settingsManager.disableUI) {
-    (function initParseFromGETVariables() {
-      var queryStr = window.location.search.substring(1);
-      var params = queryStr.split('&');
-
-      for (var i = 0; i < params.length; i++) {
-        var key = params[i].split('=')[0]; // let val = params[i].split('=')[1];
-
-        switch (key) {
-          case 'console':
-            settingsManager.isEnableConsole = true;
-            break;
-
-          case 'radarData':
-            settingsManager.isEnableRadarData = true;
-            settingsManager.maxRadarData = 150000;
-            break;
-
-          case 'smallImages':
-            settingsManager.smallImages = true;
-            break;
-
-          case 'lowperf':
-            settingsManager.lowPerf = true;
-            settingsManager.isDrawLess = true;
-            settingsManager.zFar = 250000.0;
-            settingsManager.noMeshManager = true;
-            settingsManager.maxFieldOfViewMarkers = 1;
-            settingsManager.smallImages = true;
-            break;
-
-          case 'hires':
-            settingsManager.hiresImages = true;
-            settingsManager.earthNumLatSegs = 256;
-            settingsManager.earthNumLonSegs = 256;
-            settingsManager.atmospherelatSegs = 128;
-            settingsManager.atmospherelonSegs = 128;
-            settingsManager.minimumDrawDt = 0.01667;
-            break;
-
-          case 'nostars':
-            settingsManager.noStars = true;
-            break;
-
-          case 'draw-less':
-            settingsManager.isDrawLess = true;
-            settingsManager.zFar = 250000.0;
-            settingsManager.noMeshManager = true;
-            break;
-
-          case 'draw-more':
-            settingsManager.isDrawLess = false;
-            settingsManager.noMeshManager = false;
-            settingsManager.smallImages = false;
-            break;
-
-          case 'vec':
-            settingsManager.vectorImages = true;
-            break;
-
-          case 'retro':
-            settingsManager.retro = true;
-            settingsManager.tleSource = 'tle/retro.json';
-            break;
-
-          case 'offline':
-            settingsManager.offline = true;
-            break;
-
-          case 'debris':
-            settingsManager.tleSource = 'tle/TLEdebris.json';
-            break;
-
-          case 'mw':
-            settingsManager.tleSource = 'tle/mw.json';
-            break;
-
-          case 'trusat':
-            settingsManager.trusatMode = true;
-            settingsManager.trusatImages = true;
-            break;
-
-          case 'trusat-only':
-            settingsManager.trusatMode = true;
-            settingsManager.trusatOnly = true;
-            settingsManager.colors.debris = [0.9, 0.9, 0.9, 1];
-            settingsManager.trusatImages = true;
-            settingsManager.tleSource = 'tle/trusat.json';
-            break;
-
-          case 'cpo':
-            settingsManager.copyrightOveride = true;
-            break;
-
-          case 'logo':
-            settingsManager.isShowLogo = true;
-            break;
-
-          case 'noPropRate':
-            settingsManager.isAlwaysHidePropRate = true;
-            break;
-        }
-      }
-    })();
-  } // Load the previously saved map
-
-
-  if (settingsManager.isLoadLastMap && !settingsManager.isDrawLess) {
-    var lastMap = localStorage.getItem('lastMap');
-
-    switch (lastMap) {
-      case 'blue':
-        settingsManager.blueImages = true;
-        break;
-
-      case 'nasa':
-        settingsManager.nasaImages = true;
-        break;
-
-      case 'low':
-        settingsManager.lowresImages = true;
-        break;
-
-      case 'trusat':
-        settingsManager.trusatImages = true;
-        break;
-
-      case 'high':
-        settingsManager.hiresImages = true;
-        break;
-
-      case 'high-nc':
-        settingsManager.hiresNoCloudsImages = true;
-        break;
-
-      case 'vec':
-        settingsManager.vectorImages = true;
-        break;
-
-      default:
-        settingsManager.lowresImages = true;
-        break;
-    }
-  } // Make sure there is some map loaded!
-
-
-  if (!settingsManager.smallImages && !settingsManager.nasaImages && !settingsManager.blueImages && !settingsManager.lowresImages && !settingsManager.hiresImages && !settingsManager.hiresNoCloudsImages && !settingsManager.vectorImages) {
-    settingsManager.lowresImages = true;
-  } //Global Debug Manager
-
-
-  {
-    try {
-      db = JSON.parse(localStorage.getItem('db'));
-      if (db == null) throw new Error('Reload Debug Manager');
-      if (typeof db.enabled == 'undefined') throw new Error('Reload Debug Manager');
-    } catch (e) {
-      db = {};
-      db.enabled = false;
-      db.verbose = false;
-      localStorage.setItem('db', JSON.stringify(db));
-    }
-
-    db.init = function () {
-      db.log = function (message, isVerbose) {
-        // Don't Log Verbose Stuff Normally
-        if (isVerbose && !db.verbose) return; // If Logging is Enabled - Log It
-
-        if (db.enabled) {
-          console.log(message);
-        }
-      };
-
-      db.on = function () {
-        db.enabled = true;
-        console.log('db is now on!');
-        localStorage.setItem('db', JSON.stringify(db));
-      };
-
-      db.off = function () {
-        db.enabled = false;
-        console.log('db is now off!');
-        localStorage.setItem('db', JSON.stringify(db));
-      };
-    }();
-
-    db.gremlinsSettings = {};
-    db.gremlinsSettings.nb = 100000;
-    db.gremlinsSettings.delay = 5;
-
-    db.gremlins = () => {
-      jquery__WEBPACK_IMPORTED_MODULE_0___default()('#nav-footer').height(200);
-      jquery__WEBPACK_IMPORTED_MODULE_0___default()('#nav-footer-toggle').hide();
-      jquery__WEBPACK_IMPORTED_MODULE_0___default()('#bottom-icons-container').height(200);
-      jquery__WEBPACK_IMPORTED_MODULE_0___default()('#bottom-icons').height(200);
-
-      var startGremlins = () => {
-        var bottomMenuGremlinClicker = gremlins.species.clicker({
-          // Click only if parent is has class test-class
-          canClick: element => {
-            if (typeof element.parentElement == 'undefined' || element.parentElement == null) return null;
-            return element.parentElement.className === 'bmenu-item';
-          },
-          defaultPositionSelector: () => {
-            [randomizer.natural({
-              max: Math.max(0, document.documentElement.clientWidth - 1)
-            }), randomizer.natural({
-              min: Math.max(0, document.documentElement.clientHeight - 100),
-              max: Math.max(0, document.documentElement.clientHeight - 1)
-            })];
-          }
-        });
-        var bottomMenuGremlinScroller = gremlins.species.toucher({
-          touchTypes: ['gesture'],
-          defaultPositionSelector: () => {
-            [randomizer.natural({
-              max: Math.max(0, document.documentElement.clientWidth - 1)
-            }), randomizer.natural({
-              min: Math.max(0, document.documentElement.clientHeight - 100),
-              max: Math.max(0, document.documentElement.clientHeight - 1)
-            })];
-          }
-        });
-        var distributionStrategy = gremlins.strategies.distribution({
-          distribution: [0.3, 0.3, 0.1, 0.1, 0.1, 0.1],
-          // the first three gremlins have more chances to be executed than the last
-          delay: 5 // wait 5 ms between each action
-
-        });
-        gremlins.createHorde({
-          species: [bottomMenuGremlinClicker, bottomMenuGremlinScroller, // gremlins.species.scroller(),
-          gremlins.species.clicker(), gremlins.species.toucher(), gremlins.species.formFiller(), gremlins.species.typer()],
-          mogwais: [gremlins.mogwais.alert(), gremlins.mogwais.fps(), gremlins.mogwais.gizmo({
-            maxErrors: 1000
-          })],
-          strategies: [distributionStrategy]
-        }).unleash();
-        return;
-      };
-
-      if (typeof gremlins == 'undefined') {
-        var s = document.createElement('script');
-        s.src = 'https://unpkg.com/gremlins.js';
-
-        if (s.addEventListener) {
-          s.addEventListener('load', startGremlins, false);
-        } else if (s.readyState) {
-          s.onreadystatechange = startGremlins;
-        }
-
-        document.body.appendChild(s);
-      } else {
-        startGremlins();
-      }
-    };
-  }
-  window.db = db; // Try to Make Older Versions of Jquery Work
-
-  if (typeof window.$ == 'undefined') {
-    if (typeof window.jQuery !== 'undefined') {
-      window.$ = window.jQuery;
-    }
-  } // Import CSS needed for loading screen
-
-
-  if (!settingsManager.disableUI) {
-    __webpack_require__.e(/*! import() */ "src_css_fonts_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/fonts.css */ "./src/css/fonts.css")).then(resp => resp);
-    __webpack_require__.e(/*! import() */ "src_css_materialize_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/materialize.css */ "./src/css/materialize.css")).then(resp => resp);
-    __webpack_require__.e(/*! import() */ "src_css_materialize-local_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/materialize-local.css */ "./src/css/materialize-local.css")).then(resp => resp);
-    __webpack_require__.e(/*! import() */ "src_js_lib_external_colorPick_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/js/lib/external/colorPick.css */ "./src/js/lib/external/colorPick.css")).then(resp => resp);
-    __webpack_require__.e(/*! import() */ "src_css_perfect-scrollbar_min_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/perfect-scrollbar.min.css */ "./src/css/perfect-scrollbar.min.css")).then(resp => resp);
-    __webpack_require__.e(/*! import() */ "src_css_jquery-ui_min_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/jquery-ui.min.css */ "./src/css/jquery-ui.min.css")).then(resp => resp);
-    __webpack_require__.e(/*! import() */ "src_css_jquery-ui-timepicker-addon_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/jquery-ui-timepicker-addon.css */ "./src/css/jquery-ui-timepicker-addon.css")).then(resp => resp);
-    __webpack_require__.e(/*! import() */ "src_css_style_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/style.css */ "./src/css/style.css")).then(__webpack_require__.e(/*! import() */ "src_css_responsive_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/responsive.css */ "./src/css/responsive.css")).then(resp => resp));
-  } else if (settingsManager.enableLimitedUI) {
-    __webpack_require__.e(/*! import() */ "src_css_limitedUI_css").then(__webpack_require__.bind(__webpack_require__, /*! @app/css/limitedUI.css */ "./src/css/limitedUI.css")).then(resp => resp);
-  } else {// console.log('ERROR');
-  }
-};
-
-settingsManager.init(); // Expose these to the console
-
-window.settingsManager = settingsManager;
-
-
-/***/ }),
-
-/***/ "./src/js/settingsManager/version.js":
-/*!*******************************************!*\
-  !*** ./src/js/settingsManager/version.js ***!
-  \*******************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "VERSION": () => (/* binding */ VERSION)
-/* harmony export */ });
-// THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
-var VERSION = '3.4.0';
-
-/***/ }),
-
-/***/ "./src/js/settingsManager/versionDate.js":
-/*!***********************************************!*\
-  !*** ./src/js/settingsManager/versionDate.js ***!
-  \***********************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "VERSION_DATE": () => (/* binding */ VERSION_DATE)
-/* harmony export */ });
-// THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.
-var VERSION_DATE = 'July 5, 2021';
-
-/***/ }),
-
-/***/ "./src/js/timeManager/timeManager.js":
-/*!*******************************************!*\
-  !*** ./src/js/timeManager/timeManager.js ***!
-  \*******************************************/
-/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "timeManager": () => (/* binding */ timeManager)
-/* harmony export */ });
-/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
-/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(jquery__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @app/js/lib/constants.js */ "./src/js/lib/constants.js");
-/* harmony import */ var _app_js_lib_external_dateFormat_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @app/js/lib/external/dateFormat.js */ "./src/js/lib/external/dateFormat.js");
-/* harmony import */ var _app_js_settingsManager_settingsManager_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @app/js/settingsManager/settingsManager.js */ "./src/js/settingsManager/settingsManager.js");
-
-
-
-
-'use strict';
-
-var timeManager = {};
-var document = window.document;
-
-timeManager.init = () => {
-  // Variables pulled from timeManager.jday function to reduce garbage collection
-  var jDayStart;
-  var jDayDiff;
-  timeManager.dateObject = new Date();
-  timeManager.propTimeVar = timeManager.dateObject;
-  timeManager.datetimeInputDOM = jquery__WEBPACK_IMPORTED_MODULE_0___default()('#datetime-input-tb');
-  timeManager.timeTextStr = '';
-  timeManager.timeTextStrEmpty = '';
-  var propFrozen = Date.now(); // for when propRate 0
-
-  timeManager.now = propFrozen; // (initialized as Date.now)
-
-  timeManager.propRealTime = propFrozen; // actual time we're running it (initialized as Date.now)
-
-  timeManager.propOffset = 0.0; // offset we're propagating to, msec
-
-  timeManager.propRate = 1.0; // time rate multiplier for propagation
-
-  timeManager.dt = 0;
-  timeManager.drawDt = 0;
-
-  timeManager.updatePropTime = propTimeVar => {
-    if (typeof propTimeVar !== 'undefined' && propTimeVar !== null) {
-      timeManager.propTimeVar.setTime(propTimeVar);
-      return;
-    }
-
-    if (timeManager.propRate === 0) {
-      timeManager.propTimeVar.setTime(Number(timeManager.propRealTime) + timeManager.propOffset);
-    } else {
-      timeManager.propTimeVar.setTime(Number(timeManager.propRealTime) + timeManager.propOffset + (Number(timeManager.now) - Number(timeManager.propRealTime)) * timeManager.propRate);
-    }
-  }; // Propagation Time Functions
-
-
-  timeManager.propTime = function () {
-    if (timeManager.propRate === 0) {
-      timeManager.propTimeVar.setTime(Number(timeManager.propRealTime) + timeManager.propOffset);
-    } else {
-      timeManager.propTimeVar.setTime(Number(timeManager.propRealTime) + timeManager.propOffset + (Number(timeManager.now) - Number(timeManager.propRealTime)) * timeManager.propRate);
-    }
-
-    return timeManager.propTimeVar;
-  };
-
-  timeManager.propTimeCheck = function (propTempOffset, propRealTime) {
-    'use strict';
-
-    var now = new Date(); // Make a time variable
-
-    now.setTime(Number(propRealTime) + propTempOffset); // Set the time variable to the time in the future
-
-    return now;
-  };
-
-  timeManager.setNow = (now, dt) => {
-    timeManager.now = now;
-    timeManager.dt = dt;
-    timeManager.setLastTime(timeManager.propTimeVar);
-    timeManager.updatePropTime();
-    timeManager.setSelectedDate(timeManager.propTimeVar); // Passing datetimeInput eliminates needing jQuery in main module
-
-    if (timeManager.lastTime - timeManager.propTimeVar < 300 && (_app_js_settingsManager_settingsManager_js__WEBPACK_IMPORTED_MODULE_3__.settingsManager.isEditTime || !_app_js_settingsManager_settingsManager_js__WEBPACK_IMPORTED_MODULE_3__.settingsManager.cruncherReady)) {
-      timeManager.datetimeInputDOM.val(timeManager.selectedDate.toISOString().slice(0, 10) + ' ' + timeManager.selectedDate.toISOString().slice(11, 19));
-    }
-  };
-
-  timeManager.setDrawDt = drawDt => {
-    timeManager.drawDt = drawDt;
-  };
-
-  timeManager.setPropRateZero = function () {
-    timeManager.propRate = 0;
-    propFrozen = Date.now();
-  };
-
-  timeManager.setLastTime = now => {
-    timeManager.lastTime = now;
-  };
-
-  timeManager.setSelectedDate = selectedDate => {
-    timeManager.selectedDate = selectedDate;
-
-    if (timeManager.lastTime - timeManager.propTimeVar < 300) {
-      timeManager.tDS = timeManager.propTimeVar.toJSON();
-      timeManager.timeTextStr = timeManager.timeTextStrEmpty;
-
-      for (timeManager.iText = 11; timeManager.iText < 20; timeManager.iText++) {
-        if (timeManager.iText > 11) timeManager.timeTextStr += timeManager.tDS[timeManager.iText - 1];
-      }
-
-      timeManager.propRate0 = timeManager.propRate;
-      _app_js_settingsManager_settingsManager_js__WEBPACK_IMPORTED_MODULE_3__.settingsManager.isPropRateChange = false;
-    } // textContent doesn't remove the Node! No unecessary DOM changes everytime time updates.
-
-
-    if (typeof timeManager.dateDOM == 'undefined') timeManager.dateDOM = document.getElementById('datetime-text');
-
-    if (timeManager.dateDOM == null) {
-      console.warn('Cant find datetime-text!');
-      return;
-    }
-
-    timeManager.dateDOM.textContent = timeManager.timeTextStr;
-  };
-
-  timeManager.getPropOffset = function () {
-    // timeManager.selectedDate = $('#datetime-text').text().substr(0, 19);
-    if (!timeManager.selectedDate) {
-      // console.error(timeManager);
-      return;
-    } // selectedDate = selectedDate.split(' ');
-    // selectedDate = new Date(selectedDate[0] + 'T' + selectedDate[1] + 'Z');
-
-
-    var today = new Date(); // Not using local scope caused time to drift backwards!
-
-    var propOffset = timeManager.selectedDate - today;
-    return propOffset;
-  };
-
-  timeManager.dateToISOLikeButLocal = function (date) {
-    var offsetMs = date.getTimezoneOffset() * 60 * 1000;
-    var msLocal = date.getTime() - offsetMs;
-    var dateLocal = new Date(msLocal);
-    var iso = dateLocal.toISOString();
-    iso = iso.replace('T', ' ');
-    var isoLocal = iso.slice(0, 19) + ' ' + dateLocal.toString().slice(25, 31);
-    return isoLocal;
-  };
-
-  timeManager.localToZulu = function (date) {
-    date = (0,_app_js_lib_external_dateFormat_js__WEBPACK_IMPORTED_MODULE_2__.dateFormat)(date, 'isoDateTime', true);
-    date = date.split(' ');
-    date = new Date(date[0] + 'T' + date[1] + 'Z');
-    return date;
-  }; // Get Day of Year
-
-
-  timeManager.getDayOfYear = function (date) {
-    date = date || new Date();
-
-    var _isLeapYear = date => {
-      var year = date.getFullYear();
-      if ((year & 3) !== 0) return false;
-      return year % 100 !== 0 || year % 400 === 0;
-    };
-
-    var dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
-    var mn = date.getMonth();
-    var dn = date.getUTCDate();
-    var dayOfYear = dayCount[mn] + dn;
-    if (mn > 1 && _isLeapYear(date)) dayOfYear++;
-    return dayOfYear;
-  };
-
-  timeManager.dateFromDay = function (year, day) {
-    var date = new Date(year, 0); // initialize a date in `year-01-01`
-
-    return new Date(date.setDate(day)); // add the number of days
-  };
-
-  timeManager.jday = function (year, mon, day, hr, minute, sec) {
-    // from satellite.js
-    if (!year) {
-      // console.error('timeManager.jday should always have a date passed to it!');
-      var now = new Date();
-      jDayStart = new Date(now.getFullYear(), 0, 0);
-      jDayDiff = now - jDayStart;
-      return Math.floor(jDayDiff / _app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__.MILLISECONDS_PER_DAY);
-    } else {
-      return 367.0 * year - Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) + Math.floor(275 * mon / 9.0) + day + 1721013.5 + ((sec / 60.0 + minute) / 60.0 + hr) / 24.0 //  ut in days
-      ;
-    }
-  }; // Initialize
-
-
-  timeManager.updatePropTime();
-  timeManager.setSelectedDate(timeManager.propTimeVar);
-};
-
 
 
 /***/ }),
@@ -19599,19 +18568,240 @@ __nested_webpack_require_124921__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/js/api/externalApi.ts":
+/*!***********************************!*\
+  !*** ./src/js/api/externalApi.ts ***!
+  \***********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "keepTrackApi": () => (/* binding */ keepTrackApi)
+/* harmony export */ });
+var __values = (undefined && undefined.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+var __read = (undefined && undefined.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spreadArray = (undefined && undefined.__spreadArray) || function (to, from) {
+    for (var i = 0, il = from.length, j = to.length; i < il; i++, j++)
+        to[j] = from[i];
+    return to;
+};
+var keepTrackApi = {
+    html: function (strings) {
+        var e_1, _a;
+        var placeholders = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            placeholders[_i - 1] = arguments[_i];
+        }
+        try {
+            for (var placeholders_1 = __values(placeholders), placeholders_1_1 = placeholders_1.next(); !placeholders_1_1.done; placeholders_1_1 = placeholders_1.next()) {
+                var placeholder = placeholders_1_1.value;
+                if (typeof placeholder !== 'string') {
+                    throw Error('Invalid input');
+                }
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (placeholders_1_1 && !placeholders_1_1.done && (_a = placeholders_1.return)) _a.call(placeholders_1);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        return String.raw.apply(String, __spreadArray([strings], __read(placeholders)));
+    },
+    register: function (params) {
+        // If this is a valid callback
+        if (typeof keepTrackApi.callbacks[params.method] !== 'undefined') {
+            // Add the callback
+            keepTrackApi.callbacks[params.method].push({ name: params.cbName, cb: params.cb });
+        }
+        else {
+            throw new Error("Invalid callback \"" + params.method + "\"!");
+        }
+        return;
+    },
+    unregister: function (params) {
+        // If this is a valid callback
+        if (typeof keepTrackApi.callbacks[params.method] !== 'undefined') {
+            for (var i = 0; i < keepTrackApi.callbacks[params.method].length; i++) {
+                if (keepTrackApi.callbacks[params.method][i].name == params.cbName) {
+                    keepTrackApi.callbacks[params.method].splice(i, 1);
+                    return;
+                }
+            }
+            // If we got this far, it means we couldn't find the callback
+            throw new Error("Callback \"" + params.cbName + " not found\"!");
+        }
+        else {
+            // Couldn't find the method
+            throw new Error("Invalid callback \"" + params.method + "\"!");
+        }
+    },
+    callbacks: {
+        selectSatData: [],
+        updateSelectBox: [],
+        onCruncherReady: [],
+        onCruncherMessage: [],
+        uiManagerInit: [],
+        uiManagerOnReady: [],
+        bottomMenuClick: [],
+        hideSideMenus: [],
+        nightToggle: [],
+        orbitManagerInit: [],
+        adviceReady: [],
+        drawManagerLoadScene: [],
+        drawOptionalScenery: [],
+        updateLoop: [],
+        rmbMenuActions: [],
+        rightBtnMenuAdd: [],
+        updateDateTime: [],
+        uiManagerFinal: [],
+    },
+    methods: {
+        selectSatData: function (sat, satId) {
+            keepTrackApi.callbacks.selectSatData.forEach(function (cb) { return cb.cb(sat, satId); });
+        },
+        updateSelectBox: function (sat) {
+            keepTrackApi.callbacks.updateSelectBox.forEach(function (cb) { return cb.cb(sat); });
+        },
+        onCruncherReady: function () {
+            keepTrackApi.callbacks.onCruncherReady.forEach(function (cb) { return cb.cb(); });
+        },
+        onCruncherMessage: function () {
+            keepTrackApi.callbacks.onCruncherMessage.forEach(function (cb) { return cb.cb(); });
+        },
+        uiManagerInit: function () {
+            keepTrackApi.callbacks.uiManagerInit.forEach(function (cb) { return cb.cb(); });
+        },
+        uiManagerOnReady: function () {
+            keepTrackApi.callbacks.uiManagerOnReady.forEach(function (cb) { return cb.cb(); });
+        },
+        bottomMenuClick: function (iconName) {
+            keepTrackApi.callbacks.bottomMenuClick.forEach(function (cb) { return cb.cb(iconName); });
+        },
+        hideSideMenus: function () {
+            keepTrackApi.callbacks.hideSideMenus.forEach(function (cb) { return cb.cb(); });
+        },
+        nightToggle: function (gl, nightTexture, texture) {
+            keepTrackApi.callbacks.nightToggle.forEach(function (cb) { return cb.cb(gl, nightTexture, texture); });
+        },
+        orbitManagerInit: function () {
+            keepTrackApi.callbacks.orbitManagerInit.forEach(function (cb) { return cb.cb(); });
+        },
+        adviceReady: function () {
+            keepTrackApi.callbacks.adviceReady.forEach(function (cb) { return cb.cb(); });
+        },
+        drawManagerLoadScene: function () {
+            keepTrackApi.callbacks.drawManagerLoadScene.forEach(function (cb) { return cb.cb(); });
+        },
+        drawOptionalScenery: function () {
+            keepTrackApi.callbacks.drawOptionalScenery.forEach(function (cb) { return cb.cb(); });
+        },
+        updateLoop: function () {
+            keepTrackApi.callbacks.updateLoop.forEach(function (cb) { return cb.cb(); });
+        },
+        rmbMenuActions: function (menuName) {
+            keepTrackApi.callbacks.rmbMenuActions.forEach(function (cb) { return cb.cb(menuName); });
+        },
+        rightBtnMenuAdd: function () {
+            keepTrackApi.callbacks.rightBtnMenuAdd.forEach(function (cb) { return cb.cb(); });
+        },
+        updateDateTime: function (date) {
+            keepTrackApi.callbacks.updateDateTime.forEach(function (cb) { return cb.cb(date); });
+        },
+        uiManagerFinal: function () {
+            keepTrackApi.callbacks.uiManagerFinal.forEach(function (cb) { return cb.cb(); });
+        }
+    },
+    programs: {
+        timeManager: {},
+        settingsManager: {},
+        ColorScheme: {},
+        drawManager: {},
+        mapManager: {},
+        missileManager: {},
+        objectManager: {},
+        orbitManager: {},
+        photoManager: {},
+        satSet: {},
+        satellite: {},
+        searchBox: {},
+        sensorManager: {},
+        starManager: {},
+        uiManager: {},
+        uiInput: {},
+    },
+};
+window.keepTrackApi = keepTrackApi;
+
+
+
+/***/ }),
+
 /***/ "./src/js/lib/helpers.ts":
 /*!*******************************!*\
   !*** ./src/js/lib/helpers.ts ***!
   \*******************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "saveAs": () => (/* reexport safe */ _external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__.saveAs),
+/* harmony export */   "stringPad": () => (/* binding */ stringPad),
+/* harmony export */   "saveVariable": () => (/* binding */ saveVariable),
+/* harmony export */   "saveCsv": () => (/* binding */ saveCsv),
+/* harmony export */   "parseRgba": () => (/* binding */ parseRgba),
+/* harmony export */   "hex2RgbA": () => (/* binding */ hex2RgbA),
+/* harmony export */   "rgbCss": () => (/* binding */ rgbCss),
+/* harmony export */   "truncateString": () => (/* binding */ truncateString)
+/* harmony export */ });
+/* harmony import */ var _external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./external/file-saver.min.js */ "./src/js/lib/external/file-saver.min.js");
+var __read = (undefined && undefined.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
+    }
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
 
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.truncateString = exports.rgbCss = exports.hex2RgbA = exports.parseRgba = exports.saveCsv = exports.saveVariable = exports.stringPad = exports.saveAs = void 0;
-var file_saver_min_js_1 = __webpack_require__(/*! ./external/file-saver.min.js */ "./src/js/lib/external/file-saver.min.js");
-Object.defineProperty(exports, "saveAs", ({ enumerable: true, get: function () { return file_saver_min_js_1.saveAs; } }));
-exports.stringPad = {
+
+var stringPad = {
     pad: function (val, len) {
         val = String(val);
         len = len || 2;
@@ -19623,42 +18813,40 @@ exports.stringPad = {
         var s = '   ' + num;
         return s.substr(s.length - size);
     },
-    pad0: function (str, max) { return (str.length < max ? exports.stringPad.pad0('0' + str, max) : str); },
+    pad0: function (str, max) { return (str.length < max ? stringPad.pad0('0' + str, max) : str); },
 };
 var saveVariable = function (variable, filename) {
     try {
         filename = typeof filename == 'undefined' ? 'variable.txt' : filename;
         variable = JSON.stringify(variable);
         var blob = new Blob([variable], { type: 'text/plain;charset=utf-8' });
-        if (!file_saver_min_js_1.saveAs)
+        if (!_external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__.saveAs)
             throw new Error('saveAs is unavailable!');
-        file_saver_min_js_1.saveAs(blob, filename);
+        (0,_external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__.saveAs)(blob, filename);
     }
     catch (e) {
         console.debug('Unable to Save File!');
     }
 };
-exports.saveVariable = saveVariable;
 var saveCsv = function (items, name) {
     try {
-        var replacer_1 = function (key, value) { return (value === null ? '' : value); }; // specify how you want to handle null values here
+        var replacer_1 = function (value) { return (value === null ? '' : value); }; // specify how you want to handle null values here
         var header_1 = Object.keys(items[0]);
         var csv = items.map(function (row) { return header_1.map(function (fieldName) { return JSON.stringify(row[fieldName], replacer_1); }).join(','); });
         csv.unshift(header_1.join(','));
         csv = csv.join('\r\n');
         var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
-        if (!file_saver_min_js_1.saveAs)
+        if (!_external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__.saveAs)
             throw new Error('saveAs is unavailable!');
-        file_saver_min_js_1.saveAs(blob, name + ".csv");
+        (0,_external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__.saveAs)(blob, name + ".csv");
     }
     catch (error) {
         console.debug('Unable to Save File!');
     }
 };
-exports.saveCsv = saveCsv;
 var parseRgba = function (str) {
     // eslint-disable-next-line no-useless-escape
-    var _a = str.match(/[\d\.]+/gu), r = _a[0], g = _a[1], b = _a[2], a = _a[3];
+    var _a = __read(str.match(/[\d\.]+/gu), 4), r = _a[0], g = _a[1], b = _a[2], a = _a[3];
     r = (parseInt(r) / 255);
     g = parseInt(g) / 255;
     b = parseInt(b) / 255;
@@ -19671,7 +18859,6 @@ var parseRgba = function (str) {
         return [r, g, b, a];
     }
 };
-exports.parseRgba = parseRgba;
 var hex2RgbA = function (hex) {
     // eslint-disable-next-line prefer-named-capture-group
     if (/^#([A-Fa-f0-9]{3}){1,2}$/u.test(hex)) {
@@ -19688,9 +18875,7 @@ var hex2RgbA = function (hex) {
     console.warn('Bad Hex! Using White Instead.');
     return [1, 1, 1, 1];
 };
-exports.hex2RgbA = hex2RgbA;
 var rgbCss = function (values) { return "rgba(" + values[0] * 255 + "," + values[1] * 255 + "," + values[2] * 255 + "," + values[3] + ")"; };
-exports.rgbCss = rgbCss;
 /**
  *
  * @param {string} str Input string
@@ -19708,7 +18893,224 @@ var truncateString = function (str, num) {
     // Return str truncated with '...' concatenated to the end of str.
     return str.slice(0, num) + '...';
 };
-exports.truncateString = truncateString;
+
+
+/***/ }),
+
+/***/ "./src/js/timeManager/timeManager.ts":
+/*!*******************************************!*\
+  !*** ./src/js/timeManager/timeManager.ts ***!
+  \*******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "timeManager": () => (/* binding */ timeManager)
+/* harmony export */ });
+/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
+/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(jquery__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @app/js/lib/constants.js */ "./src/js/lib/constants.js");
+/* harmony import */ var _app_js_lib_external_dateFormat_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @app/js/lib/external/dateFormat.js */ "./src/js/lib/external/dateFormat.js");
+/* harmony import */ var _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @app/js/api/externalApi */ "./src/js/api/externalApi.ts");
+
+
+
+
+var timeManager = {
+    dateObject: null,
+    propTimeVar: null,
+    datetimeInputDOM: null,
+    timeTextStr: null,
+    timeTextStrEmpty: null,
+    now: null,
+    propRealTime: null,
+    propOffset: null,
+    propRate: null,
+    dt: null,
+    drawDt: null,
+    updatePropTime: null,
+    propTime: null,
+    propTimeCheck: null,
+    setNow: null,
+    setLastTime: null,
+    setSelectedDate: null,
+    lastTime: null,
+    selectedDate: null,
+    setDrawDt: null,
+    setPropRateZero: null,
+    tDS: null,
+    iText: null,
+    propRate0: null,
+    dateDOM: null,
+    getPropOffset: null,
+    dateToISOLikeButLocal: null,
+    localToZulu: null,
+    getDayOfYear: null,
+    dateFromDay: null,
+    jday: null,
+    init: function () {
+        var settingsManager = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_3__.keepTrackApi.programs.settingsManager;
+        // Variables pulled from timeManager.jday function to reduce garbage collection
+        var jDayStart;
+        var jDayDiff;
+        timeManager.dateObject = new Date();
+        timeManager.propTimeVar = timeManager.dateObject;
+        timeManager.datetimeInputDOM = jquery__WEBPACK_IMPORTED_MODULE_0___default()('#datetime-input-tb');
+        timeManager.timeTextStr = '';
+        timeManager.timeTextStrEmpty = '';
+        var propFrozen = Date.now(); // for when propRate 0
+        timeManager.now = propFrozen; // (initialized as Date.now)
+        timeManager.propRealTime = propFrozen; // actual time we're running it (initialized as Date.now)
+        timeManager.propOffset = 0.0; // offset we're propagating to, msec
+        timeManager.propRate = 1.0; // time rate multiplier for propagation
+        timeManager.dt = 0;
+        timeManager.drawDt = 0;
+        timeManager.updatePropTime = function (propTimeVar) {
+            if (typeof propTimeVar !== 'undefined' && propTimeVar !== null) {
+                timeManager.propTimeVar.setTime(propTimeVar);
+                return;
+            }
+            if (timeManager.propRate === 0) {
+                timeManager.propTimeVar.setTime(Number(timeManager.propRealTime) + timeManager.propOffset);
+            }
+            else {
+                timeManager.propTimeVar.setTime(Number(timeManager.propRealTime) + timeManager.propOffset + (Number(timeManager.now) - Number(timeManager.propRealTime)) * timeManager.propRate);
+            }
+        };
+        // Propagation Time Functions
+        timeManager.propTime = function () {
+            if (timeManager.propRate === 0) {
+                timeManager.propTimeVar.setTime(Number(timeManager.propRealTime) + timeManager.propOffset);
+            }
+            else {
+                timeManager.propTimeVar.setTime(Number(timeManager.propRealTime) + timeManager.propOffset + (Number(timeManager.now) - Number(timeManager.propRealTime)) * timeManager.propRate);
+            }
+            return timeManager.propTimeVar;
+        };
+        timeManager.propTimeCheck = function (propTempOffset, propRealTime) {
+            var now = new Date(); // Make a time variable
+            now.setTime(Number(propRealTime) + propTempOffset); // Set the time variable to the time in the future
+            return now;
+        };
+        timeManager.setNow = function (now, dt) {
+            timeManager.now = now;
+            timeManager.dt = dt;
+            timeManager.setLastTime(timeManager.propTimeVar);
+            timeManager.updatePropTime();
+            timeManager.setSelectedDate(timeManager.propTimeVar);
+            // Passing datetimeInput eliminates needing jQuery in main module
+            if (timeManager.lastTime - timeManager.propTimeVar < 300 && (settingsManager.isEditTime || !settingsManager.cruncherReady)) {
+                if (settingsManager.plugins.datetime) {
+                    timeManager.datetimeInputDOM.val(timeManager.selectedDate.toISOString().slice(0, 10) + ' ' + timeManager.selectedDate.toISOString().slice(11, 19));
+                }
+            }
+        };
+        timeManager.setDrawDt = function (drawDt) {
+            timeManager.drawDt = drawDt;
+        };
+        timeManager.setPropRateZero = function () {
+            timeManager.propRate = 0;
+            propFrozen = Date.now();
+        };
+        timeManager.setLastTime = function (now) {
+            timeManager.lastTime = now;
+        };
+        timeManager.setSelectedDate = function (selectedDate) {
+            // This function only applies when datetime plugin is enabled
+            timeManager.selectedDate = selectedDate;
+            if (settingsManager.plugins.datetime) {
+                if (timeManager.lastTime - timeManager.propTimeVar < 300) {
+                    timeManager.tDS = timeManager.propTimeVar.toJSON();
+                    timeManager.timeTextStr = timeManager.timeTextStrEmpty;
+                    for (timeManager.iText = 11; timeManager.iText < 20; timeManager.iText++) {
+                        if (timeManager.iText > 11)
+                            timeManager.timeTextStr += timeManager.tDS[timeManager.iText - 1];
+                    }
+                    timeManager.propRate0 = timeManager.propRate;
+                    settingsManager.isPropRateChange = false;
+                }
+                // textContent doesn't remove the Node! No unecessary DOM changes everytime time updates.
+                if (timeManager.dateDOM == null)
+                    timeManager.dateDOM = window.document.getElementById('datetime-text');
+                if (timeManager.dateDOM == null) {
+                    console.warn('Cant find datetime-text!');
+                    return;
+                }
+                timeManager.dateDOM.textContent = timeManager.timeTextStr;
+                // Load the current JDAY
+                var jday = timeManager.getDayOfYear(timeManager.propTime());
+                jquery__WEBPACK_IMPORTED_MODULE_0___default()('#jday').html(jday);
+            }
+        };
+        timeManager.getPropOffset = function () {
+            // timeManager.selectedDate = $('#datetime-text').text().substr(0, 19);
+            if (!timeManager.selectedDate) {
+                // console.error(timeManager);
+                return;
+            }
+            // selectedDate = selectedDate.split(' ');
+            // selectedDate = new Date(selectedDate[0] + 'T' + selectedDate[1] + 'Z');
+            var today = new Date();
+            // Not using local scope caused time to drift backwards!
+            var propOffset = timeManager.selectedDate - today.getTime();
+            return propOffset;
+        };
+        timeManager.dateToISOLikeButLocal = function (date) {
+            var offsetMs = date.getTimezoneOffset() * 60 * 1000;
+            var msLocal = date.getTime() - offsetMs;
+            var dateLocal = new Date(msLocal);
+            var iso = dateLocal.toISOString();
+            iso = iso.replace('T', ' ');
+            var isoLocal = iso.slice(0, 19) + ' ' + dateLocal.toString().slice(25, 31);
+            return isoLocal;
+        };
+        timeManager.localToZulu = function (date) {
+            date = (0,_app_js_lib_external_dateFormat_js__WEBPACK_IMPORTED_MODULE_2__.dateFormat)(date, 'isoDateTime', true);
+            date = date.split(' ');
+            date = new Date(date[0] + 'T' + date[1] + 'Z');
+            return date;
+        };
+        // Get Day of Year
+        timeManager.getDayOfYear = function (date) {
+            date = date || new Date();
+            var _isLeapYear = function (date) {
+                var year = date.getFullYear();
+                if ((year & 3) !== 0)
+                    return false;
+                return year % 100 !== 0 || year % 400 === 0;
+            };
+            var dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+            var mn = date.getMonth();
+            var dn = date.getUTCDate();
+            var dayOfYear = dayCount[mn] + dn;
+            if (mn > 1 && _isLeapYear(date))
+                dayOfYear++;
+            return dayOfYear;
+        };
+        timeManager.dateFromDay = function (year, day) {
+            var date = new Date(year, 0); // initialize a date in `year-01-01`
+            return new Date(date.setDate(day)); // add the number of days
+        };
+        timeManager.jday = function (year, mon, day, hr, minute, sec) {
+            // from satellite.js
+            if (!year) {
+                // console.error('timeManager.jday should always have a date passed to it!');
+                var now = new Date();
+                jDayStart = new Date(now.getFullYear(), 0, 0);
+                jDayDiff = now.getDate() - jDayStart.getDate();
+                return Math.floor(jDayDiff / _app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__.MILLISECONDS_PER_DAY);
+            }
+            else {
+                return (367.0 * year - Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) + Math.floor((275 * mon) / 9.0) + day + 1721013.5 + ((sec / 60.0 + minute) / 60.0 + hr) / 24.0 //  ut in days
+                );
+            }
+        };
+        // Initialize
+        timeManager.updatePropTime();
+        timeManager.setSelectedDate(timeManager.propTimeVar);
+    },
+};
 
 
 /***/ })
@@ -19742,9 +19144,6 @@ exports.truncateString = truncateString;
 /******/ 		return module.exports;
 /******/ 	}
 /******/ 	
-/******/ 	// expose the modules object (__webpack_modules__)
-/******/ 	__webpack_require__.m = __webpack_modules__;
-/******/ 	
 /************************************************************************/
 /******/ 	/* webpack/runtime/amd options */
 /******/ 	(() => {
@@ -19772,28 +19171,6 @@ exports.truncateString = truncateString;
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/ensure chunk */
-/******/ 	(() => {
-/******/ 		__webpack_require__.f = {};
-/******/ 		// This file contains only the entry chunk.
-/******/ 		// The chunk loading function for additional chunks
-/******/ 		__webpack_require__.e = (chunkId) => {
-/******/ 			return Promise.all(Object.keys(__webpack_require__.f).reduce((promises, key) => {
-/******/ 				__webpack_require__.f[key](chunkId, promises);
-/******/ 				return promises;
-/******/ 			}, []));
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/get javascript chunk filename */
-/******/ 	(() => {
-/******/ 		// This function allow to reference async chunks
-/******/ 		__webpack_require__.u = (chunkId) => {
-/******/ 			// return url for filenames based on template
-/******/ 			return "" + chunkId + ".js";
 /******/ 		};
 /******/ 	})();
 /******/ 	
@@ -19829,52 +19206,6 @@ exports.truncateString = truncateString;
 /******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
 /******/ 	})();
 /******/ 	
-/******/ 	/* webpack/runtime/load script */
-/******/ 	(() => {
-/******/ 		var inProgress = {};
-/******/ 		var dataWebpackPrefix = "keeptrack.space:";
-/******/ 		// loadScript function to load a script via script tag
-/******/ 		__webpack_require__.l = (url, done, key, chunkId) => {
-/******/ 			if(inProgress[url]) { inProgress[url].push(done); return; }
-/******/ 			var script, needAttach;
-/******/ 			if(key !== undefined) {
-/******/ 				var scripts = document.getElementsByTagName("script");
-/******/ 				for(var i = 0; i < scripts.length; i++) {
-/******/ 					var s = scripts[i];
-/******/ 					if(s.getAttribute("src") == url || s.getAttribute("data-webpack") == dataWebpackPrefix + key) { script = s; break; }
-/******/ 				}
-/******/ 			}
-/******/ 			if(!script) {
-/******/ 				needAttach = true;
-/******/ 				script = document.createElement('script');
-/******/ 		
-/******/ 				script.charset = 'utf-8';
-/******/ 				script.timeout = 120;
-/******/ 				if (__webpack_require__.nc) {
-/******/ 					script.setAttribute("nonce", __webpack_require__.nc);
-/******/ 				}
-/******/ 				script.setAttribute("data-webpack", dataWebpackPrefix + key);
-/******/ 				script.src = url;
-/******/ 			}
-/******/ 			inProgress[url] = [done];
-/******/ 			var onScriptComplete = (prev, event) => {
-/******/ 				// avoid mem leaks in IE.
-/******/ 				script.onerror = script.onload = null;
-/******/ 				clearTimeout(timeout);
-/******/ 				var doneFns = inProgress[url];
-/******/ 				delete inProgress[url];
-/******/ 				script.parentNode && script.parentNode.removeChild(script);
-/******/ 				doneFns && doneFns.forEach((fn) => (fn(event)));
-/******/ 				if(prev) return prev(event);
-/******/ 			}
-/******/ 			;
-/******/ 			var timeout = setTimeout(onScriptComplete.bind(null, undefined, { type: 'timeout', target: script }), 120000);
-/******/ 			script.onerror = onScriptComplete.bind(null, script.onerror);
-/******/ 			script.onload = onScriptComplete.bind(null, script.onload);
-/******/ 			needAttach && document.head.appendChild(script);
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/make namespace object */
 /******/ 	(() => {
 /******/ 		// define __esModule on exports
@@ -19884,99 +19215,6 @@ exports.truncateString = truncateString;
 /******/ 			}
 /******/ 			Object.defineProperty(exports, '__esModule', { value: true });
 /******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/publicPath */
-/******/ 	(() => {
-/******/ 		__webpack_require__.p = "./js/";
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/jsonp chunk loading */
-/******/ 	(() => {
-/******/ 		// no baseURI
-/******/ 		
-/******/ 		// object to store loaded and loading chunks
-/******/ 		// undefined = chunk not loaded, null = chunk preloaded/prefetched
-/******/ 		// [resolve, reject, Promise] = chunk loading, 0 = chunk loaded
-/******/ 		var installedChunks = {
-/******/ 			"analysis-tools": 0
-/******/ 		};
-/******/ 		
-/******/ 		__webpack_require__.f.j = (chunkId, promises) => {
-/******/ 				// JSONP chunk loading for javascript
-/******/ 				var installedChunkData = __webpack_require__.o(installedChunks, chunkId) ? installedChunks[chunkId] : undefined;
-/******/ 				if(installedChunkData !== 0) { // 0 means "already installed".
-/******/ 		
-/******/ 					// a Promise means "currently loading".
-/******/ 					if(installedChunkData) {
-/******/ 						promises.push(installedChunkData[2]);
-/******/ 					} else {
-/******/ 						if(true) { // all chunks have JS
-/******/ 							// setup Promise in chunk cache
-/******/ 							var promise = new Promise((resolve, reject) => (installedChunkData = installedChunks[chunkId] = [resolve, reject]));
-/******/ 							promises.push(installedChunkData[2] = promise);
-/******/ 		
-/******/ 							// start chunk loading
-/******/ 							var url = __webpack_require__.p + __webpack_require__.u(chunkId);
-/******/ 							// create error before stack unwound to get useful stacktrace later
-/******/ 							var error = new Error();
-/******/ 							var loadingEnded = (event) => {
-/******/ 								if(__webpack_require__.o(installedChunks, chunkId)) {
-/******/ 									installedChunkData = installedChunks[chunkId];
-/******/ 									if(installedChunkData !== 0) installedChunks[chunkId] = undefined;
-/******/ 									if(installedChunkData) {
-/******/ 										var errorType = event && (event.type === 'load' ? 'missing' : event.type);
-/******/ 										var realSrc = event && event.target && event.target.src;
-/******/ 										error.message = 'Loading chunk ' + chunkId + ' failed.\n(' + errorType + ': ' + realSrc + ')';
-/******/ 										error.name = 'ChunkLoadError';
-/******/ 										error.type = errorType;
-/******/ 										error.request = realSrc;
-/******/ 										installedChunkData[1](error);
-/******/ 									}
-/******/ 								}
-/******/ 							};
-/******/ 							__webpack_require__.l(url, loadingEnded, "chunk-" + chunkId, chunkId);
-/******/ 						} else installedChunks[chunkId] = 0;
-/******/ 					}
-/******/ 				}
-/******/ 		};
-/******/ 		
-/******/ 		// no prefetching
-/******/ 		
-/******/ 		// no preloaded
-/******/ 		
-/******/ 		// no HMR
-/******/ 		
-/******/ 		// no HMR manifest
-/******/ 		
-/******/ 		// no on chunks loaded
-/******/ 		
-/******/ 		// install a JSONP callback for chunk loading
-/******/ 		var webpackJsonpCallback = (parentChunkLoadingFunction, data) => {
-/******/ 			var [chunkIds, moreModules, runtime] = data;
-/******/ 			// add "moreModules" to the modules object,
-/******/ 			// then flag all "chunkIds" as loaded and fire callback
-/******/ 			var moduleId, chunkId, i = 0;
-/******/ 			for(moduleId in moreModules) {
-/******/ 				if(__webpack_require__.o(moreModules, moduleId)) {
-/******/ 					__webpack_require__.m[moduleId] = moreModules[moduleId];
-/******/ 				}
-/******/ 			}
-/******/ 			if(runtime) var result = runtime(__webpack_require__);
-/******/ 			if(parentChunkLoadingFunction) parentChunkLoadingFunction(data);
-/******/ 			for(;i < chunkIds.length; i++) {
-/******/ 				chunkId = chunkIds[i];
-/******/ 				if(__webpack_require__.o(installedChunks, chunkId) && installedChunks[chunkId]) {
-/******/ 					installedChunks[chunkId][0]();
-/******/ 				}
-/******/ 				installedChunks[chunkIds[i]] = 0;
-/******/ 			}
-/******/ 		
-/******/ 		}
-/******/ 		
-/******/ 		var chunkLoadingGlobal = self["webpackChunkkeeptrack_space"] = self["webpackChunkkeeptrack_space"] || [];
-/******/ 		chunkLoadingGlobal.forEach(webpackJsonpCallback.bind(null, 0));
-/******/ 		chunkLoadingGlobal.push = webpackJsonpCallback.bind(null, chunkLoadingGlobal.push.bind(chunkLoadingGlobal));
 /******/ 	})();
 /******/ 	
 /************************************************************************/
@@ -19994,8 +19232,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(jquery__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _app_js_lib_external_dateFormat_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @app/js/lib/external/dateFormat.js */ "./src/js/lib/external/dateFormat.js");
 /* harmony import */ var _app_js_lib_lookangles_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @app/js/lib/lookangles.js */ "./src/js/lib/lookangles.js");
-/* harmony import */ var _app_js_sensorManager_sensorList_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @app/js/sensorManager/sensorList.js */ "./src/js/sensorManager/sensorList.js");
-/* harmony import */ var _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @app/js/timeManager/timeManager.js */ "./src/js/timeManager/timeManager.js");
+/* harmony import */ var _app_js_plugins_sensor_sensorList_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @app/js/plugins/sensor/sensorList.js */ "./src/js/plugins/sensor/sensorList.js");
+/* harmony import */ var _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @app/js/timeManager/timeManager.ts */ "./src/js/timeManager/timeManager.ts");
 /* /////////////////////////////////////////////////////////////////////////////
 
 (c) 2016-2020, Theodore Kruczek
@@ -20062,8 +19300,8 @@ _app_js_lib_lookangles_js__WEBPACK_IMPORTED_MODULE_3__.satellite.calculateLookAn
       sensor.observerGd = {
         // Array to calculate look angles in propagate()
         latitude: sensor.lat * DEG2RAD,
-        longitude: sensor.long * DEG2RAD,
-        height: sensor.obshei * 1 // Converts from string to number TODO: Find correct way to convert string to integer
+        longitude: sensor.lon * DEG2RAD,
+        height: sensor.alt * 1 // Converts from string to number TODO: Find correct way to convert string to integer
 
       };
     }
@@ -20154,7 +19392,7 @@ _app_js_lib_lookangles_js__WEBPACK_IMPORTED_MODULE_3__.satellite.calculateLookAn
         // Previous Pass to Calculate first line of coverage
         var now1 = new Date();
         now1.setTime(Number(Date.now()) + propTempOffset - _app_js_lib_lookangles_js__WEBPACK_IMPORTED_MODULE_3__.satellite.lookanglesInterval * 1000);
-        var j1 = _app_js_timeManager_timeManager_js__WEBPACK_IMPORTED_MODULE_5__.timeManager.jday(now1.getUTCFullYear(), now1.getUTCMonth() + 1, // NOTE:, this function requires months in range 1-12.
+        var j1 = _app_js_timeManager_timeManager_ts__WEBPACK_IMPORTED_MODULE_5__.timeManager.jday(now1.getUTCFullYear(), now1.getUTCMonth() + 1, // NOTE:, this function requires months in range 1-12.
         now1.getUTCDate(), now1.getUTCHours(), now1.getUTCMinutes(), now1.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
 
         j1 += now1.getUTCMilliseconds() * millisecondsPerDay;
@@ -20682,10 +19920,10 @@ var loadJSON = () => {
         break;
 
       case 'sensor':
-        if (val == 'BLE') sensor = _app_js_sensorManager_sensorList_js__WEBPACK_IMPORTED_MODULE_4__.sensorList.BLE;
-        if (val == 'CLR') sensor = _app_js_sensorManager_sensorList_js__WEBPACK_IMPORTED_MODULE_4__.sensorList.CLR;
-        if (val == 'COD') sensor = _app_js_sensorManager_sensorList_js__WEBPACK_IMPORTED_MODULE_4__.sensorList.COD;
-        if (val == 'FYL') sensor = _app_js_sensorManager_sensorList_js__WEBPACK_IMPORTED_MODULE_4__.sensorList.FYL;
+        if (val == 'BLE') sensor = _app_js_plugins_sensor_sensorList_js__WEBPACK_IMPORTED_MODULE_4__.sensorList.BLE;
+        if (val == 'CLR') sensor = _app_js_plugins_sensor_sensorList_js__WEBPACK_IMPORTED_MODULE_4__.sensorList.CLR;
+        if (val == 'COD') sensor = _app_js_plugins_sensor_sensorList_js__WEBPACK_IMPORTED_MODULE_4__.sensorList.COD;
+        if (val == 'FYL') sensor = _app_js_plugins_sensor_sensorList_js__WEBPACK_IMPORTED_MODULE_4__.sensorList.FYL;
         break;
 
       case 'lookanglesLength':

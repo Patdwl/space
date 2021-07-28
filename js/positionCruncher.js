@@ -11081,9 +11081,9 @@ onmessage = function onmessage(m) {
       } else {
         globalPropagationRate = 2000;
         sensor.observerGd = {
-          longitude: m.data.sensor.long * DEG2RAD,
+          longitude: m.data.sensor.lon * DEG2RAD,
           latitude: m.data.sensor.lat * DEG2RAD,
-          height: m.data.sensor.obshei * 1 // Convert from string
+          height: m.data.sensor.alt * 1 // Convert from string
 
         };
         if (isResetInView == false) isResetInView = true;
@@ -11131,6 +11131,7 @@ onmessage = function onmessage(m) {
         } else {
           satrec = satellite_js__WEBPACK_IMPORTED_MODULE_1__.twoline2satrec( // perform and store sat init calcs
           satData[i].TLE1, satData[i].TLE2);
+          extra.lowAlt = satrec.isimp;
           extra.inclination = satrec.inclo; // rads
 
           extra.eccentricity = satrec.ecco;
@@ -11143,6 +11144,7 @@ onmessage = function onmessage(m) {
           extra.semiMajorAxis = Math.pow(8681663.653 / extra.meanMotion, 2 / 3);
           extra.semiMinorAxis = extra.semiMajorAxis * Math.sqrt(1 - Math.pow(extra.eccentricity, 2));
           extra.apogee = extra.semiMajorAxis * (1 + extra.eccentricity) - RADIUS_OF_EARTH;
+          satrec.apogee = extra.apogee;
           extra.perigee = extra.semiMajorAxis * (1 - extra.eccentricity) - RADIUS_OF_EARTH;
           extra.period = 1440.0 / extra.meanMotion;
           extraData.push(extra);
@@ -11346,7 +11348,45 @@ var propagateCruncher = () => {
         satPos[i * 3 + 2] = pv.position.z;
         satVel[i * 3] = pv.velocity.x;
         satVel[i * 3 + 1] = pv.velocity.y;
-        satVel[i * 3 + 2] = pv.velocity.z; // Skip Calculating Lookangles if No Sensor is Selected
+        satVel[i * 3 + 2] = pv.velocity.z; // Make sure that objects with an imprecise orbit or an old elset
+        // are not failing to propagate
+
+        if (sat.isimp || m / 1440 > 30) {
+          var a = 6378.137;
+          var b = 6356.7523142;
+          var R = Math.sqrt(pv.position.x * pv.position.x + pv.position.y * pv.position.y);
+          var f = (a - b) / a;
+          var e2 = 2 * f - f * f;
+          var lon = Math.atan2(pv.position.y, pv.position.x) - gmst;
+
+          while (lon < -PI) {
+            lon += TAU;
+          }
+
+          while (lon > PI) {
+            lon -= TAU;
+          }
+
+          var kmax = 20;
+          var k = 0;
+
+          var _lat = Math.atan2(pv.position.z, Math.sqrt(pv.position.x * pv.position.x + pv.position.y * pv.position.y));
+
+          var C = void 0;
+
+          while (k < kmax) {
+            C = 1 / Math.sqrt(1 - e2 * (Math.sin(_lat) * Math.sin(_lat)));
+            _lat = Math.atan2(pv.position.z + a * C * e2 * Math.sin(_lat), R);
+            k += 1;
+          }
+
+          var alt = R / Math.cos(_lat) - a * C;
+
+          if (alt > sat.apogee + 1000) {
+            throw new Error('Impossible orbit');
+          }
+        } // Skip Calculating Lookangles if No Sensor is Selected
+
 
         if (!isSensorChecked) {
           if (sensor.observerGd !== defaultGd && !isMultiSensor) {
@@ -11411,9 +11451,9 @@ var propagateCruncher = () => {
               if (satInView[i]) break;
               sensor = mSensor[s];
               sensor.observerGd = {
-                longitude: sensor.long * DEG2RAD,
+                longitude: sensor.lon * DEG2RAD,
                 latitude: sensor.lat * DEG2RAD,
-                height: sensor.obshei * 1 // Convert from string
+                height: sensor.alt * 1 // Convert from string
 
               };
 
@@ -11593,9 +11633,9 @@ var propagateCruncher = () => {
         if (s == mSensor.length) break;
         sensor = mSensor[s];
         sensor.observerGd = {
-          longitude: sensor.long * DEG2RAD,
+          longitude: sensor.lon * DEG2RAD,
           latitude: sensor.lat * DEG2RAD,
-          height: sensor.obshei * 1 // Convert from string
+          height: sensor.alt * 1 // Convert from string
 
         };
 
@@ -11950,7 +11990,12 @@ var propagateCruncher = () => {
           continue;
         }
 
-        for (snum = 0; snum < satelliteSelected.length; snum++) {
+        for (snum = 0; snum < satelliteSelected.length + 1; snum++) {
+          if (snum === satelliteSelected.length) {
+            sensorMarkerArray.push(i);
+            break;
+          }
+
           if (satelliteSelected[snum] !== -1) {
             if (!isShowSatOverfly) continue; // Find the ECI position of the Selected Satellite
 

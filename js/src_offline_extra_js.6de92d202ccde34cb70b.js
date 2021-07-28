@@ -1,3 +1,4 @@
+"use strict";
 (self["webpackChunkkeeptrack_space"] = self["webpackChunkkeeptrack_space"] || []).push([["src_offline_extra_js"],{
 
 /***/ "./src/offline/extra.js":
@@ -6,7 +7,6 @@
   \******************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "satelliteList": () => (/* binding */ satelliteList)
