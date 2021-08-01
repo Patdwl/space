@@ -18737,7 +18737,7 @@ var keepTrackApi = {
         },
         uiManagerFinal: function () {
             keepTrackApi.callbacks.uiManagerFinal.forEach(function (cb) { return cb.cb(); });
-        }
+        },
     },
     programs: {
         timeManager: {},
@@ -19017,8 +19017,8 @@ var timeManager = {
             timeManager.lastTime = now;
         };
         timeManager.setSelectedDate = function (selectedDate) {
-            // This function only applies when datetime plugin is enabled
             timeManager.selectedDate = selectedDate;
+            // This function only applies when datetime plugin is enabled
             if (settingsManager.plugins.datetime) {
                 if (timeManager.lastTime - timeManager.propTimeVar < 300) {
                     timeManager.tDS = timeManager.propTimeVar.toJSON();
