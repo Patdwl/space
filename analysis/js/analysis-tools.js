@@ -18611,7 +18611,7 @@ var __spreadArray = (undefined && undefined.__spreadArray) || function (to, from
         to[j] = from[i];
     return to;
 };
-var keepTrackApi = {
+var keepTrackApi = window.keepTrackApi || {
     html: function (strings) {
         var e_1, _a;
         var placeholders = [];
