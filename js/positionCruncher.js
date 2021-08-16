@@ -11661,11 +11661,11 @@ var propagateCruncher = () => {
           } // az, el, rng, pos;
 
 
-          q = Math.abs(sensor.obsmaxaz - sensor.obsminaz) < 30 ? 0.25 : 2;
+          q = Math.abs(sensor.obsmaxaz - sensor.obsminaz) < 30 ? 0.25 : 3;
           q2 = sensor.obsmaxrange - sensor.obsminrange < 500 ? 1000 : 30; // Don't show anything but the floor if in surveillance only mode
           // Unless it is a volume search radar
 
-          if (!isShowSurvFence || sensor.volume) {
+          if (!isShowSurvFence) {
             // Only on non-360 FOV
             if (sensor.obsminaz !== 0 && sensor.obsmaxaz !== 360) {
               // //////////////////////////////////
@@ -11718,7 +11718,7 @@ var propagateCruncher = () => {
                 // //////////////////////////////////
                 // Min AZ 2 FOV
                 // //////////////////////////////////
-                for (rng = Math.max(sensor.obsminrange2, 100); rng < Math.min(sensor.obsmaxrange2, 60000); rng += Math.min(sensor.obsmaxrange2, 60000) / q2) {
+                for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
                   az = sensor.obsminaz2;
 
                   for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
@@ -11737,7 +11737,7 @@ var propagateCruncher = () => {
                 // //////////////////////////////////
 
 
-                for (rng = Math.max(sensor.obsminrange2, 100); rng < Math.min(sensor.obsmaxrange2, 60000); rng += Math.min(sensor.obsmaxrange2, 60000) / q2) {
+                for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
                   az = sensor.obsmaxaz2;
 
                   for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
@@ -11770,41 +11770,6 @@ var propagateCruncher = () => {
                   i++;
                 }
               }
-            }
-          } // //////////////////////////////////
-          // Floor of FOV
-          // //////////////////////////////////
-
-
-          for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
-              if (sensor.obsminaz > sensor.obsmaxaz) {
-                if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {// Intentional
-                } else {
-                  continue;
-                }
-              } else {
-                if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {// Intentional
-                } else {
-                  continue;
-                }
-              }
-
-              pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-
-              if (i === len) {
-                console.error('No More Markers');
-                break;
-              }
-
-              satCache[i].active = true;
-              satPos[i * 3] = pos.x;
-              satPos[i * 3 + 1] = pos.y;
-              satPos[i * 3 + 2] = pos.z;
-              satVel[i * 3] = 0;
-              satVel[i * 3 + 1] = 0;
-              satVel[i * 3 + 2] = 0;
-              i++;
             }
           } // //////////////////////////////////
           // Top of FOV for Small FOV
@@ -11889,7 +11854,7 @@ var propagateCruncher = () => {
           // Unless it is a volume search radar
 
 
-          if (!isShowSurvFence || sensor.volume) {
+          if (!isShowSurvFence) {
             // //////////////////////////////////
             // Outside Edge of FOV
             // //////////////////////////////////
@@ -11966,6 +11931,117 @@ var propagateCruncher = () => {
                   satVel[i * 3 + 2] = 0;
                   i++;
                 }
+              }
+            }
+          } // //////////////////////////////////
+          // Floor of FOV
+          // //////////////////////////////////
+
+
+          q = 0.25;
+
+          for (rng = sensor.obsmaxrange; rng == sensor.obsmaxrange; rng += 1) {
+            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+              if (sensor.obsminaz > sensor.obsmaxaz) {
+                if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {// Intentional
+                } else {
+                  continue;
+                }
+              } else {
+                if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {// Intentional
+                } else {
+                  continue;
+                }
+              }
+
+              pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+
+              if (i === len) {
+                console.error('No More Markers');
+                break;
+              }
+
+              satCache[i].active = true;
+              satPos[i * 3] = pos.x;
+              satPos[i * 3 + 1] = pos.y;
+              satPos[i * 3 + 2] = pos.z;
+              satVel[i * 3] = 0;
+              satVel[i * 3 + 1] = 0;
+              satVel[i * 3 + 2] = 0;
+              i++;
+            }
+          }
+
+          for (rng = sensor.obsminrange; rng == sensor.obsminrange; rng += 1) {
+            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+              if (sensor.obsminaz > sensor.obsmaxaz) {
+                if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {// Intentional
+                } else {
+                  continue;
+                }
+              } else {
+                if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {// Intentional
+                } else {
+                  continue;
+                }
+              }
+
+              pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+
+              if (i === len) {
+                console.error('No More Markers');
+                break;
+              }
+
+              satCache[i].active = true;
+              satPos[i * 3] = pos.x;
+              satPos[i * 3 + 1] = pos.y;
+              satPos[i * 3 + 2] = pos.z;
+              satVel[i * 3] = 0;
+              satVel[i * 3 + 1] = 0;
+              satVel[i * 3 + 2] = 0;
+              i++;
+            }
+          }
+
+          if (sensor.obsminaz !== sensor.obsmaxaz && sensor.obsminaz !== sensor.obsmaxaz - 360) {
+            for (az = sensor.obsmaxaz; az == sensor.obsmaxaz; az += 1) {
+              for (rng = sensor.obsminrange; rng < sensor.obsmaxrange; rng += q) {
+                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+
+                if (i === len) {
+                  console.error('No More Markers');
+                  break;
+                }
+
+                satCache[i].active = true;
+                satPos[i * 3] = pos.x;
+                satPos[i * 3 + 1] = pos.y;
+                satPos[i * 3 + 2] = pos.z;
+                satVel[i * 3] = 0;
+                satVel[i * 3 + 1] = 0;
+                satVel[i * 3 + 2] = 0;
+                i++;
+              }
+            }
+
+            for (az = sensor.obsminaz; az == sensor.obsminaz; az += 1) {
+              for (rng = sensor.obsminrange; rng < sensor.obsmaxrange; rng += q) {
+                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+
+                if (i === len) {
+                  console.error('No More Markers');
+                  break;
+                }
+
+                satCache[i].active = true;
+                satPos[i * 3] = pos.x;
+                satPos[i * 3 + 1] = pos.y;
+                satPos[i * 3 + 2] = pos.z;
+                satVel[i * 3] = 0;
+                satVel[i * 3 + 1] = 0;
+                satVel[i * 3 + 2] = 0;
+                i++;
               }
             }
           }
