@@ -18629,7 +18629,7 @@ var keepTrackApi = window.keepTrackApi || {
         catch (e_1_1) { e_1 = { error: e_1_1 }; }
         finally {
             try {
-                if (placeholders_1_1 && !placeholders_1_1.done && (_a = placeholders_1.return)) _a.call(placeholders_1);
+                if (placeholders_1_1 && !placeholders_1_1.done && (_a = placeholders_1["return"])) _a.call(placeholders_1);
             }
             finally { if (e_1) throw e_1.error; }
         }
