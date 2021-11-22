@@ -749,19 +749,16 @@ A.Solistice = {
 /*!****************************************!*\
   !*** ./src/js/lib/external/numeric.js ***!
   \****************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "numeric": () => (/* binding */ numeric)
+/* harmony export */ });
+var _numeric = {};
+_numeric.version = '1.2.7'; // 1. Utility functions
 
-
-var numeric =  false ? 0 : exports;
-
-if (typeof __webpack_require__.g !== 'undefined') {
-  __webpack_require__.g.numeric = numeric;
-}
-
-numeric.version = '1.2.6'; // 1. Utility functions
-
-numeric.bench = function bench(f, interval) {
+_numeric.bench = function bench(f, interval) {
   var t1, t2, n, i;
 
   if (typeof interval === 'undefined') {
@@ -806,7 +803,7 @@ numeric.bench = function bench(f, interval) {
   return 1000 * (3 * n - 1) / (t2 - t1);
 };
 
-numeric._myIndexOf = function _myIndexOf(w) {
+_numeric._myIndexOf = function _myIndexOf(w) {
   var n = this.length,
       k;
 
@@ -817,12 +814,12 @@ numeric._myIndexOf = function _myIndexOf(w) {
   return -1;
 };
 
-numeric.myIndexOf = Array.prototype.indexOf ? Array.prototype.indexOf : numeric._myIndexOf;
-numeric.Function = Function;
-numeric.precision = 4;
-numeric.largeArray = 50;
+_numeric.myIndexOf = Array.prototype.indexOf ? Array.prototype.indexOf : _numeric._myIndexOf;
+_numeric.Function = Function;
+_numeric.precision = 4;
+_numeric.largeArray = 50;
 
-numeric.prettyPrint = function prettyPrint(x) {
+_numeric.prettyPrint = function prettyPrint(x) {
   function fmtnum(x) {
     if (x === 0) {
       return '0';
@@ -839,12 +836,12 @@ numeric.prettyPrint = function prettyPrint(x) {
     if (isFinite(x)) {
       var scale = Math.floor(Math.log(x) / Math.log(10));
       var normalized = x / Math.pow(10, scale);
-      var basic = normalized.toPrecision(numeric.precision);
+      var basic = normalized.toPrecision(_numeric.precision);
 
       if (parseFloat(basic) === 10) {
         scale++;
         normalized = 1;
-        basic = normalized.toPrecision(numeric.precision);
+        basic = normalized.toPrecision(_numeric.precision);
       }
 
       return parseFloat(basic).toString() + 'e' + scale.toString();
@@ -859,7 +856,7 @@ numeric.prettyPrint = function prettyPrint(x) {
     var k;
 
     if (typeof x === 'undefined') {
-      ret.push(Array(numeric.precision + 8).join(' '));
+      ret.push(Array(_numeric.precision + 8).join(' '));
       return false;
     }
 
@@ -875,7 +872,7 @@ numeric.prettyPrint = function prettyPrint(x) {
 
     if (typeof x === 'number') {
       var a = fmtnum(x);
-      var b = x.toPrecision(numeric.precision);
+      var b = x.toPrecision(_numeric.precision);
       var c = parseFloat(x.toString()).toString();
       var d = [a, b, c, parseFloat(b).toString(), parseFloat(c).toString()];
 
@@ -883,7 +880,7 @@ numeric.prettyPrint = function prettyPrint(x) {
         if (d[k].length < a.length) a = d[k];
       }
 
-      ret.push(Array(numeric.precision + 8 - a.length).join(' ') + a);
+      ret.push(Array(_numeric.precision + 8 - a.length).join(' ') + a);
       return false;
     }
 
@@ -911,7 +908,7 @@ numeric.prettyPrint = function prettyPrint(x) {
     }
 
     if (x instanceof Array) {
-      if (x.length > numeric.largeArray) {
+      if (x.length > _numeric.largeArray) {
         ret.push('...Large Array...');
         return true;
       }
@@ -953,7 +950,7 @@ numeric.prettyPrint = function prettyPrint(x) {
   return ret.join('');
 };
 
-numeric.parseDate = function parseDate(d) {
+_numeric.parseDate = function parseDate(d) {
   function foo(d) {
     if (typeof d === 'string') {
       return Date.parse(d.replace(/-/g, '/'));
@@ -976,7 +973,7 @@ numeric.parseDate = function parseDate(d) {
   return foo(d);
 };
 
-numeric.parseFloat = function parseFloat_(d) {
+_numeric.parseFloat = function parseFloat_(d) {
   function foo(d) {
     if (typeof d === 'string') {
       return parseFloat(d);
@@ -999,7 +996,7 @@ numeric.parseFloat = function parseFloat_(d) {
   return foo(d);
 };
 
-numeric.parseCSV = function parseCSV(t) {
+_numeric.parseCSV = function parseCSV(t) {
   var foo = t.split('\n');
   var j, k;
   var ret = [];
@@ -1034,8 +1031,9 @@ numeric.parseCSV = function parseCSV(t) {
   return ret;
 };
 
-numeric.toCSV = function toCSV(A) {
-  var s = numeric.dim(A);
+_numeric.toCSV = function toCSV(A) {
+  var s = _numeric.dim(A);
+
   var i, j, m, n, row, ret;
   m = s[0];
   n = s[1];
@@ -1054,15 +1052,14 @@ numeric.toCSV = function toCSV(A) {
   return ret.join('\n') + '\n';
 };
 
-numeric.getURL = function getURL(url) {
+_numeric.getURL = function getURL(url) {
   var client = new XMLHttpRequest();
-  client.overrideMimeType("text/html");
   client.open('GET', url, false);
   client.send();
   return client;
 };
 
-numeric.imageURL = function imageURL(img) {
+_numeric.imageURL = function imageURL(img) {
   function base64(A) {
     var n = A.length,
         i,
@@ -1226,7 +1223,7 @@ numeric.imageURL = function imageURL(img) {
 }; // 2. Linear algebra with Arrays.
 
 
-numeric._dim = function _dim(x) {
+_numeric._dim = function _dim(x) {
   var ret = [];
 
   while (typeof x === 'object') {
@@ -1237,7 +1234,7 @@ numeric._dim = function _dim(x) {
   return ret;
 };
 
-numeric.dim = function dim(x) {
+_numeric.dim = function dim(x) {
   var y, z;
 
   if (typeof x === 'object') {
@@ -1247,7 +1244,7 @@ numeric.dim = function dim(x) {
       z = y[0];
 
       if (typeof z === 'object') {
-        return numeric._dim(x);
+        return _numeric._dim(x);
       }
 
       return [x.length, y.length];
@@ -1259,15 +1256,15 @@ numeric.dim = function dim(x) {
   return [];
 };
 
-numeric.mapreduce = function mapreduce(body, init) {
-  return Function('x', 'accum', '_s', '_k', 'if(typeof accum === "undefined") accum = ' + init + ';\n' + 'if(typeof x === "number") { var xi = x; ' + body + '; return accum; }\n' + 'if(typeof _s === "undefined") _s = numeric.dim(x);\n' + 'if(typeof _k === "undefined") _k = 0;\n' + 'var _n = _s[_k];\n' + 'var i,xi;\n' + 'if(_k < _s.length-1) {\n' + '    for(i=_n-1;i>=0;i--) {\n' + '        accum = arguments.callee(x[i],accum,_s,_k+1);\n' + '    }' + '    return accum;\n' + '}\n' + 'for(i=_n-1;i>=1;i-=2) { \n' + '    xi = x[i];\n' + '    ' + body + ';\n' + '    xi = x[i-1];\n' + '    ' + body + ';\n' + '}\n' + 'if(i === 0) {\n' + '    xi = x[i];\n' + '    ' + body + '\n' + '}\n' + 'return accum;');
+_numeric.mapreduce = function mapreduce(body, init) {
+  return Function('x', 'accum', '_s', '_k', 'if(typeof accum === "undefined") accum = ' + init + ';\n' + 'if(typeof x === "number") { var xi = x; ' + body + '; return accum; }\n' + 'if(typeof _s === "undefined") _s = _numeric.dim(x);\n' + 'if(typeof _k === "undefined") _k = 0;\n' + 'var _n = _s[_k];\n' + 'var i,xi;\n' + 'if(_k < _s.length-1) {\n' + '    for(i=_n-1;i>=0;i--) {\n' + '        accum = arguments.callee(x[i],accum,_s,_k+1);\n' + '    }' + '    return accum;\n' + '}\n' + 'for(i=_n-1;i>=1;i-=2) { \n' + '    xi = x[i];\n' + '    ' + body + ';\n' + '    xi = x[i-1];\n' + '    ' + body + ';\n' + '}\n' + 'if(i === 0) {\n' + '    xi = x[i];\n' + '    ' + body + '\n' + '}\n' + 'return accum;');
 };
 
-numeric.mapreduce2 = function mapreduce2(body, setup) {
+_numeric.mapreduce2 = function mapreduce2(body, setup) {
   return Function('x', 'var n = x.length;\n' + 'var i,xi;\n' + setup + ';\n' + 'for(i=n-1;i!==-1;--i) { \n' + '    xi = x[i];\n' + '    ' + body + ';\n' + '}\n' + 'return accum;');
 };
 
-numeric.same = function same(x, y) {
+_numeric.same = function same(x, y) {
   var i, n;
 
   if (!(x instanceof Array) || !(y instanceof Array)) {
@@ -1295,7 +1292,7 @@ numeric.same = function same(x, y) {
   return true;
 };
 
-numeric.rep = function rep(s, v, k) {
+_numeric.rep = function rep(s, v, k) {
   if (typeof k === 'undefined') {
     k = 0;
   }
@@ -1318,13 +1315,13 @@ numeric.rep = function rep(s, v, k) {
   }
 
   for (i = n - 1; i >= 0; i--) {
-    ret[i] = numeric.rep(s, v, k + 1);
+    ret[i] = _numeric.rep(s, v, k + 1);
   }
 
   return ret;
 };
 
-numeric.dotMMsmall = function dotMMsmall(x, y) {
+_numeric.dotMMsmall = function dotMMsmall(x, y) {
   var i, j, k, p, q, r, ret, foo, bar, woo, i0, k0, p0, r0;
   p = x.length;
   q = y.length;
@@ -1356,7 +1353,7 @@ numeric.dotMMsmall = function dotMMsmall(x, y) {
   return ret;
 };
 
-numeric._getCol = function _getCol(A, j, x) {
+_numeric._getCol = function _getCol(A, j, x) {
   var n = A.length,
       i;
 
@@ -1369,15 +1366,15 @@ numeric._getCol = function _getCol(A, j, x) {
   if (i === 0) x[0] = A[0][j];
 };
 
-numeric.dotMMbig = function dotMMbig(x, y) {
-  var gc = numeric._getCol,
+_numeric.dotMMbig = function dotMMbig(x, y) {
+  var gc = _numeric._getCol,
       p = y.length,
       v = Array(p);
   var m = x.length,
       n = y[0].length,
       A = new Array(m),
       xj;
-  var VV = numeric.dotVV;
+  var VV = _numeric.dotVV;
   var i, j, k, z;
   --p;
   --m;
@@ -1401,12 +1398,12 @@ numeric.dotMMbig = function dotMMbig(x, y) {
   return A;
 };
 
-numeric.dotMV = function dotMV(x, y) {
+_numeric.dotMV = function dotMV(x, y) {
   var p = x.length,
       q = y.length,
       i;
   var ret = Array(p),
-      dotVV = numeric.dotVV;
+      dotVV = _numeric.dotVV;
 
   for (i = p - 1; i >= 0; i--) {
     ret[i] = dotVV(x[i], y);
@@ -1415,7 +1412,7 @@ numeric.dotMV = function dotMV(x, y) {
   return ret;
 };
 
-numeric.dotVM = function dotVM(x, y) {
+_numeric.dotVM = function dotVM(x, y) {
   var i, j, k, p, q, r, ret, foo, bar, woo, i0, k0, p0, r0, s1, s2, s3, baz, accum;
   p = x.length;
   q = y[0].length;
@@ -1439,7 +1436,7 @@ numeric.dotVM = function dotVM(x, y) {
   return ret;
 };
 
-numeric.dotVV = function dotVV(x, y) {
+_numeric.dotVV = function dotVV(x, y) {
   var i,
       n = x.length,
       i1,
@@ -1457,37 +1454,37 @@ numeric.dotVV = function dotVV(x, y) {
   return ret;
 };
 
-numeric.dot = function dot(x, y) {
-  var d = numeric.dim;
+_numeric.dot = function dot(x, y) {
+  var d = _numeric.dim;
 
   switch (d(x).length * 1000 + d(y).length) {
     case 2002:
-      if (y.length < 10) return numeric.dotMMsmall(x, y);else return numeric.dotMMbig(x, y);
+      if (y.length < 10) return _numeric.dotMMsmall(x, y);else return _numeric.dotMMbig(x, y);
 
     case 2001:
-      return numeric.dotMV(x, y);
+      return _numeric.dotMV(x, y);
 
     case 1002:
-      return numeric.dotVM(x, y);
+      return _numeric.dotVM(x, y);
 
     case 1001:
-      return numeric.dotVV(x, y);
+      return _numeric.dotVV(x, y);
 
     case 1000:
-      return numeric.mulVS(x, y);
+      return _numeric.mulVS(x, y);
 
     case 1:
-      return numeric.mulSV(x, y);
+      return _numeric.mulSV(x, y);
 
     case 0:
       return x * y;
 
     default:
-      throw new Error('numeric.dot only works on vectors and matrices');
+      throw new Error('_numeric.dot only works on vectors and matrices');
   }
 };
 
-numeric.diag = function diag(d) {
+_numeric.diag = function diag(d) {
   var i,
       i1,
       j,
@@ -1525,7 +1522,7 @@ numeric.diag = function diag(d) {
   return A;
 };
 
-numeric.getDiag = function (A) {
+_numeric.getDiag = function (A) {
   var n = Math.min(A.length, A[0].length),
       i,
       ret = Array(n);
@@ -1543,11 +1540,11 @@ numeric.getDiag = function (A) {
   return ret;
 };
 
-numeric.identity = function identity(n) {
-  return numeric.diag(numeric.rep([n], 1));
+_numeric.identity = function identity(n) {
+  return _numeric.diag(_numeric.rep([n], 1));
 };
 
-numeric.pointwise = function pointwise(params, body, setup) {
+_numeric.pointwise = function pointwise(params, body, setup) {
   if (typeof setup === 'undefined') {
     setup = '';
   }
@@ -1573,11 +1570,11 @@ numeric.pointwise = function pointwise(params, body, setup) {
 
   fun[params.length] = '_s';
   fun[params.length + 1] = '_k';
-  fun[params.length + 2] = 'if(typeof _s === "undefined") _s = numeric.dim(' + thevec + ');\n' + 'if(typeof _k === "undefined") _k = 0;\n' + 'var _n = _s[_k];\n' + 'var i' + (haveret ? '' : ', ret = Array(_n)') + ';\n' + 'if(_k < _s.length-1) {\n' + '    for(i=_n-1;i>=0;i--) ret[i] = arguments.callee(' + params.join(',') + ',_s,_k+1);\n' + '    return ret;\n' + '}\n' + setup + '\n' + 'for(i=_n-1;i!==-1;--i) {\n' + '    ' + body + '\n' + '}\n' + 'return ret;';
+  fun[params.length + 2] = 'if(typeof _s === "undefined") _s = _numeric.dim(' + thevec + ');\n' + 'if(typeof _k === "undefined") _k = 0;\n' + 'var _n = _s[_k];\n' + 'var i' + (haveret ? '' : ', ret = Array(_n)') + ';\n' + 'if(_k < _s.length-1) {\n' + '    for(i=_n-1;i>=0;i--) ret[i] = arguments.callee(' + params.join(',') + ',_s,_k+1);\n' + '    return ret;\n' + '}\n' + setup + '\n' + 'for(i=_n-1;i!==-1;--i) {\n' + '    ' + body + '\n' + '}\n' + 'return ret;';
   return Function.apply(null, fun);
 };
 
-numeric.pointwise2 = function pointwise2(params, body, setup) {
+_numeric.pointwise2 = function pointwise2(params, body, setup) {
   if (typeof setup === 'undefined') {
     setup = '';
   }
@@ -1605,7 +1602,7 @@ numeric.pointwise2 = function pointwise2(params, body, setup) {
   return Function.apply(null, fun);
 };
 
-numeric._biforeach = function _biforeach(x, y, s, k, f) {
+_numeric._biforeach = function _biforeach(x, y, s, k, f) {
   if (k === s.length - 1) {
     f(x, y);
     return;
@@ -1619,7 +1616,7 @@ numeric._biforeach = function _biforeach(x, y, s, k, f) {
   }
 };
 
-numeric._biforeach2 = function _biforeach2(x, y, s, k, f) {
+_numeric._biforeach2 = function _biforeach2(x, y, s, k, f) {
   if (k === s.length - 1) {
     return f(x, y);
   }
@@ -1635,7 +1632,7 @@ numeric._biforeach2 = function _biforeach2(x, y, s, k, f) {
   return ret;
 };
 
-numeric._foreach = function _foreach(x, s, k, f) {
+_numeric._foreach = function _foreach(x, s, k, f) {
   if (k === s.length - 1) {
     f(x);
     return;
@@ -1649,7 +1646,7 @@ numeric._foreach = function _foreach(x, s, k, f) {
   }
 };
 
-numeric._foreach2 = function _foreach2(x, s, k, f) {
+_numeric._foreach2 = function _foreach2(x, s, k, f) {
   if (k === s.length - 1) {
     return f(x);
   }
@@ -1664,13 +1661,13 @@ numeric._foreach2 = function _foreach2(x, s, k, f) {
 
   return ret;
 };
-/*numeric.anyV = numeric.mapreduce('if(xi) return true;','false');
-numeric.allV = numeric.mapreduce('if(!xi) return false;','true');
-numeric.any = function(x) { if(typeof x.length === "undefined") return x; return numeric.anyV(x); }
-numeric.all = function(x) { if(typeof x.length === "undefined") return x; return numeric.allV(x); }*/
+/*_numeric.anyV = _numeric.mapreduce('if(xi) return true;','false');
+_numeric.allV = _numeric.mapreduce('if(!xi) return false;','true');
+_numeric.any = function(x) { if(typeof x.length === "undefined") return x; return _numeric.anyV(x); }
+_numeric.all = function(x) { if(typeof x.length === "undefined") return x; return _numeric.allV(x); }*/
 
 
-numeric.ops2 = {
+_numeric.ops2 = {
   add: '+',
   sub: '-',
   mul: '*',
@@ -1691,7 +1688,7 @@ numeric.ops2 = {
   rshift: '>>',
   rrshift: '>>>'
 };
-numeric.opseq = {
+_numeric.opseq = {
   addeq: '+=',
   subeq: '-=',
   muleq: '*=',
@@ -1704,15 +1701,15 @@ numeric.opseq = {
   boreq: '|=',
   bxoreq: '^='
 };
-numeric.mathfuns = ['abs', 'acos', 'asin', 'atan', 'ceil', 'cos', 'exp', 'floor', 'log', 'round', 'sin', 'sqrt', 'tan', 'isNaN', 'isFinite'];
-numeric.mathfuns2 = ['atan2', 'pow', 'max', 'min'];
-numeric.ops1 = {
+_numeric.mathfuns = ['abs', 'acos', 'asin', 'atan', 'ceil', 'cos', 'exp', 'floor', 'log', 'round', 'sin', 'sqrt', 'tan', 'isNaN', 'isFinite'];
+_numeric.mathfuns2 = ['atan2', 'pow', 'max', 'min'];
+_numeric.ops1 = {
   neg: '-',
   not: '!',
   bnot: '~',
   clone: ''
 };
-numeric.mapreducers = {
+_numeric.mapreducers = {
   any: ['if(xi) return true;', 'var accum = false;'],
   all: ['if(!xi) return false;', 'var accum = true;'],
   sum: ['accum += xi;', 'var accum = 0;'],
@@ -1727,19 +1724,19 @@ numeric.mapreducers = {
 (function () {
   var i, o;
 
-  for (i = 0; i < numeric.mathfuns2.length; ++i) {
-    o = numeric.mathfuns2[i];
-    numeric.ops2[o] = o;
+  for (i = 0; i < _numeric.mathfuns2.length; ++i) {
+    o = _numeric.mathfuns2[i];
+    _numeric.ops2[o] = o;
   }
 
-  for (i in numeric.ops2) {
-    if (numeric.ops2.hasOwnProperty(i)) {
-      o = numeric.ops2[i];
+  for (i in _numeric.ops2) {
+    if (_numeric.ops2.hasOwnProperty(i)) {
+      o = _numeric.ops2[i];
       var code,
           codeeq,
           setup = '';
 
-      if (numeric.myIndexOf.call(numeric.mathfuns2, i) !== -1) {
+      if (_numeric.myIndexOf.call(_numeric.mathfuns2, i) !== -1) {
         setup = 'var ' + o + ' = Math.' + o + ';\n';
 
         code = function code(r, x, y) {
@@ -1754,7 +1751,7 @@ numeric.mapreducers = {
           return r + ' = ' + x + ' ' + o + ' ' + y;
         };
 
-        if (numeric.opseq.hasOwnProperty(i + 'eq')) {
+        if (_numeric.opseq.hasOwnProperty(i + 'eq')) {
           codeeq = function codeeq(x, y) {
             return x + ' ' + o + '= ' + y;
           };
@@ -1765,82 +1762,85 @@ numeric.mapreducers = {
         }
       }
 
-      numeric[i + 'VV'] = numeric.pointwise2(['x[i]', 'y[i]'], code('ret[i]', 'x[i]', 'y[i]'), setup);
-      numeric[i + 'SV'] = numeric.pointwise2(['x', 'y[i]'], code('ret[i]', 'x', 'y[i]'), setup);
-      numeric[i + 'VS'] = numeric.pointwise2(['x[i]', 'y'], code('ret[i]', 'x[i]', 'y'), setup);
-      numeric[i] = Function('var n = arguments.length, i, x = arguments[0], y;\n' + 'var VV = numeric.' + i + 'VV, VS = numeric.' + i + 'VS, SV = numeric.' + i + 'SV;\n' + 'var dim = numeric.dim;\n' + 'for(i=1;i!==n;++i) { \n' + '  y = arguments[i];\n' + '  if(typeof x === "object") {\n' + '      if(typeof y === "object") x = numeric._biforeach2(x,y,dim(x),0,VV);\n' + '      else x = numeric._biforeach2(x,y,dim(x),0,VS);\n' + '  } else if(typeof y === "object") x = numeric._biforeach2(x,y,dim(y),0,SV);\n' + '  else ' + codeeq('x', 'y') + '\n' + '}\nreturn x;\n');
-      numeric[o] = numeric[i];
-      numeric[i + 'eqV'] = numeric.pointwise2(['ret[i]', 'x[i]'], codeeq('ret[i]', 'x[i]'), setup);
-      numeric[i + 'eqS'] = numeric.pointwise2(['ret[i]', 'x'], codeeq('ret[i]', 'x'), setup);
-      numeric[i + 'eq'] = Function('var n = arguments.length, i, x = arguments[0], y;\n' + 'var V = numeric.' + i + 'eqV, S = numeric.' + i + 'eqS\n' + 'var s = numeric.dim(x);\n' + 'for(i=1;i!==n;++i) { \n' + '  y = arguments[i];\n' + '  if(typeof y === "object") numeric._biforeach(x,y,s,0,V);\n' + '  else numeric._biforeach(x,y,s,0,S);\n' + '}\nreturn x;\n');
+      _numeric[i + 'VV'] = _numeric.pointwise2(['x[i]', 'y[i]'], code('ret[i]', 'x[i]', 'y[i]'), setup);
+      _numeric[i + 'SV'] = _numeric.pointwise2(['x', 'y[i]'], code('ret[i]', 'x', 'y[i]'), setup);
+      _numeric[i + 'VS'] = _numeric.pointwise2(['x[i]', 'y'], code('ret[i]', 'x[i]', 'y'), setup);
+      _numeric[i] = Function('var n = arguments.length, i, x = arguments[0], y;\n' + 'var VV = _numeric.' + i + 'VV, VS = _numeric.' + i + 'VS, SV = _numeric.' + i + 'SV;\n' + 'var dim = _numeric.dim;\n' + 'for(i=1;i!==n;++i) { \n' + '  y = arguments[i];\n' + '  if(typeof x === "object") {\n' + '      if(typeof y === "object") x = _numeric._biforeach2(x,y,dim(x),0,VV);\n' + '      else x = _numeric._biforeach2(x,y,dim(x),0,VS);\n' + '  } else if(typeof y === "object") x = _numeric._biforeach2(x,y,dim(y),0,SV);\n' + '  else ' + codeeq('x', 'y') + '\n' + '}\nreturn x;\n');
+      _numeric[o] = _numeric[i];
+      _numeric[i + 'eqV'] = _numeric.pointwise2(['ret[i]', 'x[i]'], codeeq('ret[i]', 'x[i]'), setup);
+      _numeric[i + 'eqS'] = _numeric.pointwise2(['ret[i]', 'x'], codeeq('ret[i]', 'x'), setup);
+      _numeric[i + 'eq'] = Function('var n = arguments.length, i, x = arguments[0], y;\n' + 'var V = _numeric.' + i + 'eqV, S = _numeric.' + i + 'eqS\n' + 'var s = _numeric.dim(x);\n' + 'for(i=1;i!==n;++i) { \n' + '  y = arguments[i];\n' + '  if(typeof y === "object") _numeric._biforeach(x,y,s,0,V);\n' + '  else _numeric._biforeach(x,y,s,0,S);\n' + '}\nreturn x;\n');
     }
   }
 
-  for (i = 0; i < numeric.mathfuns2.length; ++i) {
-    o = numeric.mathfuns2[i];
-    delete numeric.ops2[o];
+  for (i = 0; i < _numeric.mathfuns2.length; ++i) {
+    o = _numeric.mathfuns2[i];
+    delete _numeric.ops2[o];
   }
 
-  for (i = 0; i < numeric.mathfuns.length; ++i) {
-    o = numeric.mathfuns[i];
-    numeric.ops1[o] = o;
+  for (i = 0; i < _numeric.mathfuns.length; ++i) {
+    o = _numeric.mathfuns[i];
+    _numeric.ops1[o] = o;
   }
 
-  for (i in numeric.ops1) {
-    if (numeric.ops1.hasOwnProperty(i)) {
+  for (i in _numeric.ops1) {
+    if (_numeric.ops1.hasOwnProperty(i)) {
       setup = '';
-      o = numeric.ops1[i];
+      o = _numeric.ops1[i];
 
-      if (numeric.myIndexOf.call(numeric.mathfuns, i) !== -1) {
+      if (_numeric.myIndexOf.call(_numeric.mathfuns, i) !== -1) {
         if (Math.hasOwnProperty(o)) setup = 'var ' + o + ' = Math.' + o + ';\n';
       }
 
-      numeric[i + 'eqV'] = numeric.pointwise2(['ret[i]'], 'ret[i] = ' + o + '(ret[i]);', setup);
-      numeric[i + 'eq'] = Function('x', 'if(typeof x !== "object") return ' + o + 'x\n' + 'var i;\n' + 'var V = numeric.' + i + 'eqV;\n' + 'var s = numeric.dim(x);\n' + 'numeric._foreach(x,s,0,V);\n' + 'return x;\n');
-      numeric[i + 'V'] = numeric.pointwise2(['x[i]'], 'ret[i] = ' + o + '(x[i]);', setup);
-      numeric[i] = Function('x', 'if(typeof x !== "object") return ' + o + '(x)\n' + 'var i;\n' + 'var V = numeric.' + i + 'V;\n' + 'var s = numeric.dim(x);\n' + 'return numeric._foreach2(x,s,0,V);\n');
+      _numeric[i + 'eqV'] = _numeric.pointwise2(['ret[i]'], 'ret[i] = ' + o + '(ret[i]);', setup);
+      _numeric[i + 'eq'] = Function('x', 'if(typeof x !== "object") return ' + o + 'x\n' + 'var i;\n' + 'var V = _numeric.' + i + 'eqV;\n' + 'var s = _numeric.dim(x);\n' + '_numeric._foreach(x,s,0,V);\n' + 'return x;\n');
+      _numeric[i + 'V'] = _numeric.pointwise2(['x[i]'], 'ret[i] = ' + o + '(x[i]);', setup);
+      _numeric[i] = Function('x', 'if(typeof x !== "object") return ' + o + '(x)\n' + 'var i;\n' + 'var V = _numeric.' + i + 'V;\n' + 'var s = _numeric.dim(x);\n' + 'return _numeric._foreach2(x,s,0,V);\n');
     }
   }
 
-  for (i = 0; i < numeric.mathfuns.length; ++i) {
-    o = numeric.mathfuns[i];
-    delete numeric.ops1[o];
+  for (i = 0; i < _numeric.mathfuns.length; ++i) {
+    o = _numeric.mathfuns[i];
+    delete _numeric.ops1[o];
   }
 
-  for (i in numeric.mapreducers) {
-    if (numeric.mapreducers.hasOwnProperty(i)) {
-      o = numeric.mapreducers[i];
-      numeric[i + 'V'] = numeric.mapreduce2(o[0], o[1]);
-      numeric[i] = Function('x', 's', 'k', o[1] + 'if(typeof x !== "object") {' + '    xi = x;\n' + o[0] + ';\n' + '    return accum;\n' + '}' + 'if(typeof s === "undefined") s = numeric.dim(x);\n' + 'if(typeof k === "undefined") k = 0;\n' + 'if(k === s.length-1) return numeric.' + i + 'V(x);\n' + 'var xi;\n' + 'var n = x.length, i;\n' + 'for(i=n-1;i!==-1;--i) {\n' + '   xi = arguments.callee(x[i]);\n' + o[0] + ';\n' + '}\n' + 'return accum;\n');
+  for (i in _numeric.mapreducers) {
+    if (_numeric.mapreducers.hasOwnProperty(i)) {
+      o = _numeric.mapreducers[i];
+      _numeric[i + 'V'] = _numeric.mapreduce2(o[0], o[1]);
+      _numeric[i] = Function('x', 's', 'k', o[1] + 'if(typeof x !== "object") {' + '    xi = x;\n' + o[0] + ';\n' + '    return accum;\n' + '}' + 'if(typeof s === "undefined") s = _numeric.dim(x);\n' + 'if(typeof k === "undefined") k = 0;\n' + 'if(k === s.length-1) return _numeric.' + i + 'V(x);\n' + 'var xi;\n' + 'var n = x.length, i;\n' + 'for(i=n-1;i!==-1;--i) {\n' + '   xi = arguments.callee(x[i]);\n' + o[0] + ';\n' + '}\n' + 'return accum;\n');
     }
   }
 })();
 
-numeric.truncVV = numeric.pointwise(['x[i]', 'y[i]'], 'ret[i] = round(x[i]/y[i])*y[i];', 'var round = Math.round;');
-numeric.truncVS = numeric.pointwise(['x[i]', 'y'], 'ret[i] = round(x[i]/y)*y;', 'var round = Math.round;');
-numeric.truncSV = numeric.pointwise(['x', 'y[i]'], 'ret[i] = round(x/y[i])*y[i];', 'var round = Math.round;');
+_numeric.truncVV = _numeric.pointwise(['x[i]', 'y[i]'], 'ret[i] = round(x[i]/y[i])*y[i];', 'var round = Math.round;');
+_numeric.truncVS = _numeric.pointwise(['x[i]', 'y'], 'ret[i] = round(x[i]/y)*y;', 'var round = Math.round;');
+_numeric.truncSV = _numeric.pointwise(['x', 'y[i]'], 'ret[i] = round(x/y[i])*y[i];', 'var round = Math.round;');
 
-numeric.trunc = function trunc(x, y) {
+_numeric.trunc = function trunc(x, y) {
   if (typeof x === 'object') {
-    if (typeof y === 'object') return numeric.truncVV(x, y);
-    return numeric.truncVS(x, y);
+    if (typeof y === 'object') return _numeric.truncVV(x, y);
+    return _numeric.truncVS(x, y);
   }
 
-  if (typeof y === 'object') return numeric.truncSV(x, y);
+  if (typeof y === 'object') return _numeric.truncSV(x, y);
   return Math.round(x / y) * y;
 };
 
-numeric.inv = function inv(x) {
-  var s = numeric.dim(x),
+_numeric.inv = function inv(x) {
+  var s = _numeric.dim(x),
       abs = Math.abs,
       m = s[0],
       n = s[1];
-  var A = numeric.clone(x),
+
+  var A = _numeric.clone(x),
       Ai,
       Aj;
-  var I = numeric.identity(m),
+
+  var I = _numeric.identity(m),
       Ii,
       Ij;
+
   var i, j, k, x;
 
   for (j = 0; j < n; ++j) {
@@ -1896,11 +1896,11 @@ numeric.inv = function inv(x) {
   return I;
 };
 
-numeric.det = function det(x) {
-  var s = numeric.dim(x);
+_numeric.det = function det(x) {
+  var s = _numeric.dim(x);
 
   if (s.length !== 2 || s[0] !== s[1]) {
-    throw new Error('numeric: det() only works on square matrices');
+    throw new Error('_numeric: det() only works on square matrices');
   }
 
   var n = s[0],
@@ -1908,7 +1908,7 @@ numeric.det = function det(x) {
       i,
       j,
       k,
-      A = numeric.clone(x),
+      A = _numeric.clone(x),
       Aj,
       Ai,
       alpha,
@@ -1960,7 +1960,7 @@ numeric.det = function det(x) {
   return ret * A[j][j];
 };
 
-numeric.transpose = function transpose(x) {
+_numeric.transpose = function transpose(x) {
   var i,
       j,
       m = x.length,
@@ -2012,7 +2012,7 @@ numeric.transpose = function transpose(x) {
   return ret;
 };
 
-numeric.negtranspose = function negtranspose(x) {
+_numeric.negtranspose = function negtranspose(x) {
   var i,
       j,
       m = x.length,
@@ -2064,7 +2064,7 @@ numeric.negtranspose = function negtranspose(x) {
   return ret;
 };
 
-numeric._random = function _random(s, k) {
+_numeric._random = function _random(s, k) {
   var i,
       n = s[k],
       ret = Array(n),
@@ -2092,15 +2092,15 @@ numeric._random = function _random(s, k) {
   return ret;
 };
 
-numeric.random = function random(s) {
-  return numeric._random(s, 0);
+_numeric.random = function random(s) {
+  return _numeric._random(s, 0);
 };
 
-numeric.norm2 = function norm2(x) {
-  return Math.sqrt(numeric.norm2Squared(x));
+_numeric.norm2 = function norm2(x) {
+  return Math.sqrt(_numeric.norm2Squared(x));
 };
 
-numeric.linspace = function linspace(a, b, n) {
+_numeric.linspace = function linspace(a, b, n) {
   if (typeof n === 'undefined') n = Math.max(Math.round(b - a) + 1, 1);
 
   if (n < 2) {
@@ -2118,8 +2118,8 @@ numeric.linspace = function linspace(a, b, n) {
   return ret;
 };
 
-numeric.getBlock = function getBlock(x, from, to) {
-  var s = numeric.dim(x);
+_numeric.getBlock = function getBlock(x, from, to) {
+  var s = _numeric.dim(x);
 
   function foo(x, k) {
     var i,
@@ -2145,8 +2145,8 @@ numeric.getBlock = function getBlock(x, from, to) {
   return foo(x, 0);
 };
 
-numeric.setBlock = function setBlock(x, from, to, B) {
-  var s = numeric.dim(x);
+_numeric.setBlock = function setBlock(x, from, to, B) {
+  var s = _numeric.dim(x);
 
   function foo(x, y, k) {
     var i,
@@ -2168,7 +2168,7 @@ numeric.setBlock = function setBlock(x, from, to, B) {
   return x;
 };
 
-numeric.getRange = function getRange(A, I, J) {
+_numeric.getRange = function getRange(A, I, J) {
   var m = I.length,
       n = J.length;
   var i, j;
@@ -2189,9 +2189,10 @@ numeric.getRange = function getRange(A, I, J) {
   return B;
 };
 
-numeric.blockMatrix = function blockMatrix(X) {
-  var s = numeric.dim(X);
-  if (s.length < 4) return numeric.blockMatrix([X]);
+_numeric.blockMatrix = function blockMatrix(X) {
+  var s = _numeric.dim(X);
+
+  if (s.length < 4) return _numeric.blockMatrix([X]);
   var m = s[0],
       n = s[1],
       M,
@@ -2246,13 +2247,14 @@ numeric.blockMatrix = function blockMatrix(X) {
   return Z;
 };
 
-numeric.tensor = function tensor(x, y) {
-  if (typeof x === 'number' || typeof y === 'number') return numeric.mul(x, y);
-  var s1 = numeric.dim(x),
-      s2 = numeric.dim(y);
+_numeric.tensor = function tensor(x, y) {
+  if (typeof x === 'number' || typeof y === 'number') return _numeric.mul(x, y);
+
+  var s1 = _numeric.dim(x),
+      s2 = _numeric.dim(y);
 
   if (s1.length !== 1 || s2.length !== 1) {
-    throw new Error('numeric: tensor product is only defined for vectors');
+    throw new Error('_numeric: tensor product is only defined for vectors');
   }
 
   var m = s1[0],
@@ -2289,91 +2291,92 @@ numeric.tensor = function tensor(x, y) {
 }; // 3. The Tensor type T
 
 
-numeric.T = function T(x, y) {
+_numeric.T = function T(x, y) {
   this.x = x;
   this.y = y;
 };
 
-numeric.t = function t(x, y) {
-  return new numeric.T(x, y);
+_numeric.t = function t(x, y) {
+  return new _numeric.T(x, y);
 };
 
-numeric.Tbinop = function Tbinop(rr, rc, cr, cc, setup) {
-  var io = numeric.indexOf;
+_numeric.Tbinop = function Tbinop(rr, rc, cr, cc, setup) {
+  var io = _numeric.indexOf;
 
   if (typeof setup !== 'string') {
     var k;
     setup = '';
 
-    for (k in numeric) {
-      if (numeric.hasOwnProperty(k) && (rr.indexOf(k) >= 0 || rc.indexOf(k) >= 0 || cr.indexOf(k) >= 0 || cc.indexOf(k) >= 0) && k.length > 1) {
-        setup += 'var ' + k + ' = numeric.' + k + ';\n';
+    for (k in _numeric) {
+      if (_numeric.hasOwnProperty(k) && (rr.indexOf(k) >= 0 || rc.indexOf(k) >= 0 || cr.indexOf(k) >= 0 || cc.indexOf(k) >= 0) && k.length > 1) {
+        setup += 'var ' + k + ' = _numeric.' + k + ';\n';
       }
     }
   }
 
-  return Function(['y'], 'var x = this;\n' + 'if(!(y instanceof numeric.T)) { y = new numeric.T(y); }\n' + setup + '\n' + 'if(x.y) {' + '  if(y.y) {' + '    return new numeric.T(' + cc + ');\n' + '  }\n' + '  return new numeric.T(' + cr + ');\n' + '}\n' + 'if(y.y) {\n' + '  return new numeric.T(' + rc + ');\n' + '}\n' + 'return new numeric.T(' + rr + ');\n');
+  return Function(['y'], 'var x = this;\n' + 'if(!(y instanceof _numeric.T)) { y = new _numeric.T(y); }\n' + setup + '\n' + 'if(x.y) {' + '  if(y.y) {' + '    return new _numeric.T(' + cc + ');\n' + '  }\n' + '  return new _numeric.T(' + cr + ');\n' + '}\n' + 'if(y.y) {\n' + '  return new _numeric.T(' + rc + ');\n' + '}\n' + 'return new _numeric.T(' + rr + ');\n');
 };
 
-numeric.T.prototype.add = numeric.Tbinop('add(x.x,y.x)', 'add(x.x,y.x),y.y', 'add(x.x,y.x),x.y', 'add(x.x,y.x),add(x.y,y.y)');
-numeric.T.prototype.sub = numeric.Tbinop('sub(x.x,y.x)', 'sub(x.x,y.x),neg(y.y)', 'sub(x.x,y.x),x.y', 'sub(x.x,y.x),sub(x.y,y.y)');
-numeric.T.prototype.mul = numeric.Tbinop('mul(x.x,y.x)', 'mul(x.x,y.x),mul(x.x,y.y)', 'mul(x.x,y.x),mul(x.y,y.x)', 'sub(mul(x.x,y.x),mul(x.y,y.y)),add(mul(x.x,y.y),mul(x.y,y.x))');
+_numeric.T.prototype.add = _numeric.Tbinop('add(x.x,y.x)', 'add(x.x,y.x),y.y', 'add(x.x,y.x),x.y', 'add(x.x,y.x),add(x.y,y.y)');
+_numeric.T.prototype.sub = _numeric.Tbinop('sub(x.x,y.x)', 'sub(x.x,y.x),neg(y.y)', 'sub(x.x,y.x),x.y', 'sub(x.x,y.x),sub(x.y,y.y)');
+_numeric.T.prototype.mul = _numeric.Tbinop('mul(x.x,y.x)', 'mul(x.x,y.x),mul(x.x,y.y)', 'mul(x.x,y.x),mul(x.y,y.x)', 'sub(mul(x.x,y.x),mul(x.y,y.y)),add(mul(x.x,y.y),mul(x.y,y.x))');
 
-numeric.T.prototype.reciprocal = function reciprocal() {
-  var mul = numeric.mul,
-      div = numeric.div;
+_numeric.T.prototype.reciprocal = function reciprocal() {
+  var mul = _numeric.mul,
+      div = _numeric.div;
 
   if (this.y) {
-    var d = numeric.add(mul(this.x, this.x), mul(this.y, this.y));
-    return new numeric.T(div(this.x, d), div(numeric.neg(this.y), d));
+    var d = _numeric.add(mul(this.x, this.x), mul(this.y, this.y));
+
+    return new _numeric.T(div(this.x, d), div(_numeric.neg(this.y), d));
   }
 
   return new T(div(1, this.x));
 };
 
-numeric.T.prototype.div = function div(y) {
-  if (!(y instanceof numeric.T)) y = new numeric.T(y);
+_numeric.T.prototype.div = function div(y) {
+  if (!(y instanceof _numeric.T)) y = new _numeric.T(y);
 
   if (y.y) {
     return this.mul(y.reciprocal());
   }
 
-  var div = numeric.div;
+  var div = _numeric.div;
 
   if (this.y) {
-    return new numeric.T(div(this.x, y.x), div(this.y, y.x));
+    return new _numeric.T(div(this.x, y.x), div(this.y, y.x));
   }
 
-  return new numeric.T(div(this.x, y.x));
+  return new _numeric.T(div(this.x, y.x));
 };
 
-numeric.T.prototype.dot = numeric.Tbinop('dot(x.x,y.x)', 'dot(x.x,y.x),dot(x.x,y.y)', 'dot(x.x,y.x),dot(x.y,y.x)', 'sub(dot(x.x,y.x),dot(x.y,y.y)),add(dot(x.x,y.y),dot(x.y,y.x))');
+_numeric.T.prototype.dot = _numeric.Tbinop('dot(x.x,y.x)', 'dot(x.x,y.x),dot(x.x,y.y)', 'dot(x.x,y.x),dot(x.y,y.x)', 'sub(dot(x.x,y.x),dot(x.y,y.y)),add(dot(x.x,y.y),dot(x.y,y.x))');
 
-numeric.T.prototype.transpose = function transpose() {
-  var t = numeric.transpose,
+_numeric.T.prototype.transpose = function transpose() {
+  var t = _numeric.transpose,
       x = this.x,
       y = this.y;
 
   if (y) {
-    return new numeric.T(t(x), t(y));
+    return new _numeric.T(t(x), t(y));
   }
 
-  return new numeric.T(t(x));
+  return new _numeric.T(t(x));
 };
 
-numeric.T.prototype.transjugate = function transjugate() {
-  var t = numeric.transpose,
+_numeric.T.prototype.transjugate = function transjugate() {
+  var t = _numeric.transpose,
       x = this.x,
       y = this.y;
 
   if (y) {
-    return new numeric.T(t(x), numeric.negtranspose(y));
+    return new _numeric.T(t(x), _numeric.negtranspose(y));
   }
 
-  return new numeric.T(t(x));
+  return new _numeric.T(t(x));
 };
 
-numeric.Tunop = function Tunop(r, c, s) {
+_numeric.Tunop = function Tunop(r, c, s) {
   if (typeof s !== 'string') {
     s = '';
   }
@@ -2381,30 +2384,33 @@ numeric.Tunop = function Tunop(r, c, s) {
   return Function('var x = this;\n' + s + '\n' + 'if(x.y) {' + '  ' + c + ';\n' + '}\n' + r + ';\n');
 };
 
-numeric.T.prototype.exp = numeric.Tunop('return new numeric.T(ex)', 'return new numeric.T(mul(cos(x.y),ex),mul(sin(x.y),ex))', 'var ex = numeric.exp(x.x), cos = numeric.cos, sin = numeric.sin, mul = numeric.mul;');
-numeric.T.prototype.conj = numeric.Tunop('return new numeric.T(x.x);', 'return new numeric.T(x.x,numeric.neg(x.y));');
-numeric.T.prototype.neg = numeric.Tunop('return new numeric.T(neg(x.x));', 'return new numeric.T(neg(x.x),neg(x.y));', 'var neg = numeric.neg;');
-numeric.T.prototype.sin = numeric.Tunop('return new numeric.T(numeric.sin(x.x))', 'return x.exp().sub(x.neg().exp()).div(new numeric.T(0,2));');
-numeric.T.prototype.cos = numeric.Tunop('return new numeric.T(numeric.cos(x.x))', 'return x.exp().add(x.neg().exp()).div(2);');
-numeric.T.prototype.abs = numeric.Tunop('return new numeric.T(numeric.abs(x.x));', 'return new numeric.T(numeric.sqrt(numeric.add(mul(x.x,x.x),mul(x.y,x.y))));', 'var mul = numeric.mul;');
-numeric.T.prototype.log = numeric.Tunop('return new numeric.T(numeric.log(x.x));', 'var theta = new numeric.T(numeric.atan2(x.y,x.x)), r = x.abs();\n' + 'return new numeric.T(numeric.log(r.x),theta.x);');
-numeric.T.prototype.norm2 = numeric.Tunop('return numeric.norm2(x.x);', 'var f = numeric.norm2Squared;\n' + 'return Math.sqrt(f(x.x)+f(x.y));');
+_numeric.T.prototype.exp = _numeric.Tunop('return new _numeric.T(ex)', 'return new _numeric.T(mul(cos(x.y),ex),mul(sin(x.y),ex))', 'var ex = _numeric.exp(x.x), cos = _numeric.cos, sin = _numeric.sin, mul = _numeric.mul;');
+_numeric.T.prototype.conj = _numeric.Tunop('return new _numeric.T(x.x);', 'return new _numeric.T(x.x,_numeric.neg(x.y));');
+_numeric.T.prototype.neg = _numeric.Tunop('return new _numeric.T(neg(x.x));', 'return new _numeric.T(neg(x.x),neg(x.y));', 'var neg = _numeric.neg;');
+_numeric.T.prototype.sin = _numeric.Tunop('return new _numeric.T(_numeric.sin(x.x))', 'return x.exp().sub(x.neg().exp()).div(new _numeric.T(0,2));');
+_numeric.T.prototype.cos = _numeric.Tunop('return new _numeric.T(_numeric.cos(x.x))', 'return x.exp().add(x.neg().exp()).div(2);');
+_numeric.T.prototype.abs = _numeric.Tunop('return new _numeric.T(_numeric.abs(x.x));', 'return new _numeric.T(_numeric.sqrt(_numeric.add(mul(x.x,x.x),mul(x.y,x.y))));', 'var mul = _numeric.mul;');
+_numeric.T.prototype.log = _numeric.Tunop('return new _numeric.T(_numeric.log(x.x));', 'var theta = new _numeric.T(_numeric.atan2(x.y,x.x)), r = x.abs();\n' + 'return new _numeric.T(_numeric.log(r.x),theta.x);');
+_numeric.T.prototype.norm2 = _numeric.Tunop('return _numeric.norm2(x.x);', 'var f = _numeric.norm2Squared;\n' + 'return Math.sqrt(f(x.x)+f(x.y));');
 
-numeric.T.prototype.inv = function inv() {
+_numeric.T.prototype.inv = function inv() {
   var A = this;
 
   if (typeof A.y === 'undefined') {
-    return new numeric.T(numeric.inv(A.x));
+    return new _numeric.T(_numeric.inv(A.x));
   }
 
   var n = A.x.length,
       i,
       j,
       k;
-  var Rx = numeric.identity(n),
-      Ry = numeric.rep([n, n], 0);
-  var Ax = numeric.clone(A.x),
-      Ay = numeric.clone(A.y);
+
+  var Rx = _numeric.identity(n),
+      Ry = _numeric.rep([n, n], 0);
+
+  var Ax = _numeric.clone(A.x),
+      Ay = _numeric.clone(A.y);
+
   var Aix, Aiy, Ajx, Ajy, Rix, Riy, Rjx, Rjy;
   var i, j, k, d, d1, ax, ay, bx, by, temp;
 
@@ -2504,10 +2510,10 @@ numeric.T.prototype.inv = function inv() {
     }
   }
 
-  return new numeric.T(Rx, Ry);
+  return new _numeric.T(Rx, Ry);
 };
 
-numeric.T.prototype.get = function get(i) {
+_numeric.T.prototype.get = function get(i) {
   var x = this.x,
       y = this.y,
       k = 0,
@@ -2522,7 +2528,7 @@ numeric.T.prototype.get = function get(i) {
       k++;
     }
 
-    return new numeric.T(x, y);
+    return new _numeric.T(x, y);
   }
 
   while (k < n) {
@@ -2531,10 +2537,10 @@ numeric.T.prototype.get = function get(i) {
     k++;
   }
 
-  return new numeric.T(x);
+  return new _numeric.T(x);
 };
 
-numeric.T.prototype.set = function set(i, v) {
+_numeric.T.prototype.set = function set(i, v) {
   var x = this.x,
       y = this.y,
       k = 0,
@@ -2558,7 +2564,7 @@ numeric.T.prototype.set = function set(i, v) {
     if (y) {
       /* ok */
     } else {
-      y = numeric.rep(numeric.dim(x), 0);
+      y = _numeric.rep(_numeric.dim(x), 0);
       this.y = y;
     }
 
@@ -2585,7 +2591,7 @@ numeric.T.prototype.set = function set(i, v) {
 
     ik = i[k];
     x[ik] = vx;
-    if (vx instanceof Array) y[ik] = numeric.rep(numeric.dim(vx), 0);else y[ik] = 0;
+    if (vx instanceof Array) y[ik] = _numeric.rep(_numeric.dim(vx), 0);else y[ik] = 0;
     return this;
   }
 
@@ -2600,7 +2606,7 @@ numeric.T.prototype.set = function set(i, v) {
   return this;
 };
 
-numeric.T.prototype.getRows = function getRows(i0, i1) {
+_numeric.T.prototype.getRows = function getRows(i0, i1) {
   var n = i1 - i0 + 1,
       j;
   var rx = Array(n),
@@ -2619,13 +2625,13 @@ numeric.T.prototype.getRows = function getRows(i0, i1) {
       ry[j - i0] = y[j];
     }
 
-    return new numeric.T(rx, ry);
+    return new _numeric.T(rx, ry);
   }
 
-  return new numeric.T(rx);
+  return new _numeric.T(rx);
 };
 
-numeric.T.prototype.setRows = function setRows(i0, i1, A) {
+_numeric.T.prototype.setRows = function setRows(i0, i1, A) {
   var j;
   var rx = this.x,
       ry = this.y,
@@ -2638,7 +2644,7 @@ numeric.T.prototype.setRows = function setRows(i0, i1, A) {
 
   if (y) {
     if (!ry) {
-      ry = numeric.rep(numeric.dim(rx), 0);
+      ry = _numeric.rep(_numeric.dim(rx), 0);
       this.y = ry;
     }
 
@@ -2647,25 +2653,25 @@ numeric.T.prototype.setRows = function setRows(i0, i1, A) {
     }
   } else if (ry) {
     for (j = i0; j <= i1; j++) {
-      ry[j] = numeric.rep([x[j - i0].length], 0);
+      ry[j] = _numeric.rep([x[j - i0].length], 0);
     }
   }
 
   return this;
 };
 
-numeric.T.prototype.getRow = function getRow(k) {
+_numeric.T.prototype.getRow = function getRow(k) {
   var x = this.x,
       y = this.y;
 
   if (y) {
-    return new numeric.T(x[k], y[k]);
+    return new _numeric.T(x[k], y[k]);
   }
 
-  return new numeric.T(x[k]);
+  return new _numeric.T(x[k]);
 };
 
-numeric.T.prototype.setRow = function setRow(i, v) {
+_numeric.T.prototype.setRow = function setRow(i, v) {
   var rx = this.x,
       ry = this.y,
       x = v.x,
@@ -2674,41 +2680,41 @@ numeric.T.prototype.setRow = function setRow(i, v) {
 
   if (y) {
     if (!ry) {
-      ry = numeric.rep(numeric.dim(rx), 0);
+      ry = _numeric.rep(_numeric.dim(rx), 0);
       this.y = ry;
     }
 
     ry[i] = y;
   } else if (ry) {
-    ry = numeric.rep([x.length], 0);
+    ry = _numeric.rep([x.length], 0);
   }
 
   return this;
 };
 
-numeric.T.prototype.getBlock = function getBlock(from, to) {
+_numeric.T.prototype.getBlock = function getBlock(from, to) {
   var x = this.x,
       y = this.y,
-      b = numeric.getBlock;
+      b = _numeric.getBlock;
 
   if (y) {
-    return new numeric.T(b(x, from, to), b(y, from, to));
+    return new _numeric.T(b(x, from, to), b(y, from, to));
   }
 
-  return new numeric.T(b(x, from, to));
+  return new _numeric.T(b(x, from, to));
 };
 
-numeric.T.prototype.setBlock = function setBlock(from, to, A) {
-  if (!(A instanceof numeric.T)) A = new numeric.T(A);
+_numeric.T.prototype.setBlock = function setBlock(from, to, A) {
+  if (!(A instanceof _numeric.T)) A = new _numeric.T(A);
   var x = this.x,
       y = this.y,
-      b = numeric.setBlock,
+      b = _numeric.setBlock,
       Ax = A.x,
       Ay = A.y;
 
   if (Ay) {
     if (!y) {
-      this.y = numeric.rep(numeric.dim(this), 0);
+      this.y = _numeric.rep(_numeric.dim(this), 0);
       y = this.y;
     }
 
@@ -2718,42 +2724,42 @@ numeric.T.prototype.setBlock = function setBlock(from, to, A) {
   }
 
   b(x, from, to, Ax);
-  if (y) b(y, from, to, numeric.rep(numeric.dim(Ax), 0));
+  if (y) b(y, from, to, _numeric.rep(_numeric.dim(Ax), 0));
 };
 
-numeric.T.rep = function rep(s, v) {
-  var T = numeric.T;
+_numeric.T.rep = function rep(s, v) {
+  var T = _numeric.T;
   if (!(v instanceof T)) v = new T(v);
   var x = v.x,
       y = v.y,
-      r = numeric.rep;
+      r = _numeric.rep;
   if (y) return new T(r(s, x), r(s, y));
   return new T(r(s, x));
 };
 
-numeric.T.diag = function diag(d) {
-  if (!(d instanceof numeric.T)) d = new numeric.T(d);
+_numeric.T.diag = function diag(d) {
+  if (!(d instanceof _numeric.T)) d = new _numeric.T(d);
   var x = d.x,
       y = d.y,
-      diag = numeric.diag;
-  if (y) return new numeric.T(diag(x), diag(y));
-  return new numeric.T(diag(x));
+      diag = _numeric.diag;
+  if (y) return new _numeric.T(diag(x), diag(y));
+  return new _numeric.T(diag(x));
 };
 
-numeric.T.eig = function eig() {
+_numeric.T.eig = function eig() {
   if (this.y) {
     throw new Error('eig: not implemented for complex matrices.');
   }
 
-  return numeric.eig(this.x);
+  return _numeric.eig(this.x);
 };
 
-numeric.T.identity = function identity(n) {
-  return new numeric.T(numeric.identity(n));
+_numeric.T.identity = function identity(n) {
+  return new _numeric.T(_numeric.identity(n));
 };
 
-numeric.T.prototype.getDiag = function getDiag() {
-  var n = numeric;
+_numeric.T.prototype.getDiag = function getDiag() {
+  var n = _numeric;
   var x = this.x,
       y = this.y;
 
@@ -2765,26 +2771,30 @@ numeric.T.prototype.getDiag = function getDiag() {
 }; // 4. Eigenvalues of real matrices
 
 
-numeric.house = function house(x) {
-  var v = numeric.clone(x);
+_numeric.house = function house(x) {
+  var v = _numeric.clone(x);
+
   var s = x[0] >= 0 ? 1 : -1;
-  var alpha = s * numeric.norm2(x);
+
+  var alpha = s * _numeric.norm2(x);
+
   v[0] += alpha;
-  var foo = numeric.norm2(v);
+
+  var foo = _numeric.norm2(v);
 
   if (foo === 0) {
     /* this should not happen */
     throw new Error('eig: internal error');
   }
 
-  return numeric.div(v, foo);
+  return _numeric.div(v, foo);
 };
 
-numeric.toUpperHessenberg = function toUpperHessenberg(me) {
-  var s = numeric.dim(me);
+_numeric.toUpperHessenberg = function toUpperHessenberg(me) {
+  var s = _numeric.dim(me);
 
   if (s.length !== 2 || s[0] !== s[1]) {
-    throw new Error('numeric: toUpperHessenberg() only works on square matrices');
+    throw new Error('_numeric: toUpperHessenberg() only works on square matrices');
   }
 
   var m = s[0],
@@ -2793,12 +2803,12 @@ numeric.toUpperHessenberg = function toUpperHessenberg(me) {
       k,
       x,
       v,
-      A = numeric.clone(me),
+      A = _numeric.clone(me),
       B,
       C,
       Ai,
       Ci,
-      Q = numeric.identity(m),
+      Q = _numeric.identity(m),
       Qi;
 
   for (j = 0; j < m - 2; j++) {
@@ -2808,10 +2818,10 @@ numeric.toUpperHessenberg = function toUpperHessenberg(me) {
       x[i - j - 1] = A[i][j];
     }
 
-    if (numeric.norm2(x) > 0) {
-      v = numeric.house(x);
-      B = numeric.getBlock(A, [j + 1, j], [m - 1, m - 1]);
-      C = numeric.tensor(v, numeric.dot(v, B));
+    if (_numeric.norm2(x) > 0) {
+      v = _numeric.house(x);
+      B = _numeric.getBlock(A, [j + 1, j], [m - 1, m - 1]);
+      C = _numeric.tensor(v, _numeric.dot(v, B));
 
       for (i = j + 1; i < m; i++) {
         Ai = A[i];
@@ -2822,8 +2832,8 @@ numeric.toUpperHessenberg = function toUpperHessenberg(me) {
         }
       }
 
-      B = numeric.getBlock(A, [0, j + 1], [m - 1, m - 1]);
-      C = numeric.tensor(numeric.dot(B, v), v);
+      B = _numeric.getBlock(A, [0, j + 1], [m - 1, m - 1]);
+      C = _numeric.tensor(_numeric.dot(B, v), v);
 
       for (i = 0; i < m; i++) {
         Ai = A[i];
@@ -2840,7 +2850,7 @@ numeric.toUpperHessenberg = function toUpperHessenberg(me) {
         B[i - j - 1] = Q[i];
       }
 
-      C = numeric.tensor(v, numeric.dot(v, B));
+      C = _numeric.tensor(v, _numeric.dot(v, B));
 
       for (i = j + 1; i < m; i++) {
         Qi = Q[i];
@@ -2859,16 +2869,18 @@ numeric.toUpperHessenberg = function toUpperHessenberg(me) {
   };
 };
 
-numeric.epsilon = 2.220446049250313e-16;
+_numeric.epsilon = 2.220446049250313e-16;
 
-numeric.QRFrancis = function (H, maxiter) {
+_numeric.QRFrancis = function (H, maxiter) {
   if (typeof maxiter === 'undefined') {
     maxiter = 10000;
   }
 
-  H = numeric.clone(H);
-  var H0 = numeric.clone(H);
-  var s = numeric.dim(H),
+  H = _numeric.clone(H);
+
+  var H0 = _numeric.clone(H);
+
+  var s = _numeric.dim(H),
       m = s[0],
       x,
       v,
@@ -2879,7 +2891,7 @@ numeric.QRFrancis = function (H, maxiter) {
       det,
       tr,
       Hloc,
-      Q = numeric.identity(m),
+      Q = _numeric.identity(m),
       Qi,
       Hi,
       B,
@@ -2897,20 +2909,22 @@ numeric.QRFrancis = function (H, maxiter) {
     };
   }
 
-  var epsilon = numeric.epsilon;
+  var epsilon = _numeric.epsilon;
 
   for (iter = 0; iter < maxiter; iter++) {
     for (j = 0; j < m - 1; j++) {
       if (Math.abs(H[j + 1][j]) < epsilon * (Math.abs(H[j][j]) + Math.abs(H[j + 1][j + 1]))) {
-        var QH1 = numeric.QRFrancis(numeric.getBlock(H, [0, 0], [j, j]), maxiter);
-        var QH2 = numeric.QRFrancis(numeric.getBlock(H, [j + 1, j + 1], [m - 1, m - 1]), maxiter);
+        var QH1 = _numeric.QRFrancis(_numeric.getBlock(H, [0, 0], [j, j]), maxiter);
+
+        var QH2 = _numeric.QRFrancis(_numeric.getBlock(H, [j + 1, j + 1], [m - 1, m - 1]), maxiter);
+
         B = Array(j + 1);
 
         for (i = 0; i <= j; i++) {
           B[i] = Q[i];
         }
 
-        C = numeric.dot(QH1.Q, B);
+        C = _numeric.dot(QH1.Q, B);
 
         for (i = 0; i <= j; i++) {
           Q[i] = C[i];
@@ -2922,7 +2936,7 @@ numeric.QRFrancis = function (H, maxiter) {
           B[i - j - 1] = Q[i];
         }
 
-        C = numeric.dot(QH2.Q, B);
+        C = _numeric.dot(QH2.Q, B);
 
         for (i = j + 1; i < m; i++) {
           Q[i] = C[i - j - 1];
@@ -2930,7 +2944,7 @@ numeric.QRFrancis = function (H, maxiter) {
 
         return {
           Q: Q,
-          B: QH1.B.concat(numeric.add(QH2.B, j + 1))
+          B: QH1.B.concat(_numeric.add(QH2.B, j + 1))
         };
       }
     }
@@ -2941,21 +2955,21 @@ numeric.QRFrancis = function (H, maxiter) {
     d = H[m - 1][m - 1];
     tr = a + d;
     det = a * d - b * c;
-    Hloc = numeric.getBlock(H, [0, 0], [2, 2]);
+    Hloc = _numeric.getBlock(H, [0, 0], [2, 2]);
 
     if (tr * tr >= 4 * det) {
       var s1, s2;
       s1 = 0.5 * (tr + Math.sqrt(tr * tr - 4 * det));
       s2 = 0.5 * (tr - Math.sqrt(tr * tr - 4 * det));
-      Hloc = numeric.add(numeric.sub(numeric.dot(Hloc, Hloc), numeric.mul(Hloc, s1 + s2)), numeric.diag(numeric.rep([3], s1 * s2)));
+      Hloc = _numeric.add(_numeric.sub(_numeric.dot(Hloc, Hloc), _numeric.mul(Hloc, s1 + s2)), _numeric.diag(_numeric.rep([3], s1 * s2)));
     } else {
-      Hloc = numeric.add(numeric.sub(numeric.dot(Hloc, Hloc), numeric.mul(Hloc, tr)), numeric.diag(numeric.rep([3], det)));
+      Hloc = _numeric.add(_numeric.sub(_numeric.dot(Hloc, Hloc), _numeric.mul(Hloc, tr)), _numeric.diag(_numeric.rep([3], det)));
     }
 
     x = [Hloc[0][0], Hloc[1][0], Hloc[2][0]];
-    v = numeric.house(x);
+    v = _numeric.house(x);
     B = [H[0], H[1], H[2]];
-    C = numeric.tensor(v, numeric.dot(v, B));
+    C = _numeric.tensor(v, _numeric.dot(v, B));
 
     for (i = 0; i < 3; i++) {
       Hi = H[i];
@@ -2966,8 +2980,8 @@ numeric.QRFrancis = function (H, maxiter) {
       }
     }
 
-    B = numeric.getBlock(H, [0, 0], [m - 1, 2]);
-    C = numeric.tensor(numeric.dot(B, v), v);
+    B = _numeric.getBlock(H, [0, 0], [m - 1, 2]);
+    C = _numeric.tensor(_numeric.dot(B, v), v);
 
     for (i = 0; i < m; i++) {
       Hi = H[i];
@@ -2979,7 +2993,7 @@ numeric.QRFrancis = function (H, maxiter) {
     }
 
     B = [Q[0], Q[1], Q[2]];
-    C = numeric.tensor(v, numeric.dot(v, B));
+    C = _numeric.tensor(v, _numeric.dot(v, B));
 
     for (i = 0; i < 3; i++) {
       Qi = Q[i];
@@ -2995,15 +3009,17 @@ numeric.QRFrancis = function (H, maxiter) {
     for (j = 0; j < m - 2; j++) {
       for (k = j; k <= j + 1; k++) {
         if (Math.abs(H[k + 1][k]) < epsilon * (Math.abs(H[k][k]) + Math.abs(H[k + 1][k + 1]))) {
-          var QH1 = numeric.QRFrancis(numeric.getBlock(H, [0, 0], [k, k]), maxiter);
-          var QH2 = numeric.QRFrancis(numeric.getBlock(H, [k + 1, k + 1], [m - 1, m - 1]), maxiter);
+          var QH1 = _numeric.QRFrancis(_numeric.getBlock(H, [0, 0], [k, k]), maxiter);
+
+          var QH2 = _numeric.QRFrancis(_numeric.getBlock(H, [k + 1, k + 1], [m - 1, m - 1]), maxiter);
+
           B = Array(k + 1);
 
           for (i = 0; i <= k; i++) {
             B[i] = Q[i];
           }
 
-          C = numeric.dot(QH1.Q, B);
+          C = _numeric.dot(QH1.Q, B);
 
           for (i = 0; i <= k; i++) {
             Q[i] = C[i];
@@ -3015,7 +3031,7 @@ numeric.QRFrancis = function (H, maxiter) {
             B[i - k - 1] = Q[i];
           }
 
-          C = numeric.dot(QH2.Q, B);
+          C = _numeric.dot(QH2.Q, B);
 
           for (i = k + 1; i < m; i++) {
             Q[i] = C[i - k - 1];
@@ -3023,7 +3039,7 @@ numeric.QRFrancis = function (H, maxiter) {
 
           return {
             Q: Q,
-            B: QH1.B.concat(numeric.add(QH2.B, k + 1))
+            B: QH1.B.concat(_numeric.add(QH2.B, k + 1))
           };
         }
       }
@@ -3035,9 +3051,9 @@ numeric.QRFrancis = function (H, maxiter) {
         x[i - j - 1] = H[i][j];
       }
 
-      v = numeric.house(x);
-      B = numeric.getBlock(H, [j + 1, j], [J, m - 1]);
-      C = numeric.tensor(v, numeric.dot(v, B));
+      v = _numeric.house(x);
+      B = _numeric.getBlock(H, [j + 1, j], [J, m - 1]);
+      C = _numeric.tensor(v, _numeric.dot(v, B));
 
       for (i = j + 1; i <= J; i++) {
         Hi = H[i];
@@ -3048,8 +3064,8 @@ numeric.QRFrancis = function (H, maxiter) {
         }
       }
 
-      B = numeric.getBlock(H, [0, j + 1], [m - 1, J]);
-      C = numeric.tensor(numeric.dot(B, v), v);
+      B = _numeric.getBlock(H, [0, j + 1], [m - 1, J]);
+      C = _numeric.tensor(_numeric.dot(B, v), v);
 
       for (i = 0; i < m; i++) {
         Hi = H[i];
@@ -3066,7 +3082,7 @@ numeric.QRFrancis = function (H, maxiter) {
         B[i - j - 1] = Q[i];
       }
 
-      C = numeric.tensor(v, numeric.dot(v, B));
+      C = _numeric.tensor(v, _numeric.dot(v, B));
 
       for (i = j + 1; i <= J; i++) {
         Qi = Q[i];
@@ -3079,20 +3095,24 @@ numeric.QRFrancis = function (H, maxiter) {
     }
   }
 
-  throw new Error('numeric: eigenvalue iteration does not converge -- increase maxiter?');
+  throw new Error('_numeric: eigenvalue iteration does not converge -- increase maxiter?');
 };
 
-numeric.eig = function eig(A, maxiter) {
-  var QH = numeric.toUpperHessenberg(A);
-  var QB = numeric.QRFrancis(QH.H, maxiter);
-  var T = numeric.T;
+_numeric.eig = function eig(A, maxiter) {
+  var QH = _numeric.toUpperHessenberg(A);
+
+  var QB = _numeric.QRFrancis(QH.H, maxiter);
+
+  var T = _numeric.T;
+
   var n = A.length,
       i,
       k,
       flag = false,
       B = QB.B,
-      H = numeric.dot(QB.Q, numeric.dot(QH.H, numeric.transpose(QB.Q)));
-  var Q = new T(numeric.dot(QB.Q, QH.Q)),
+      H = _numeric.dot(QB.Q, _numeric.dot(QH.H, _numeric.transpose(QB.Q)));
+
+  var Q = new T(_numeric.dot(QB.Q, QH.Q)),
       Q0;
   var m = B.length,
       j;
@@ -3159,7 +3179,7 @@ numeric.eig = function eig(A, maxiter) {
 
   var R = Q.dot(A).dot(Q.transjugate()),
       n = A.length,
-      E = numeric.T.identity(n);
+      E = _numeric.T.identity(n);
 
   for (j = 0; j < n; j++) {
     if (j > 0) {
@@ -3167,7 +3187,7 @@ numeric.eig = function eig(A, maxiter) {
         var Rk = R.get([k, k]),
             Rj = R.get([j, j]);
 
-        if (numeric.neq(Rk.x, Rj.x) || numeric.neq(Rk.y, Rj.y)) {
+        if (_numeric.neq(Rk.x, Rj.x) || _numeric.neq(Rk.y, Rj.y)) {
           x = R.getRow(k).getBlock([k], [j - 1]);
           y = E.getRow(j).getBlock([k], [j - 1]);
           E.set([j, k], R.get([k, j]).neg().sub(x.dot(y)).div(Rk.sub(Rj)));
@@ -3193,7 +3213,7 @@ numeric.eig = function eig(A, maxiter) {
 }; // 5. Compressed Column Storage matrices
 
 
-numeric.ccsSparse = function ccsSparse(A) {
+_numeric.ccsSparse = function ccsSparse(A) {
   var m = A.length,
       n,
       foo,
@@ -3241,11 +3261,11 @@ numeric.ccsSparse = function ccsSparse(A) {
   return [Ai, Aj, Av];
 };
 
-numeric.ccsFull = function ccsFull(A) {
+_numeric.ccsFull = function ccsFull(A) {
   var Ai = A[0],
       Aj = A[1],
       Av = A[2],
-      s = numeric.ccsDim(A),
+      s = _numeric.ccsDim(A),
       m = s[0],
       n = s[1],
       i,
@@ -3253,7 +3273,8 @@ numeric.ccsFull = function ccsFull(A) {
       j0,
       j1,
       k;
-  var B = numeric.rep([m, n], 0);
+
+  var B = _numeric.rep([m, n], 0);
 
   for (i = 0; i < n; i++) {
     j0 = Ai[i];
@@ -3267,15 +3288,15 @@ numeric.ccsFull = function ccsFull(A) {
   return B;
 };
 
-numeric.ccsTSolve = function ccsTSolve(A, b, x, bj, xj) {
+_numeric.ccsTSolve = function ccsTSolve(A, b, x, bj, xj) {
   var Ai = A[0],
       Aj = A[1],
       Av = A[2],
       m = Ai.length - 1,
       max = Math.max,
       n = 0;
-  if (typeof bj === 'undefined') x = numeric.rep([m], 0);
-  if (typeof bj === 'undefined') bj = numeric.linspace(0, x.length - 1);
+  if (typeof bj === 'undefined') x = _numeric.rep([m], 0);
+  if (typeof bj === 'undefined') bj = _numeric.linspace(0, x.length - 1);
   if (typeof xj === 'undefined') xj = [];
 
   function dfs(j) {
@@ -3331,13 +3352,13 @@ numeric.ccsTSolve = function ccsTSolve(A, b, x, bj, xj) {
   return x;
 };
 
-numeric.ccsDFS = function ccsDFS(n) {
+_numeric.ccsDFS = function ccsDFS(n) {
   this.k = Array(n);
   this.k1 = Array(n);
   this.j = Array(n);
 };
 
-numeric.ccsDFS.prototype.dfs = function dfs(J, Ai, Aj, x, xj, Pinv) {
+_numeric.ccsDFS.prototype.dfs = function dfs(J, Ai, Aj, x, xj, Pinv) {
   var m = 0,
       foo,
       n = xj.length;
@@ -3375,7 +3396,7 @@ numeric.ccsDFS.prototype.dfs = function dfs(J, Ai, Aj, x, xj, Pinv) {
   }
 };
 
-numeric.ccsLPSolve = function ccsLPSolve(A, B, x, xj, I, Pinv, dfs) {
+_numeric.ccsLPSolve = function ccsLPSolve(A, B, x, xj, I, Pinv, dfs) {
   var Ai = A[0],
       Aj = A[1],
       Av = A[2],
@@ -3425,25 +3446,29 @@ numeric.ccsLPSolve = function ccsLPSolve(A, B, x, xj, I, Pinv, dfs) {
   return x;
 };
 
-numeric.ccsLUP1 = function ccsLUP1(A, threshold) {
+_numeric.ccsLUP1 = function ccsLUP1(A, threshold) {
   var m = A[0].length - 1;
-  var L = [numeric.rep([m + 1], 0), [], []],
-      U = [numeric.rep([m + 1], 0), [], []];
+  var L = [_numeric.rep([m + 1], 0), [], []],
+      U = [_numeric.rep([m + 1], 0), [], []];
   var Li = L[0],
       Lj = L[1],
       Lv = L[2],
       Ui = U[0],
       Uj = U[1],
       Uv = U[2];
-  var x = numeric.rep([m], 0),
-      xj = numeric.rep([m], 0);
+
+  var x = _numeric.rep([m], 0),
+      xj = _numeric.rep([m], 0);
+
   var i, j, k, j0, j1, a, e, c, d, K;
-  var sol = numeric.ccsLPSolve,
+  var sol = _numeric.ccsLPSolve,
       max = Math.max,
       abs = Math.abs;
-  var P = numeric.linspace(0, m - 1),
-      Pinv = numeric.linspace(0, m - 1);
-  var dfs = new numeric.ccsDFS(m);
+
+  var P = _numeric.linspace(0, m - 1),
+      Pinv = _numeric.linspace(0, m - 1);
+
+  var dfs = new _numeric.ccsDFS(m);
 
   if (typeof threshold === 'undefined') {
     threshold = 1;
@@ -3517,13 +3542,13 @@ numeric.ccsLUP1 = function ccsLUP1(A, threshold) {
   };
 };
 
-numeric.ccsDFS0 = function ccsDFS0(n) {
+_numeric.ccsDFS0 = function ccsDFS0(n) {
   this.k = Array(n);
   this.k1 = Array(n);
   this.j = Array(n);
 };
 
-numeric.ccsDFS0.prototype.dfs = function dfs(J, Ai, Aj, x, xj, Pinv, P) {
+_numeric.ccsDFS0.prototype.dfs = function dfs(J, Ai, Aj, x, xj, Pinv, P) {
   var m = 0,
       foo,
       n = xj.length;
@@ -3564,7 +3589,7 @@ numeric.ccsDFS0.prototype.dfs = function dfs(J, Ai, Aj, x, xj, Pinv, P) {
   }
 };
 
-numeric.ccsLPSolve0 = function ccsLPSolve0(A, B, y, xj, I, Pinv, P, dfs) {
+_numeric.ccsLPSolve0 = function ccsLPSolve0(A, B, y, xj, I, Pinv, P, dfs) {
   var Ai = A[0],
       Aj = A[1],
       Av = A[2],
@@ -3615,25 +3640,29 @@ numeric.ccsLPSolve0 = function ccsLPSolve0(A, B, y, xj, I, Pinv, P, dfs) {
   }
 };
 
-numeric.ccsLUP0 = function ccsLUP0(A, threshold) {
+_numeric.ccsLUP0 = function ccsLUP0(A, threshold) {
   var m = A[0].length - 1;
-  var L = [numeric.rep([m + 1], 0), [], []],
-      U = [numeric.rep([m + 1], 0), [], []];
+  var L = [_numeric.rep([m + 1], 0), [], []],
+      U = [_numeric.rep([m + 1], 0), [], []];
   var Li = L[0],
       Lj = L[1],
       Lv = L[2],
       Ui = U[0],
       Uj = U[1],
       Uv = U[2];
-  var y = numeric.rep([m], 0),
-      xj = numeric.rep([m], 0);
+
+  var y = _numeric.rep([m], 0),
+      xj = _numeric.rep([m], 0);
+
   var i, j, k, j0, j1, a, e, c, d, K;
-  var sol = numeric.ccsLPSolve0,
+  var sol = _numeric.ccsLPSolve0,
       max = Math.max,
       abs = Math.abs;
-  var P = numeric.linspace(0, m - 1),
-      Pinv = numeric.linspace(0, m - 1);
-  var dfs = new numeric.ccsDFS0(m);
+
+  var P = _numeric.linspace(0, m - 1),
+      Pinv = _numeric.linspace(0, m - 1);
+
+  var dfs = new _numeric.ccsDFS0(m);
 
   if (typeof threshold === 'undefined') {
     threshold = 1;
@@ -3704,25 +3733,25 @@ numeric.ccsLUP0 = function ccsLUP0(A, threshold) {
   };
 };
 
-numeric.ccsLUP = numeric.ccsLUP0;
+_numeric.ccsLUP = _numeric.ccsLUP0;
 
-numeric.ccsDim = function ccsDim(A) {
-  return [numeric.sup(A[1]) + 1, A[0].length - 1];
+_numeric.ccsDim = function ccsDim(A) {
+  return [_numeric.sup(A[1]) + 1, A[0].length - 1];
 };
 
-numeric.ccsGetBlock = function ccsGetBlock(A, i, j) {
-  var s = numeric.ccsDim(A),
+_numeric.ccsGetBlock = function ccsGetBlock(A, i, j) {
+  var s = _numeric.ccsDim(A),
       m = s[0],
       n = s[1];
 
   if (typeof i === 'undefined') {
-    i = numeric.linspace(0, m - 1);
+    i = _numeric.linspace(0, m - 1);
   } else if (typeof i === 'number') {
     i = [i];
   }
 
   if (typeof j === 'undefined') {
-    j = numeric.linspace(0, n - 1);
+    j = _numeric.linspace(0, n - 1);
   } else if (typeof j === 'number') {
     j = [j];
   }
@@ -3736,16 +3765,19 @@ numeric.ccsGetBlock = function ccsGetBlock(A, i, j) {
       r,
       jq,
       ip;
-  var Bi = numeric.rep([n], 0),
+
+  var Bi = _numeric.rep([n], 0),
       Bj = [],
       Bv = [],
       B = [Bi, Bj, Bv];
+
   var Ai = A[0],
       Aj = A[1],
       Av = A[2];
-  var x = numeric.rep([m], 0),
+
+  var x = _numeric.rep([m], 0),
       count = 0,
-      flags = numeric.rep([m], 0);
+      flags = _numeric.rep([m], 0);
 
   for (q = 0; q < Q; ++q) {
     jq = j[q];
@@ -3779,25 +3811,30 @@ numeric.ccsGetBlock = function ccsGetBlock(A, i, j) {
   return B;
 };
 
-numeric.ccsDot = function ccsDot(A, B) {
+_numeric.ccsDot = function ccsDot(A, B) {
   var Ai = A[0],
       Aj = A[1],
       Av = A[2];
   var Bi = B[0],
       Bj = B[1],
       Bv = B[2];
-  var sA = numeric.ccsDim(A),
-      sB = numeric.ccsDim(B);
+
+  var sA = _numeric.ccsDim(A),
+      sB = _numeric.ccsDim(B);
+
   var m = sA[0],
       n = sA[1],
       o = sB[1];
-  var x = numeric.rep([m], 0),
-      flags = numeric.rep([m], 0),
+
+  var x = _numeric.rep([m], 0),
+      flags = _numeric.rep([m], 0),
       xj = Array(m);
-  var Ci = numeric.rep([o], 0),
+
+  var Ci = _numeric.rep([o], 0),
       Cj = [],
       Cv = [],
       C = [Ci, Cj, Cv];
+
   var i, j, k, j0, j1, i0, i1, l, p, a, b;
 
   for (k = 0; k !== o; ++k) {
@@ -3843,7 +3880,7 @@ numeric.ccsDot = function ccsDot(A, B) {
   return C;
 };
 
-numeric.ccsLUPSolve = function ccsLUPSolve(LUP, B) {
+_numeric.ccsLUPSolve = function ccsLUPSolve(LUP, B) {
   var L = LUP.L,
       U = LUP.U,
       P = LUP.P;
@@ -3851,7 +3888,7 @@ numeric.ccsLUPSolve = function ccsLUPSolve(LUP, B) {
   var flag = false;
 
   if (typeof Bi !== 'object') {
-    B = [[0, B.length], numeric.linspace(0, B.length - 1), B];
+    B = [[0, B.length], _numeric.linspace(0, B.length - 1), B];
     Bi = B[0];
     flag = true;
   }
@@ -3860,14 +3897,18 @@ numeric.ccsLUPSolve = function ccsLUPSolve(LUP, B) {
       Bv = B[2];
   var n = L[0].length - 1,
       m = Bi.length - 1;
-  var x = numeric.rep([n], 0),
+
+  var x = _numeric.rep([n], 0),
       xj = Array(n);
-  var b = numeric.rep([n], 0),
+
+  var b = _numeric.rep([n], 0),
       bj = Array(n);
-  var Xi = numeric.rep([m + 1], 0),
+
+  var Xi = _numeric.rep([m + 1], 0),
       Xj = [],
       Xv = [];
-  var sol = numeric.ccsTSolve;
+
+  var sol = _numeric.ccsTSolve;
   var i,
       j,
       j0,
@@ -3916,33 +3957,35 @@ numeric.ccsLUPSolve = function ccsLUPSolve(LUP, B) {
   return [Xi, Xj, Xv];
 };
 
-numeric.ccsbinop = function ccsbinop(body, setup) {
+_numeric.ccsbinop = function ccsbinop(body, setup) {
   if (typeof setup === 'undefined') setup = '';
-  return Function('X', 'Y', 'var Xi = X[0], Xj = X[1], Xv = X[2];\n' + 'var Yi = Y[0], Yj = Y[1], Yv = Y[2];\n' + 'var n = Xi.length-1,m = Math.max(numeric.sup(Xj),numeric.sup(Yj))+1;\n' + 'var Zi = numeric.rep([n+1],0), Zj = [], Zv = [];\n' + 'var x = numeric.rep([m],0),y = numeric.rep([m],0);\n' + 'var xk,yk,zk;\n' + 'var i,j,j0,j1,k,p=0;\n' + setup + 'for(i=0;i<n;++i) {\n' + '  j0 = Xi[i]; j1 = Xi[i+1];\n' + '  for(j=j0;j!==j1;++j) {\n' + '    k = Xj[j];\n' + '    x[k] = 1;\n' + '    Zj[p] = k;\n' + '    ++p;\n' + '  }\n' + '  j0 = Yi[i]; j1 = Yi[i+1];\n' + '  for(j=j0;j!==j1;++j) {\n' + '    k = Yj[j];\n' + '    y[k] = Yv[j];\n' + '    if(x[k] === 0) {\n' + '      Zj[p] = k;\n' + '      ++p;\n' + '    }\n' + '  }\n' + '  Zi[i+1] = p;\n' + '  j0 = Xi[i]; j1 = Xi[i+1];\n' + '  for(j=j0;j!==j1;++j) x[Xj[j]] = Xv[j];\n' + '  j0 = Zi[i]; j1 = Zi[i+1];\n' + '  for(j=j0;j!==j1;++j) {\n' + '    k = Zj[j];\n' + '    xk = x[k];\n' + '    yk = y[k];\n' + body + '\n' + '    Zv[j] = zk;\n' + '  }\n' + '  j0 = Xi[i]; j1 = Xi[i+1];\n' + '  for(j=j0;j!==j1;++j) x[Xj[j]] = 0;\n' + '  j0 = Yi[i]; j1 = Yi[i+1];\n' + '  for(j=j0;j!==j1;++j) y[Yj[j]] = 0;\n' + '}\n' + 'return [Zi,Zj,Zv];');
+  return Function('X', 'Y', 'var Xi = X[0], Xj = X[1], Xv = X[2];\n' + 'var Yi = Y[0], Yj = Y[1], Yv = Y[2];\n' + 'var n = Xi.length-1,m = Math.max(_numeric.sup(Xj),_numeric.sup(Yj))+1;\n' + 'var Zi = _numeric.rep([n+1],0), Zj = [], Zv = [];\n' + 'var x = _numeric.rep([m],0),y = _numeric.rep([m],0);\n' + 'var xk,yk,zk;\n' + 'var i,j,j0,j1,k,p=0;\n' + setup + 'for(i=0;i<n;++i) {\n' + '  j0 = Xi[i]; j1 = Xi[i+1];\n' + '  for(j=j0;j!==j1;++j) {\n' + '    k = Xj[j];\n' + '    x[k] = 1;\n' + '    Zj[p] = k;\n' + '    ++p;\n' + '  }\n' + '  j0 = Yi[i]; j1 = Yi[i+1];\n' + '  for(j=j0;j!==j1;++j) {\n' + '    k = Yj[j];\n' + '    y[k] = Yv[j];\n' + '    if(x[k] === 0) {\n' + '      Zj[p] = k;\n' + '      ++p;\n' + '    }\n' + '  }\n' + '  Zi[i+1] = p;\n' + '  j0 = Xi[i]; j1 = Xi[i+1];\n' + '  for(j=j0;j!==j1;++j) x[Xj[j]] = Xv[j];\n' + '  j0 = Zi[i]; j1 = Zi[i+1];\n' + '  for(j=j0;j!==j1;++j) {\n' + '    k = Zj[j];\n' + '    xk = x[k];\n' + '    yk = y[k];\n' + body + '\n' + '    Zv[j] = zk;\n' + '  }\n' + '  j0 = Xi[i]; j1 = Xi[i+1];\n' + '  for(j=j0;j!==j1;++j) x[Xj[j]] = 0;\n' + '  j0 = Yi[i]; j1 = Yi[i+1];\n' + '  for(j=j0;j!==j1;++j) y[Yj[j]] = 0;\n' + '}\n' + 'return [Zi,Zj,Zv];');
 };
 
 (function () {
   var k, A, B, C;
 
-  for (k in numeric.ops2) {
-    if (isFinite(eval('1' + numeric.ops2[k] + '0'))) A = '[Y[0],Y[1],numeric.' + k + '(X,Y[2])]';else A = 'NaN';
-    if (isFinite(eval('0' + numeric.ops2[k] + '1'))) B = '[X[0],X[1],numeric.' + k + '(X[2],Y)]';else B = 'NaN';
-    if (isFinite(eval('1' + numeric.ops2[k] + '0')) && isFinite(eval('0' + numeric.ops2[k] + '1'))) C = 'numeric.ccs' + k + 'MM(X,Y)';else C = 'NaN';
-    numeric['ccs' + k + 'MM'] = numeric.ccsbinop('zk = xk ' + numeric.ops2[k] + 'yk;');
-    numeric['ccs' + k] = Function('X', 'Y', 'if(typeof X === "number") return ' + A + ';\n' + 'if(typeof Y === "number") return ' + B + ';\n' + 'return ' + C + ';\n');
+  for (k in _numeric.ops2) {
+    if (isFinite(eval('1' + _numeric.ops2[k] + '0'))) A = '[Y[0],Y[1],_numeric.' + k + '(X,Y[2])]';else A = 'NaN';
+    if (isFinite(eval('0' + _numeric.ops2[k] + '1'))) B = '[X[0],X[1],_numeric.' + k + '(X[2],Y)]';else B = 'NaN';
+    if (isFinite(eval('1' + _numeric.ops2[k] + '0')) && isFinite(eval('0' + _numeric.ops2[k] + '1'))) C = '_numeric.ccs' + k + 'MM(X,Y)';else C = 'NaN';
+    _numeric['ccs' + k + 'MM'] = _numeric.ccsbinop('zk = xk ' + _numeric.ops2[k] + 'yk;');
+    _numeric['ccs' + k] = Function('X', 'Y', 'if(typeof X === "number") return ' + A + ';\n' + 'if(typeof Y === "number") return ' + B + ';\n' + 'return ' + C + ';\n');
   }
 })();
 
-numeric.ccsScatter = function ccsScatter(A) {
+_numeric.ccsScatter = function ccsScatter(A) {
   var Ai = A[0],
       Aj = A[1],
       Av = A[2];
-  var n = numeric.sup(Aj) + 1,
+  var n = _numeric.sup(Aj) + 1,
       m = Ai.length;
-  var Ri = numeric.rep([n], 0),
+
+  var Ri = _numeric.rep([n], 0),
       Rj = Array(m),
       Rv = Array(m);
-  var counts = numeric.rep([n], 0),
+
+  var counts = _numeric.rep([n], 0),
       i;
 
   for (i = 0; i < m; ++i) {
@@ -3968,7 +4011,7 @@ numeric.ccsScatter = function ccsScatter(A) {
   return [Ri, Rj, Rv];
 };
 
-numeric.ccsGather = function ccsGather(A) {
+_numeric.ccsGather = function ccsGather(A) {
   var Ai = A[0],
       Aj = A[1],
       Av = A[2];
@@ -3996,7 +4039,7 @@ numeric.ccsGather = function ccsGather(A) {
 }; // The following sparse linear algebra routines are deprecated.
 
 
-numeric.sdim = function dim(A, ret, k) {
+_numeric.sdim = function dim(A, ret, k) {
   if (typeof ret === 'undefined') {
     ret = [];
   }
@@ -4021,13 +4064,13 @@ numeric.sdim = function dim(A, ret, k) {
   return ret;
 };
 
-numeric.sclone = function clone(A, k, n) {
+_numeric.sclone = function clone(A, k, n) {
   if (typeof k === 'undefined') {
     k = 0;
   }
 
   if (typeof n === 'undefined') {
-    n = numeric.sdim(A).length;
+    n = _numeric.sdim(A).length;
   }
 
   var i,
@@ -4048,7 +4091,7 @@ numeric.sclone = function clone(A, k, n) {
   return ret;
 };
 
-numeric.sdiag = function diag(d) {
+_numeric.sdiag = function diag(d) {
   var n = d.length,
       i,
       ret = Array(n),
@@ -4072,11 +4115,11 @@ numeric.sdiag = function diag(d) {
   return ret;
 };
 
-numeric.sidentity = function identity(n) {
-  return numeric.sdiag(numeric.rep([n], 1));
+_numeric.sidentity = function identity(n) {
+  return _numeric.sdiag(_numeric.rep([n], 1));
 };
 
-numeric.stranspose = function transpose(A) {
+_numeric.stranspose = function transpose(A) {
   var ret = [],
       n = A.length,
       i,
@@ -4101,17 +4144,18 @@ numeric.stranspose = function transpose(A) {
   return ret;
 };
 
-numeric.sLUP = function LUP(A, tol) {
-  throw new Error('The function numeric.sLUP had a bug in it and has been removed. Please use the new numeric.ccsLUP function instead.');
+_numeric.sLUP = function LUP(A, tol) {
+  throw new Error('The function _numeric.sLUP had a bug in it and has been removed. Please use the new _numeric.ccsLUP function instead.');
 };
 
-numeric.sdotMM = function dotMM(A, B) {
+_numeric.sdotMM = function dotMM(A, B) {
   var p = A.length,
       q = B.length,
-      BT = numeric.stranspose(B),
+      BT = _numeric.stranspose(B),
       r = BT.length,
       Ai,
       BTk;
+
   var i, j, k, accum;
   var ret = Array(p),
       reti;
@@ -4141,7 +4185,7 @@ numeric.sdotMM = function dotMM(A, B) {
   return ret;
 };
 
-numeric.sdotMV = function dotMV(A, x) {
+_numeric.sdotMV = function dotMV(A, x) {
   var p = A.length,
       Ai,
       i,
@@ -4164,7 +4208,7 @@ numeric.sdotMV = function dotMV(A, x) {
   return ret;
 };
 
-numeric.sdotVM = function dotMV(x, A) {
+_numeric.sdotVM = function dotMV(x, A) {
   var i, j, Ai, alpha;
   var ret = [],
       accum;
@@ -4188,7 +4232,7 @@ numeric.sdotVM = function dotMV(x, A) {
   return ret;
 };
 
-numeric.sdotVV = function dotVV(x, y) {
+_numeric.sdotVV = function dotVV(x, y) {
   var i,
       ret = 0;
 
@@ -4199,9 +4243,10 @@ numeric.sdotVV = function dotVV(x, y) {
   return ret;
 };
 
-numeric.sdot = function dot(A, B) {
-  var m = numeric.sdim(A).length,
-      n = numeric.sdim(B).length;
+_numeric.sdot = function dot(A, B) {
+  var m = _numeric.sdim(A).length,
+      n = _numeric.sdim(B).length;
+
   var k = m * 1000 + n;
 
   switch (k) {
@@ -4209,23 +4254,23 @@ numeric.sdot = function dot(A, B) {
       return A * B;
 
     case 1001:
-      return numeric.sdotVV(A, B);
+      return _numeric.sdotVV(A, B);
 
     case 2001:
-      return numeric.sdotMV(A, B);
+      return _numeric.sdotMV(A, B);
 
     case 1002:
-      return numeric.sdotVM(A, B);
+      return _numeric.sdotVM(A, B);
 
     case 2002:
-      return numeric.sdotMM(A, B);
+      return _numeric.sdotMM(A, B);
 
     default:
-      throw new Error('numeric.sdot not implemented for tensors of order ' + m + ' and ' + n);
+      throw new Error('_numeric.sdot not implemented for tensors of order ' + m + ' and ' + n);
   }
 };
 
-numeric.sscatter = function scatter(V) {
+_numeric.sscatter = function scatter(V) {
   var n = V[0].length,
       Vij,
       i,
@@ -4250,7 +4295,7 @@ numeric.sscatter = function scatter(V) {
   return A;
 };
 
-numeric.sgather = function gather(A, ret, k) {
+_numeric.sgather = function gather(A, ret, k) {
   if (typeof ret === 'undefined') ret = [];
   if (typeof k === 'undefined') k = [];
   var n, i, Ai;
@@ -4284,7 +4329,7 @@ numeric.sgather = function gather(A, ret, k) {
 }; // 6. Coordinate matrices
 
 
-numeric.cLU = function LU(A) {
+_numeric.cLU = function LU(A) {
   var I = A[0],
       J = A[1],
       V = A[2];
@@ -4302,10 +4347,12 @@ numeric.cLU = function LU(A) {
   }
 
   m++;
+
   var L = Array(m),
       U = Array(m),
-      left = numeric.rep([m], Infinity),
-      right = numeric.rep([m], -Infinity);
+      left = _numeric.rep([m], Infinity),
+      right = _numeric.rep([m], -Infinity);
+
   var Ui, Uj, alpha;
 
   for (k = 0; k < p; k++) {
@@ -4327,8 +4374,8 @@ numeric.cLU = function LU(A) {
       countU = 0;
 
   for (i = 0; i < m; i++) {
-    U[i] = numeric.rep([right[i] - left[i] + 1], 0);
-    L[i] = numeric.rep([i - left[i]], 0);
+    U[i] = _numeric.rep([right[i] - left[i] + 1], 0);
+    L[i] = _numeric.rep([i - left[i]], 0);
     countL += i - left[i] + 1;
     countU += right[i] - i + 1;
   }
@@ -4405,10 +4452,11 @@ numeric.cLU = function LU(A) {
   };
 };
 
-numeric.cLUsolve = function LUsolve(lu, b) {
+_numeric.cLUsolve = function LUsolve(lu, b) {
   var L = lu.L,
       U = lu.U,
-      ret = numeric.clone(b);
+      ret = _numeric.clone(b);
+
   var Li = L[0],
       Lj = L[1],
       Lv = L[2];
@@ -4447,9 +4495,11 @@ numeric.cLUsolve = function LUsolve(lu, b) {
   return ret;
 };
 
-numeric.cgrid = function grid(n, shape) {
+_numeric.cgrid = function grid(n, shape) {
   if (typeof n === 'number') n = [n, n];
-  var ret = numeric.rep(n, -1);
+
+  var ret = _numeric.rep(n, -1);
+
   var i, j, count;
 
   if (typeof shape !== 'function') {
@@ -4484,9 +4534,10 @@ numeric.cgrid = function grid(n, shape) {
   return ret;
 };
 
-numeric.cdelsq = function delsq(g) {
+_numeric.cdelsq = function delsq(g) {
   var dir = [[-1, 0], [0, -1], [0, 1], [1, 0]];
-  var s = numeric.dim(g),
+
+  var s = _numeric.dim(g),
       m = s[0],
       n = s[1],
       i,
@@ -4494,6 +4545,7 @@ numeric.cdelsq = function delsq(g) {
       k,
       p,
       q;
+
   var Li = [],
       Lj = [],
       Lv = [];
@@ -4520,7 +4572,7 @@ numeric.cdelsq = function delsq(g) {
   return [Li, Lj, Lv];
 };
 
-numeric.cdotMV = function dotMV(A, x) {
+_numeric.cdotMV = function dotMV(A, x) {
   var ret,
       Ai = A[0],
       Aj = A[1],
@@ -4535,7 +4587,7 @@ numeric.cdotMV = function dotMV(A, x) {
   }
 
   N++;
-  ret = numeric.rep([N], 0);
+  ret = _numeric.rep([N], 0);
 
   for (k = 0; k < p; k++) {
     ret[Ai[k]] += Av[k] * x[Aj[k]];
@@ -4545,7 +4597,7 @@ numeric.cdotMV = function dotMV(A, x) {
 }; // 7. Splines
 
 
-numeric.Spline = function Spline(x, yl, yr, kl, kr) {
+_numeric.Spline = function Spline(x, yl, yr, kl, kr) {
   this.x = x;
   this.yl = yl;
   this.yr = yr;
@@ -4553,16 +4605,16 @@ numeric.Spline = function Spline(x, yl, yr, kl, kr) {
   this.kr = kr;
 };
 
-numeric.Spline.prototype._at = function _at(x1, p) {
+_numeric.Spline.prototype._at = function _at(x1, p) {
   var x = this.x;
   var yl = this.yl;
   var yr = this.yr;
   var kl = this.kl;
   var kr = this.kr;
   var x1, a, b, t;
-  var add = numeric.add,
-      sub = numeric.sub,
-      mul = numeric.mul;
+  var add = _numeric.add,
+      sub = _numeric.sub,
+      mul = _numeric.mul;
   a = sub(mul(kl[p], x[p + 1] - x[p]), sub(yr[p + 1], yl[p]));
   b = add(mul(kr[p + 1], x[p] - x[p + 1]), sub(yr[p + 1], yl[p]));
   t = (x1 - x[p]) / (x[p + 1] - x[p]);
@@ -4570,7 +4622,7 @@ numeric.Spline.prototype._at = function _at(x1, p) {
   return add(add(add(mul(1 - t, yl[p]), mul(t, yr[p + 1])), mul(a, s * (1 - t))), mul(b, s * t));
 };
 
-numeric.Spline.prototype.at = function at(x0) {
+_numeric.Spline.prototype.at = function at(x0) {
   if (typeof x0 === 'number') {
     var x = this.x;
     var n = x.length;
@@ -4603,7 +4655,7 @@ numeric.Spline.prototype.at = function at(x0) {
   return ret;
 };
 
-numeric.Spline.prototype.diff = function diff() {
+_numeric.Spline.prototype.diff = function diff() {
   var x = this.x;
   var yl = this.yl;
   var yr = this.yr;
@@ -4615,10 +4667,10 @@ numeric.Spline.prototype.diff = function diff() {
       zr = kr,
       pl = Array(n),
       pr = Array(n);
-  var add = numeric.add,
-      mul = numeric.mul,
-      div = numeric.div,
-      sub = numeric.sub;
+  var add = _numeric.add,
+      mul = _numeric.mul,
+      div = _numeric.div,
+      sub = _numeric.sub;
 
   for (i = n - 1; i !== -1; --i) {
     dx = x[i + 1] - x[i];
@@ -4627,10 +4679,10 @@ numeric.Spline.prototype.diff = function diff() {
     pr[i + 1] = div(add(mul(dy, -6), mul(kl[i], 2 * dx), mul(kr[i + 1], 4 * dx)), dx * dx);
   }
 
-  return new numeric.Spline(x, zl, zr, pl, pr);
+  return new _numeric.Spline(x, zl, zr, pl, pr);
 };
 
-numeric.Spline.prototype.roots = function roots() {
+_numeric.Spline.prototype.roots = function roots() {
   function sqr(x) {
     return x * x;
   }
@@ -4779,15 +4831,15 @@ numeric.Spline.prototype.roots = function roots() {
   return ret;
 };
 
-numeric.spline = function spline(x, y, k1, kn) {
+_numeric.spline = function spline(x, y, k1, kn) {
   var n = x.length,
       b = [],
       dx = [],
       dy = [];
   var i;
-  var sub = numeric.sub,
-      mul = numeric.mul,
-      add = numeric.add;
+  var sub = _numeric.sub,
+      mul = _numeric.mul,
+      add = _numeric.add;
 
   for (i = n - 2; i >= 0; i--) {
     dx[i] = x[i + 1] - x[i];
@@ -4851,26 +4903,26 @@ numeric.spline = function spline(x, y, k1, kn) {
       break;
   }
 
-  if (typeof b[0] !== 'number') b = numeric.transpose(b);else b = [b];
+  if (typeof b[0] !== 'number') b = _numeric.transpose(b);else b = [b];
   var k = Array(b.length);
 
   if (typeof k1 === 'string') {
     for (i = k.length - 1; i !== -1; --i) {
-      k[i] = numeric.ccsLUPSolve(numeric.ccsLUP(numeric.ccsScatter(T)), b[i]);
+      k[i] = _numeric.ccsLUPSolve(_numeric.ccsLUP(_numeric.ccsScatter(T)), b[i]);
       k[i][n - 1] = k[i][0];
     }
   } else {
     for (i = k.length - 1; i !== -1; --i) {
-      k[i] = numeric.cLUsolve(numeric.cLU(T), b[i]);
+      k[i] = _numeric.cLUsolve(_numeric.cLU(T), b[i]);
     }
   }
 
-  if (typeof y[0] === 'number') k = k[0];else k = numeric.transpose(k);
-  return new numeric.Spline(x, y, y, k, k);
+  if (typeof y[0] === 'number') k = k[0];else k = _numeric.transpose(k);
+  return new _numeric.Spline(x, y, y, k, k);
 }; // 8. FFT
 
 
-numeric.fftpow2 = function fftpow2(x, y) {
+_numeric.fftpow2 = function fftpow2(x, y) {
   var n = x.length;
   if (n === 1) return;
   var cos = Math.cos,
@@ -4911,7 +4963,7 @@ numeric.fftpow2 = function fftpow2(x, y) {
   }
 };
 
-numeric._ifftpow2 = function _ifftpow2(x, y) {
+_numeric._ifftpow2 = function _ifftpow2(x, y) {
   var n = x.length;
   if (n === 1) return;
   var cos = Math.cos,
@@ -4954,16 +5006,19 @@ numeric._ifftpow2 = function _ifftpow2(x, y) {
   }
 };
 
-numeric.ifftpow2 = function ifftpow2(x, y) {
-  numeric._ifftpow2(x, y);
+_numeric.ifftpow2 = function ifftpow2(x, y) {
+  _numeric._ifftpow2(x, y);
 
-  numeric.diveq(x, x.length);
-  numeric.diveq(y, y.length);
+  _numeric.diveq(x, x.length);
+
+  _numeric.diveq(y, y.length);
 };
 
-numeric.convpow2 = function convpow2(ax, ay, bx, by) {
-  numeric.fftpow2(ax, ay);
-  numeric.fftpow2(bx, by);
+_numeric.convpow2 = function convpow2(ax, ay, bx, by) {
+  _numeric.fftpow2(ax, ay);
+
+  _numeric.fftpow2(bx, by);
+
   var i,
       n = ax.length,
       axi,
@@ -4980,10 +5035,10 @@ numeric.convpow2 = function convpow2(ax, ay, bx, by) {
     ay[i] = axi * byi + ayi * bxi;
   }
 
-  numeric.ifftpow2(ax, ay);
+  _numeric.ifftpow2(ax, ay);
 };
 
-numeric.T.prototype.fft = function fft() {
+_numeric.T.prototype.fft = function fft() {
   var x = this.x,
       y = this.y;
   var n = x.length,
@@ -4991,15 +5046,18 @@ numeric.T.prototype.fft = function fft() {
       log2 = log(2),
       p = Math.ceil(log(2 * n - 1) / log2),
       m = Math.pow(2, p);
-  var cx = numeric.rep([m], 0),
-      cy = numeric.rep([m], 0),
+
+  var cx = _numeric.rep([m], 0),
+      cy = _numeric.rep([m], 0),
       cos = Math.cos,
       sin = Math.sin;
+
   var k,
       c = -3.14159265358979323846264338327950288419716939937510582 / n,
       t;
-  var a = numeric.rep([m], 0),
-      b = numeric.rep([m], 0),
+
+  var a = _numeric.rep([m], 0),
+      b = _numeric.rep([m], 0),
       nhalf = Math.floor(n / 2);
 
   for (k = 0; k < n; k++) {
@@ -5019,17 +5077,19 @@ numeric.T.prototype.fft = function fft() {
     cy[m - k] = sin(t);
   }
 
-  var X = new numeric.T(a, b),
-      Y = new numeric.T(cx, cy);
+  var X = new _numeric.T(a, b),
+      Y = new _numeric.T(cx, cy);
   X = X.mul(Y);
-  numeric.convpow2(X.x, X.y, numeric.clone(Y.x), numeric.neg(Y.y));
+
+  _numeric.convpow2(X.x, X.y, _numeric.clone(Y.x), _numeric.neg(Y.y));
+
   X = X.mul(Y);
   X.x.length = n;
   X.y.length = n;
   return X;
 };
 
-numeric.T.prototype.ifft = function ifft() {
+_numeric.T.prototype.ifft = function ifft() {
   var x = this.x,
       y = this.y;
   var n = x.length,
@@ -5037,15 +5097,18 @@ numeric.T.prototype.ifft = function ifft() {
       log2 = log(2),
       p = Math.ceil(log(2 * n - 1) / log2),
       m = Math.pow(2, p);
-  var cx = numeric.rep([m], 0),
-      cy = numeric.rep([m], 0),
+
+  var cx = _numeric.rep([m], 0),
+      cy = _numeric.rep([m], 0),
       cos = Math.cos,
       sin = Math.sin;
+
   var k,
       c = 3.14159265358979323846264338327950288419716939937510582 / n,
       t;
-  var a = numeric.rep([m], 0),
-      b = numeric.rep([m], 0),
+
+  var a = _numeric.rep([m], 0),
+      b = _numeric.rep([m], 0),
       nhalf = Math.floor(n / 2);
 
   for (k = 0; k < n; k++) {
@@ -5065,10 +5128,12 @@ numeric.T.prototype.ifft = function ifft() {
     cy[m - k] = sin(t);
   }
 
-  var X = new numeric.T(a, b),
-      Y = new numeric.T(cx, cy);
+  var X = new _numeric.T(a, b),
+      Y = new _numeric.T(cx, cy);
   X = X.mul(Y);
-  numeric.convpow2(X.x, X.y, numeric.clone(Y.x), numeric.neg(Y.y));
+
+  _numeric.convpow2(X.x, X.y, _numeric.clone(Y.x), _numeric.neg(Y.y));
+
   X = X.mul(Y);
   X.x.length = n;
   X.y.length = n;
@@ -5076,18 +5141,20 @@ numeric.T.prototype.ifft = function ifft() {
 }; //9. Unconstrained optimization
 
 
-numeric.gradient = function gradient(f, x) {
+_numeric.gradient = function gradient(f, x) {
   var n = x.length;
   var f0 = f(x);
   if (isNaN(f0)) throw new Error('gradient: f(x) is a NaN!');
   var max = Math.max;
+
   var i,
-      x0 = numeric.clone(x),
+      x0 = _numeric.clone(x),
       f1,
       f2,
       J = Array(n);
-  var div = numeric.div,
-      sub = numeric.sub,
+
+  var div = _numeric.div,
+      sub = _numeric.sub,
       errest,
       roundoff,
       max = Math.max,
@@ -5141,8 +5208,8 @@ numeric.gradient = function gradient(f, x) {
   return J;
 };
 
-numeric.uncmin = function uncmin(f, x0, tol, gradient, maxit, callback, options) {
-  var grad = numeric.gradient;
+_numeric.uncmin = function uncmin(f, x0, tol, gradient, maxit, callback, options) {
+  var grad = _numeric.gradient;
 
   if (typeof options === 'undefined') {
     options = {};
@@ -5159,29 +5226,31 @@ numeric.uncmin = function uncmin(f, x0, tol, gradient, maxit, callback, options)
   }
 
   if (typeof maxit === 'undefined') maxit = 1000;
-  x0 = numeric.clone(x0);
+  x0 = _numeric.clone(x0);
   var n = x0.length;
   var f0 = f(x0),
       f1,
       df0;
   if (isNaN(f0)) throw new Error('uncmin: f(x0) is a NaN!');
   var max = Math.max,
-      norm2 = numeric.norm2;
-  tol = max(tol, numeric.epsilon);
+      norm2 = _numeric.norm2;
+  tol = max(tol, _numeric.epsilon);
+
   var step,
       g0,
       g1,
-      H1 = options.Hinv || numeric.identity(n);
-  var dot = numeric.dot,
-      inv = numeric.inv,
-      sub = numeric.sub,
-      add = numeric.add,
-      ten = numeric.tensor,
-      div = numeric.div,
-      mul = numeric.mul;
-  var all = numeric.all,
-      isfinite = numeric.isFinite,
-      neg = numeric.neg;
+      H1 = options.Hinv || _numeric.identity(n);
+
+  var dot = _numeric.dot,
+      inv = _numeric.inv,
+      sub = _numeric.sub,
+      add = _numeric.add,
+      ten = _numeric.tensor,
+      div = _numeric.div,
+      mul = _numeric.mul;
+  var all = _numeric.all,
+      isfinite = _numeric.isFinite,
+      neg = _numeric.neg;
   var it = 0,
       i,
       s,
@@ -5280,7 +5349,7 @@ numeric.uncmin = function uncmin(f, x0, tol, gradient, maxit, callback, options)
 }; // 10. Ode solver (Dormand-Prince)
 
 
-numeric.Dopri = function Dopri(x, y, f, ymid, iterations, msg, events) {
+_numeric.Dopri = function Dopri(x, y, f, ymid, iterations, msg, events) {
   this.x = x;
   this.y = y;
   this.f = f;
@@ -5290,7 +5359,7 @@ numeric.Dopri = function Dopri(x, y, f, ymid, iterations, msg, events) {
   this.message = msg;
 };
 
-numeric.Dopri.prototype._at = function _at(xi, j) {
+_numeric.Dopri.prototype._at = function _at(xi, j) {
   function sqr(x) {
     return x * x;
   }
@@ -5305,9 +5374,9 @@ numeric.Dopri.prototype._at = function _at(xi, j) {
   var floor = Math.floor,
       h;
   var c = 0.5;
-  var add = numeric.add,
-      mul = numeric.mul,
-      sub = numeric.sub,
+  var add = _numeric.add,
+      mul = _numeric.mul,
+      sub = _numeric.sub,
       p,
       q,
       w;
@@ -5324,7 +5393,7 @@ numeric.Dopri.prototype._at = function _at(xi, j) {
   return add(add(add(add(mul(y0, w[0]), mul(yh, w[1])), mul(y1, w[2])), mul(p, w[3])), mul(q, w[4]));
 };
 
-numeric.Dopri.prototype.at = function at(x) {
+_numeric.Dopri.prototype.at = function at(x) {
   var i,
       j,
       k,
@@ -5353,7 +5422,7 @@ numeric.Dopri.prototype.at = function at(x) {
   return this._at(x, i);
 };
 
-numeric.dopri = function dopri(x0, x1, y0, f, tol, maxit, event) {
+_numeric.dopri = function dopri(x0, x1, y0, f, tol, maxit, event) {
   if (typeof tol === 'undefined') {
     tol = 1e-6;
   }
@@ -5386,21 +5455,21 @@ numeric.dopri = function dopri(x0, x1, y0, f, tol, maxit, event) {
       j;
   var h = (x1 - x0) / 10;
   var it = 0;
-  var add = numeric.add,
-      mul = numeric.mul,
+  var add = _numeric.add,
+      mul = _numeric.mul,
       y1,
       erinf;
   var max = Math.max,
       min = Math.min,
       abs = Math.abs,
-      norminf = numeric.norminf,
+      norminf = _numeric.norminf,
       pow = Math.pow;
-  var any = numeric.any,
-      lt = numeric.lt,
-      and = numeric.and,
-      sub = numeric.sub;
+  var any = _numeric.any,
+      lt = _numeric.lt,
+      and = _numeric.and,
+      sub = _numeric.sub;
   var e0, e1, ev;
-  var ret = new numeric.Dopri(xs, ys, k1, ymid, -1, '');
+  var ret = new _numeric.Dopri(xs, ys, k1, ymid, -1, '');
   if (typeof event === 'function') e0 = event(x0, y0);
 
   while (x0 < x1 && it < maxit) {
@@ -5507,7 +5576,7 @@ numeric.dopri = function dopri(x0, x1, y0, f, tol, maxit, event) {
 }; // 11. Ax = b
 
 
-numeric.LU = function (A, fast) {
+_numeric.LU = function (A, fast) {
   fast = fast || false;
   var abs = Math.abs;
   var i, j, k, absAjk, Akk, Ak, Pk, Ai;
@@ -5515,7 +5584,7 @@ numeric.LU = function (A, fast) {
   var n = A.length,
       n1 = n - 1;
   var P = new Array(n);
-  if (!fast) A = numeric.clone(A);
+  if (!fast) A = _numeric.clone(A);
 
   for (k = 0; k < n; ++k) {
     Pk = k;
@@ -5564,11 +5633,13 @@ numeric.LU = function (A, fast) {
   };
 };
 
-numeric.LUsolve = function LUsolve(LUP, b) {
+_numeric.LUsolve = function LUsolve(LUP, b) {
   var i, j;
   var LU = LUP.LU;
   var n = LU.length;
-  var x = numeric.clone(b);
+
+  var x = _numeric.clone(b);
+
   var P = LUP.P;
   var Pi, LUi, LUii, tmp;
 
@@ -5605,21 +5676,23 @@ numeric.LUsolve = function LUsolve(LUP, b) {
   return x;
 };
 
-numeric.solve = function solve(A, b, fast) {
-  return numeric.LUsolve(numeric.LU(A, fast), b);
+_numeric.solve = function solve(A, b, fast) {
+  return _numeric.LUsolve(_numeric.LU(A, fast), b);
 }; // 12. Linear programming
 
 
-numeric.echelonize = function echelonize(A) {
-  var s = numeric.dim(A),
+_numeric.echelonize = function echelonize(A) {
+  var s = _numeric.dim(A),
       m = s[0],
       n = s[1];
-  var I = numeric.identity(m);
+
+  var I = _numeric.identity(m);
+
   var P = Array(m);
   var i, j, k, l, Ai, Ii, Z, a;
   var abs = Math.abs;
-  var diveq = numeric.diveq;
-  A = numeric.clone(A);
+  var diveq = _numeric.diveq;
+  A = _numeric.clone(A);
 
   for (i = 0; i < m; ++i) {
     k = 0;
@@ -5659,14 +5732,14 @@ numeric.echelonize = function echelonize(A) {
   };
 };
 
-numeric.__solveLP = function __solveLP(c, A, b, tol, maxit, x, flag) {
-  var sum = numeric.sum,
-      log = numeric.log,
-      mul = numeric.mul,
-      sub = numeric.sub,
-      dot = numeric.dot,
-      div = numeric.div,
-      add = numeric.add;
+_numeric.__solveLP = function __solveLP(c, A, b, tol, maxit, x, flag) {
+  var sum = _numeric.sum,
+      log = _numeric.log,
+      mul = _numeric.mul,
+      sub = _numeric.sub,
+      dot = _numeric.dot,
+      div = _numeric.div,
+      add = _numeric.add;
   var m = c.length,
       n = b.length,
       y;
@@ -5674,25 +5747,29 @@ numeric.__solveLP = function __solveLP(c, A, b, tol, maxit, x, flag) {
       cb,
       i0 = 0;
   var alpha = 1.0;
+
   var f0,
       df0,
-      AT = numeric.transpose(A),
-      svd = numeric.svd,
-      transpose = numeric.transpose,
-      leq = numeric.leq,
+      AT = _numeric.transpose(A),
+      svd = _numeric.svd,
+      transpose = _numeric.transpose,
+      leq = _numeric.leq,
       sqrt = Math.sqrt,
       abs = Math.abs;
-  var muleq = numeric.muleq;
-  var norm = numeric.norminf,
-      any = numeric.any,
+
+  var muleq = _numeric.muleq;
+  var norm = _numeric.norminf,
+      any = _numeric.any,
       min = Math.min;
-  var all = numeric.all,
-      gt = numeric.gt;
+  var all = _numeric.all,
+      gt = _numeric.gt;
+
   var p = Array(m),
       A0 = Array(n),
-      e = numeric.rep([n], 1),
+      e = _numeric.rep([n], 1),
       H;
-  var solve = numeric.solve,
+
+  var solve = _numeric.solve,
       z = sub(b, dot(A, x)),
       count;
   var dotcc = dot(c, c);
@@ -5774,28 +5851,35 @@ numeric.__solveLP = function __solveLP(c, A, b, tol, maxit, x, flag) {
   };
 };
 
-numeric._solveLP = function _solveLP(c, A, b, tol, maxit) {
+_numeric._solveLP = function _solveLP(c, A, b, tol, maxit) {
   var m = c.length,
       n = b.length,
       y;
-  var sum = numeric.sum,
-      log = numeric.log,
-      mul = numeric.mul,
-      sub = numeric.sub,
-      dot = numeric.dot,
-      div = numeric.div,
-      add = numeric.add;
-  var c0 = numeric.rep([m], 0).concat([1]);
-  var J = numeric.rep([n, 1], -1);
-  var A0 = numeric.blockMatrix([[A, J]]);
+  var sum = _numeric.sum,
+      log = _numeric.log,
+      mul = _numeric.mul,
+      sub = _numeric.sub,
+      dot = _numeric.dot,
+      div = _numeric.div,
+      add = _numeric.add;
+
+  var c0 = _numeric.rep([m], 0).concat([1]);
+
+  var J = _numeric.rep([n, 1], -1);
+
+  var A0 = _numeric.blockMatrix([[A, J]]);
+
   var b0 = b;
-  var y = numeric.rep([m], 0).concat(Math.max(0, numeric.sup(numeric.neg(b))) + 1);
 
-  var x0 = numeric.__solveLP(c0, A0, b0, tol, maxit, y, false);
+  var y = _numeric.rep([m], 0).concat(Math.max(0, _numeric.sup(_numeric.neg(b))) + 1);
 
-  var x = numeric.clone(x0.solution);
+  var x0 = _numeric.__solveLP(c0, A0, b0, tol, maxit, y, false);
+
+  var x = _numeric.clone(x0.solution);
+
   x.length = m;
-  var foo = numeric.inf(sub(b, dot(A, x)));
+
+  var foo = _numeric.inf(sub(b, dot(A, x)));
 
   if (foo < 0) {
     return {
@@ -5805,21 +5889,24 @@ numeric._solveLP = function _solveLP(c, A, b, tol, maxit) {
     };
   }
 
-  var ret = numeric.__solveLP(c, A, b, tol, maxit - x0.iterations, x, true);
+  var ret = _numeric.__solveLP(c, A, b, tol, maxit - x0.iterations, x, true);
 
   ret.iterations += x0.iterations;
   return ret;
 };
 
-numeric.solveLP = function solveLP(c, A, b, Aeq, beq, tol, maxit) {
+_numeric.solveLP = function solveLP(c, A, b, Aeq, beq, tol, maxit) {
   if (typeof maxit === 'undefined') maxit = 1000;
-  if (typeof tol === 'undefined') tol = numeric.epsilon;
-  if (typeof Aeq === 'undefined') return numeric._solveLP(c, A, b, tol, maxit);
+  if (typeof tol === 'undefined') tol = _numeric.epsilon;
+  if (typeof Aeq === 'undefined') return _numeric._solveLP(c, A, b, tol, maxit);
   var m = Aeq.length,
       n = Aeq[0].length,
       o = A.length;
-  var B = numeric.echelonize(Aeq);
-  var flags = numeric.rep([n], 0);
+
+  var B = _numeric.echelonize(Aeq);
+
+  var flags = _numeric.rep([n], 0);
+
   var P = B.P;
   var Q = [];
   var i;
@@ -5832,14 +5919,16 @@ numeric.solveLP = function solveLP(c, A, b, Aeq, beq, tol, maxit) {
     if (flags[i] === 0) Q.push(i);
   }
 
-  var g = numeric.getRange;
-  var I = numeric.linspace(0, m - 1),
-      J = numeric.linspace(0, o - 1);
+  var g = _numeric.getRange;
+
+  var I = _numeric.linspace(0, m - 1),
+      J = _numeric.linspace(0, o - 1);
+
   var Aeq2 = g(Aeq, I, Q),
       A1 = g(A, J, P),
       A2 = g(A, J, Q),
-      dot = numeric.dot,
-      sub = numeric.sub;
+      dot = _numeric.dot,
+      sub = _numeric.sub;
   var A3 = dot(A1, B.I);
   var A4 = sub(A2, dot(A3, Aeq2)),
       b4 = sub(b, dot(A3, beq));
@@ -5856,7 +5945,7 @@ numeric.solveLP = function solveLP(c, A, b, Aeq, beq, tol, maxit) {
 
   var c4 = sub(c2, dot(c1, dot(B.I, Aeq2)));
 
-  var S = numeric._solveLP(c4, A4, b4, tol, maxit);
+  var S = _numeric._solveLP(c4, A4, b4, tol, maxit);
 
   var x2 = S.solution;
   if (x2 !== x2) return S;
@@ -5878,7 +5967,7 @@ numeric.solveLP = function solveLP(c, A, b, Aeq, beq, tol, maxit) {
   };
 };
 
-numeric.MPStoLP = function MPStoLP(MPS) {
+_numeric.MPStoLP = function MPStoLP(MPS) {
   if (MPS instanceof String) {
     MPS.split('\n');
   }
@@ -5929,7 +6018,7 @@ numeric.MPStoLP = function MPStoLP(MPS) {
       if (j === 6) return {
         name: name,
         c: c,
-        A: numeric.transpose(A),
+        A: _numeric.transpose(A),
         b: b,
         rows: rows,
         vars: vars
@@ -5970,7 +6059,7 @@ numeric.MPStoLP = function MPStoLP(MPS) {
             break;
 
           default:
-            err('Parse error ' + numeric.prettyPrint(w));
+            err('Parse error ' + _numeric.prettyPrint(w));
         }
 
         break;
@@ -5979,7 +6068,7 @@ numeric.MPStoLP = function MPStoLP(MPS) {
         if (!vars.hasOwnProperty(w[0])) {
           vars[w[0]] = nv;
           c[nv] = 0;
-          A[nv] = numeric.rep([rl], 0);
+          A[nv] = _numeric.rep([rl], 0);
           ++nv;
         }
 
@@ -6120,7 +6209,7 @@ numeric.MPStoLP = function MPStoLP(MPS) {
 // slower.
 
 
-numeric.seedrandom = {
+_numeric.seedrandom = {
   pow: Math.pow,
   random: Math.random
 };
@@ -6320,7 +6409,7 @@ numeric.seedrandom = {
 
   mixkey(math.random(), pool); // End anonymous scope, and pass initial values.
 })([], // pool: entropy pool starts empty
-numeric.seedrandom, // math: package containing random, pow, and seedrandom
+_numeric.seedrandom, // math: package containing random, pow, and seedrandom
 256, // width: each RC4 output is 0 <= x < 256
 6, // chunks: at least six RC4 outputs for each double
 52 // significance: there are 52 significant digits in a double
@@ -7016,7 +7105,7 @@ numeric.seedrandom, // math: package containing random, pow, and seedrandom
   }
 
   exports.solveQP = solveQP;
-})(numeric);
+})(_numeric);
 /*
 Shanti Rao sent me this routine by private email. I had to modify it
 slightly to work on Arrays instead of using a Matrix object.
@@ -7024,10 +7113,10 @@ It is apparently translated from http://stitchpanorama.sourceforge.net/Python/sv
 */
 
 
-numeric.svd = function svd(A) {
+_numeric.svd = function svd(A) {
   var temp; //Compute the thin SVD from G. H. Golub and C. Reinsch, Numer. Math. 14, 403-420 (1970)
 
-  var prec = numeric.epsilon; //Math.pow(2,-52) // assumes double prec
+  var prec = _numeric.epsilon; //Math.pow(2,-52) // assumes double prec
 
   var tolerance = 1e-64 / prec;
   var itmax = 50;
@@ -7036,7 +7125,9 @@ numeric.svd = function svd(A) {
   var j = 0;
   var k = 0;
   var l = 0;
-  var u = numeric.clone(A);
+
+  var u = _numeric.clone(A);
+
   var m = u.length;
   var n = u[0].length;
   if (m < n) throw 'Need more rows than columns';
@@ -7047,7 +7138,8 @@ numeric.svd = function svd(A) {
     e[i] = q[i] = 0.0;
   }
 
-  var v = numeric.rep([n, n], 0); //	v.zero();
+  var v = _numeric.rep([n, n], 0); //	v.zero();
+
 
   function pythag(a, b) {
     a = Math.abs(a);
@@ -7352,6 +7444,8 @@ numeric.svd = function svd(A) {
     V: v
   };
 };
+
+var numeric = _numeric;
 
 /***/ }),
 
@@ -10825,18 +10919,6 @@ function ecfToLookAngles(observerGeodetic, satelliteEcf) {
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__webpack_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__webpack_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
 /******/ 		// define getter functions for harmony exports
@@ -10847,18 +10929,6 @@ function ecfToLookAngles(observerGeodetic, satelliteEcf) {
 /******/ 				}
 /******/ 			}
 /******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/global */
-/******/ 	(() => {
-/******/ 		__webpack_require__.g = (function() {
-/******/ 			if (typeof globalThis === 'object') return globalThis;
-/******/ 			try {
-/******/ 				return this || new Function('return this')();
-/******/ 			} catch (e) {
-/******/ 				if (typeof window === 'object') return window;
-/******/ 			}
-/******/ 		})();
 /******/ 	})();
 /******/ 	
 /******/ 	/* webpack/runtime/hasOwnProperty shorthand */
@@ -10885,11 +10955,10 @@ var __webpack_exports__ = {};
   !*** ./src/js/webworker/positionCruncher.js ***!
   \**********************************************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _app_js_lib_external_numeric_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @app/js/lib/external/numeric.js */ "./src/js/lib/external/numeric.js");
-/* harmony import */ var _app_js_lib_external_numeric_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_app_js_lib_external_numeric_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var satellite_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! satellite.js */ "./node_modules/satellite.js/dist/satellite.es.js");
-/* harmony import */ var _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @app/js/lib/external/meuusjs.js */ "./src/js/lib/external/meuusjs.js");
-/* harmony import */ var _app_js_lib_suncalc_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @app/js/lib/suncalc.js */ "./src/js/lib/suncalc.js");
+/* harmony import */ var satellite_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! satellite.js */ "./node_modules/satellite.js/dist/satellite.es.js");
+/* harmony import */ var _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @app/js/lib/external/meuusjs.js */ "./src/js/lib/external/meuusjs.js");
+/* harmony import */ var _app_js_lib_suncalc_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @app/js/lib/suncalc.js */ "./src/js/lib/suncalc.js");
+/* harmony import */ var _lib_external_numeric__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../lib/external/numeric */ "./src/js/lib/external/numeric.js");
 /* /////////////////////////////////////////////////////////////////////////////
 
 (c) 2016-2020, Theodore Kruczek
@@ -10956,6 +11025,8 @@ var globalPropagationRateMultiplier = 1; // Used to slow down propagation rate o
 
 var propagationRunning = false; // Prevent Propagation From Running Twice
 
+var timeSyncRunning = false; // Prevent Time Sync Loop From Running Twice
+
 var divisor = 1; // When running at high speeds, allow faster propagation
 
 var propOffset = 0; // offset varting us propagate in the future (or past)
@@ -10989,9 +11060,8 @@ var postMessageArray = {};
 var sensor = {};
 var mSensor = {};
 var defaultGd = {
-  lat: null,
+  latitude: null,
   longitude: 0,
-  latitude: 0,
   height: 0
 };
 sensor.defaultGd = defaultGd;
@@ -11079,7 +11149,8 @@ onmessage = function onmessage(m) {
         mSensor = {};
         if (isResetInView == false) isResetInView = true;
       } else {
-        globalPropagationRate = 2000;
+        globalPropagationRate = 2000; // satellite.js requires this format - DONT use lon,lat,alt
+
         sensor.observerGd = {
           longitude: m.data.sensor.lon * DEG2RAD,
           latitude: m.data.sensor.lat * DEG2RAD,
@@ -11091,20 +11162,17 @@ onmessage = function onmessage(m) {
     }
 
     isMultiSensor = false;
-  }
+  } // const oldPropRate = propRate;
 
-  var oldPropRate = propRate;
 
   switch (m.data.typ) {
     case 'offset':
       propOffset = Number(m.data.dat.split(' ')[0]);
-      propRate = Number(m.data.dat.split(' ')[1]);
+      propRate = Number(m.data.dat.split(' ')[1]); // if (!(oldPropRate == 0 && propRate == 0)) {
+      // Update propRealTime only if updating propOffset
 
-      if (!(oldPropRate == 0 && propRate == 0)) {
-        // Update propRealTime only if updating propOffset
-        propRealTime = Date.now();
-      } // Changing this to 0.1 caused issues...
-
+      propRealTime = Date.now(); // }
+      // Changing this to 0.1 caused issues...
 
       divisor = 1;
       return;
@@ -11129,7 +11197,7 @@ onmessage = function onmessage(m) {
           i++;
           continue;
         } else {
-          satrec = satellite_js__WEBPACK_IMPORTED_MODULE_1__.twoline2satrec( // perform and store sat init calcs
+          satrec = satellite_js__WEBPACK_IMPORTED_MODULE_0__.twoline2satrec( // perform and store sat init calcs
           satData[i].TLE1, satData[i].TLE2);
           extra.lowAlt = satrec.isimp;
           extra.inclination = satrec.inclo; // rads
@@ -11165,7 +11233,7 @@ onmessage = function onmessage(m) {
       break;
 
     case 'satEdit':
-      satCache[m.data.id] = satellite_js__WEBPACK_IMPORTED_MODULE_1__.twoline2satrec( // replace old TLEs
+      satCache[m.data.id] = satellite_js__WEBPACK_IMPORTED_MODULE_0__.twoline2satrec( // replace old TLEs
       m.data.TLE1, m.data.TLE2);
       satrec = satCache[m.data.id];
       extraData = [];
@@ -11199,6 +11267,14 @@ onmessage = function onmessage(m) {
     case 'newMissile':
       satCache[m.data.id] = m.data;
       break;
+
+    case 'timeSync':
+      propRealTime = new Date(m.data.time);
+      break;
+
+    default:
+      console.warn('Unknown message typ: ' + m.data.typ);
+      break;
   }
 
   if (!propagationRunning) {
@@ -11206,6 +11282,21 @@ onmessage = function onmessage(m) {
 
     propagateCruncher();
   }
+
+  if (!timeSyncRunning) {
+    timeSyncLoop();
+  }
+};
+
+var timeSyncLoop = () => {
+  var postMessageArray = {
+    typ: 'timeSync',
+    time: propTime().getTime(),
+    propRate: propRate,
+    propOffset: propOffset
+  };
+  postMessage(postMessageArray);
+  setTimeout(timeSyncLoop, 250);
 }; // Prevent Memory Leak by declaring variables outside of function
 
 
@@ -11224,7 +11315,7 @@ var _lookAnglesToEcf = (azimuthDeg, elevationDeg, slantRange, obsLat, obsLong, o
   geodeticCoords.latitude = obsLat;
   geodeticCoords.longitude = obsLong;
   geodeticCoords.height = obsAlt;
-  siteXYZ = satellite_js__WEBPACK_IMPORTED_MODULE_1__.geodeticToEcf(geodeticCoords);
+  siteXYZ = satellite_js__WEBPACK_IMPORTED_MODULE_0__.geodeticToEcf(geodeticCoords);
   sitex = siteXYZ.x;
   sitey = siteXYZ.y;
   sitez = siteXYZ.z; // some needed calculations
@@ -11267,29 +11358,29 @@ var propagateCruncher = () => {
   now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
   j += now.getUTCMilliseconds() * 1.15741e-8; // days per millisecond
 
-  var gmst = satellite_js__WEBPACK_IMPORTED_MODULE_1__.gstime(j);
+  var gmst = satellite_js__WEBPACK_IMPORTED_MODULE_0__.gstime(j);
   var isSunExclusion = false;
 
   if (isSunlightView && !isMultiSensor) {
-    var jdo = new _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_2__.A.JulianDay(j); // now
+    var jdo = new _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.JulianDay(j); // now
 
-    var coord = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_2__.A.EclCoord.fromWgs84(0, 0, 0);
-    var coord2 = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_2__.A.EclCoord.fromWgs84(sensor.observerGd.latitude * RAD2DEG, sensor.observerGd.longitude * RAD2DEG, sensor.observerGd.height); // AZ / EL Calculation
+    var coord = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.EclCoord.fromWgs84(0, 0, 0);
+    var coord2 = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.EclCoord.fromWgs84(sensor.observerGd.latitude * RAD2DEG, sensor.observerGd.longitude * RAD2DEG, sensor.observerGd.height); // AZ / EL Calculation
 
-    var tp = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_2__.A.Solar.topocentricPosition(jdo, coord, false);
-    var tpRel = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_2__.A.Solar.topocentricPosition(jdo, coord2, false);
+    var tp = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.Solar.topocentricPosition(jdo, coord, false);
+    var tpRel = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.Solar.topocentricPosition(jdo, coord2, false);
     sunAz = tp.hz.az * RAD2DEG + 180 % 360;
     sunEl = tp.hz.alt * RAD2DEG % 360;
     sunElRel = tpRel.hz.alt * RAD2DEG % 360; // Range Calculation
 
-    var T = new _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_2__.A.JulianDay(_app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_2__.A.JulianDay.dateToJD(now)).jdJ2000Century();
-    sunG = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_2__.A.Solar.meanAnomaly(T) * 180 / PI;
+    var T = new _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.JulianDay(_app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.JulianDay.dateToJD(now)).jdJ2000Century();
+    sunG = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.Solar.meanAnomaly(T) * 180 / PI;
     sunG = sunG % 360.0;
     sunR = 1.00014 - 0.01671 * Math.cos(sunG) - 0.00014 * Math.cos(2 * sunG);
     sunRange = sunR * 149597870700 / 1000; // au to km conversion
     // RAE to ECI
 
-    sunECI = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(sunAz, sunEl, sunRange, 0, 0, 0), gmst);
+    sunECI = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(sunAz, sunEl, sunRange, 0, 0, 0), gmst);
 
     if (sensor.observerGd !== defaultGd && (sensor.type === 'Optical' || sensor.type === 'Observer') && sunElRel > -6) {
       isSunExclusion = true;
@@ -11303,7 +11394,7 @@ var propagateCruncher = () => {
   now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds() + 1);
   j2 += now.getUTCMilliseconds() * 1.15741e-8; // days per millisecond
 
-  var gmstNext = satellite_js__WEBPACK_IMPORTED_MODULE_1__.gstime(j2);
+  var gmstNext = satellite_js__WEBPACK_IMPORTED_MODULE_0__.gstime(j2);
   len = satCache.length - 1;
 
   if (!isResetSatOverfly && !isShowSatOverfly && !isResetFOVBubble && !isShowFOVBubble || isLowPerf) {
@@ -11340,7 +11431,7 @@ var propagateCruncher = () => {
       m = (j - sat.jdsatepoch) * 1440.0; // 1440 = minutes_per_day
       // startTime2 = performance.now();
 
-      pv = satellite_js__WEBPACK_IMPORTED_MODULE_1__.sgp4(sat, m); // stopTime2 = performance.now();
+      pv = satellite_js__WEBPACK_IMPORTED_MODULE_0__.sgp4(sat, m); // stopTime2 = performance.now();
 
       try {
         satPos[i * 3] = pv.position.x;
@@ -11390,9 +11481,9 @@ var propagateCruncher = () => {
 
         if (!isSensorChecked) {
           if (sensor.observerGd !== defaultGd && !isMultiSensor) {
-            positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToEcf(pv.position, gmst); // pv.position is called positionEci originally
+            positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_0__.eciToEcf(pv.position, gmst); // pv.position is called positionEci originally
 
-            lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(sensor.observerGd, positionEcf);
+            lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToLookAngles(sensor.observerGd, positionEcf);
             azimuth = lookangles.azimuth;
             elevation = lookangles.elevation;
             rangeSat = lookangles.rangeSat;
@@ -11424,7 +11515,7 @@ var propagateCruncher = () => {
         semiDiamEarth = Math.asin(RADIUS_OF_EARTH / Math.sqrt(Math.pow(-satPos[i * 3], 2) + Math.pow(-satPos[i * 3 + 1], 2) + Math.pow(-satPos[i * 3 + 2], 2))) * RAD2DEG;
         semiDiamSun = Math.asin(RADIUS_OF_SUN / Math.sqrt(Math.pow(-satPos[i * 3] + sunECI.x, 2) + Math.pow(-satPos[i * 3 + 1] + sunECI.y, 2) + Math.pow(-satPos[i * 3 + 2] + sunECI.z, 2))) * RAD2DEG; // Angle between earth and sun
 
-        theta = Math.acos(self.numeric.dot([-satPos[i * 3], -satPos[i * 3 + 1], -satPos[i * 3 + 2]], [-satPos[i * 3] + sunECI.x, -satPos[i * 3 + 1] + sunECI.y, -satPos[i * 3 + 2] + sunECI.z]) / (Math.sqrt(Math.pow(-satPos[i * 3], 2) + Math.pow(-satPos[i * 3 + 1], 2) + Math.pow(-satPos[i * 3 + 2], 2)) * Math.sqrt(Math.pow(-satPos[i * 3] + sunECI.x, 2) + Math.pow(-satPos[i * 3 + 1] + sunECI.y, 2) + Math.pow(-satPos[i * 3 + 2] + sunECI.z, 2)))) * RAD2DEG;
+        theta = Math.acos(_lib_external_numeric__WEBPACK_IMPORTED_MODULE_3__.numeric.dot([-satPos[i * 3], -satPos[i * 3 + 1], -satPos[i * 3 + 2]], [-satPos[i * 3] + sunECI.x, -satPos[i * 3 + 1] + sunECI.y, -satPos[i * 3 + 2] + sunECI.z]) / (Math.sqrt(Math.pow(-satPos[i * 3], 2) + Math.pow(-satPos[i * 3 + 1], 2) + Math.pow(-satPos[i * 3 + 2], 2)) * Math.sqrt(Math.pow(-satPos[i * 3] + sunECI.x, 2) + Math.pow(-satPos[i * 3 + 1] + sunECI.y, 2) + Math.pow(-satPos[i * 3 + 2] + sunECI.z, 2)))) * RAD2DEG;
 
         if (semiDiamEarth > semiDiamSun && theta < semiDiamEarth - semiDiamSun) {
           satInSun[i] = 0; // Umbral
@@ -11449,7 +11540,8 @@ var propagateCruncher = () => {
           for (s = 0; s < mSensor.length; s++) {
             if (!(sensor.type == 'Optical' && satInSun[i] == 0)) {
               if (satInView[i]) break;
-              sensor = mSensor[s];
+              sensor = mSensor[s]; // satellite.js requires this format - DONT use lon,lat,alt
+
               sensor.observerGd = {
                 longitude: sensor.lon * DEG2RAD,
                 latitude: sensor.lat * DEG2RAD,
@@ -11458,9 +11550,9 @@ var propagateCruncher = () => {
               };
 
               try {
-                positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToEcf(pv.position, gmst); // pv.position is called positionEci originally
+                positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_0__.eciToEcf(pv.position, gmst); // pv.position is called positionEci originally
 
-                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(sensor.observerGd, positionEcf);
+                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToLookAngles(sensor.observerGd, positionEcf);
               } catch (e) {
                 continue;
               }
@@ -11512,7 +11604,7 @@ var propagateCruncher = () => {
       if (satCache[i].type == 'Star') {
         // INFO: 0 Latitude returns upside down results. Using 180 looks right, but more verification needed.
         // WARNING: 180 and 0 really matter...unclear why
-        starPosition = _app_js_lib_suncalc_js__WEBPACK_IMPORTED_MODULE_3__.SunCalc.getStarPosition(now, 180, 0, satCache[i]);
+        starPosition = _app_js_lib_suncalc_js__WEBPACK_IMPORTED_MODULE_2__.SunCalc.getStarPosition(now, 180, 0, satCache[i]);
         starPosition = _lookAnglesToEcf(starPosition.azimuth * RAD2DEG, starPosition.altitude * RAD2DEG, STAR_DISTANCE, 0, 0, 0); // Reduce Random Jitter by Requiring New Positions to be Similar to Old
         // THIS MIGHT BE A HORRIBLE
 
@@ -11582,13 +11674,13 @@ var propagateCruncher = () => {
       x = satPos[i * 3];
       y = satPos[i * 3 + 1];
       z = satPos[i * 3 + 2];
-      positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToEcf({
+      positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_0__.eciToEcf({
         x: x,
         y: y,
         z: z
       }, gmst);
 
-      if (satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToGeodetic({
+      if (satellite_js__WEBPACK_IMPORTED_MODULE_0__.eciToGeodetic({
         x: x,
         y: y,
         z: z
@@ -11597,7 +11689,7 @@ var propagateCruncher = () => {
         satCache[i].skip = true;
       }
 
-      lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(sensor.observerGd, positionEcf);
+      lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToLookAngles(sensor.observerGd, positionEcf);
       azimuth = lookangles.azimuth * RAD2DEG;
       elevation = lookangles.elevation * RAD2DEG;
       rangeSat = lookangles.rangeSat;
@@ -11631,7 +11723,8 @@ var propagateCruncher = () => {
         sensorMarkerArray.push(i); // We intentionally go past the last sensor so we can record the last marker's id
 
         if (s == mSensor.length) break;
-        sensor = mSensor[s];
+        sensor = mSensor[s]; // satellite.js requires this format - DONT use lon,lat,alt
+
         sensor.observerGd = {
           longitude: sensor.lon * DEG2RAD,
           latitude: sensor.lat * DEG2RAD,
@@ -11661,8 +11754,8 @@ var propagateCruncher = () => {
           } // az, el, rng, pos;
 
 
-          q = Math.abs(sensor.obsmaxaz - sensor.obsminaz) < 30 ? 0.25 : 3;
-          q2 = sensor.obsmaxrange - sensor.obsminrange < 500 ? 1000 : 30; // Don't show anything but the floor if in surveillance only mode
+          q = Math.abs(sensor.obsmaxaz - sensor.obsminaz) < 30 ? 0.5 : 3;
+          q2 = sensor.obsmaxrange - sensor.obsminrange < 720 ? 125 : 30; // Don't show anything but the floor if in surveillance only mode
           // Unless it is a volume search radar
 
           if (!isShowSurvFence) {
@@ -11675,7 +11768,7 @@ var propagateCruncher = () => {
                 az = sensor.obsminaz;
 
                 for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
-                  pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                  pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
 
                   try {
                     satCache[i].active = true;
@@ -11699,7 +11792,7 @@ var propagateCruncher = () => {
                 az = sensor.obsmaxaz;
 
                 for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
-                  pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                  pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
                   satCache[i].active = true;
                   satPos[i * 3] = pos.x;
                   satPos[i * 3 + 1] = pos.y;
@@ -11722,7 +11815,7 @@ var propagateCruncher = () => {
                   az = sensor.obsminaz2;
 
                   for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
-                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
                     satCache[i].active = true;
                     satPos[i * 3] = pos.x;
                     satPos[i * 3 + 1] = pos.y;
@@ -11741,7 +11834,7 @@ var propagateCruncher = () => {
                   az = sensor.obsmaxaz2;
 
                   for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
-                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
                     satCache[i].active = true;
                     satPos[i * 3] = pos.x;
                     satPos[i * 3 + 1] = pos.y;
@@ -11759,7 +11852,7 @@ var propagateCruncher = () => {
                 el = sensor.obsmaxel;
 
                 for (az = sensor.obsminaz; az < sensor.obsmaxaz; az += q) {
-                  pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                  pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
                   satCache[i].active = true;
                   satPos[i * 3] = pos.x;
                   satPos[i * 3 + 1] = pos.y;
@@ -11791,10 +11884,10 @@ var propagateCruncher = () => {
                   }
                 }
 
-                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, sensor.obsmaxel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsmaxel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
 
                 if (i === len) {
-                  console.error('No More Markers');
+                  console.debug('No More Markers');
                   break;
                 }
 
@@ -11833,10 +11926,10 @@ var propagateCruncher = () => {
                   }
                 }
 
-                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel2, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel2, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
 
                 if (i === len) {
-                  console.error('No More Markers');
+                  console.debug('No More Markers');
                   break;
                 }
 
@@ -11874,10 +11967,10 @@ var propagateCruncher = () => {
               }
 
               for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
-                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
 
                 if (i === len) {
-                  console.error('No More Markers');
+                  console.debug('No More Markers');
                   break;
                 }
 
@@ -11915,10 +12008,10 @@ var propagateCruncher = () => {
                 }
 
                 for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
-                  pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                  pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
 
                   if (i === len) {
-                    console.error('No More Markers');
+                    console.debug('No More Markers');
                     break;
                   }
 
@@ -11954,10 +12047,10 @@ var propagateCruncher = () => {
                 }
               }
 
-              pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+              pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
 
               if (i === len) {
-                console.error('No More Markers');
+                console.debug('No More Markers');
                 break;
               }
 
@@ -11986,10 +12079,10 @@ var propagateCruncher = () => {
                 }
               }
 
-              pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+              pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
 
               if (i === len) {
-                console.error('No More Markers');
+                console.debug('No More Markers');
                 break;
               }
 
@@ -12004,13 +12097,47 @@ var propagateCruncher = () => {
             }
           }
 
+          if (sensor.obsmaxrange - sensor.obsminrange < 720) {
+            for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+              for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+                if (sensor.obsminaz > sensor.obsmaxaz) {
+                  if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {// Intentional
+                  } else {
+                    continue;
+                  }
+                } else {
+                  if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {// Intentional
+                  } else {
+                    continue;
+                  }
+                }
+
+                pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+
+                if (i === len) {
+                  console.debug('No More Markers');
+                  break;
+                }
+
+                satCache[i].active = true;
+                satPos[i * 3] = pos.x;
+                satPos[i * 3 + 1] = pos.y;
+                satPos[i * 3 + 2] = pos.z;
+                satVel[i * 3] = 0;
+                satVel[i * 3 + 1] = 0;
+                satVel[i * 3 + 2] = 0;
+                i++;
+              }
+            }
+          }
+
           if (sensor.obsminaz !== sensor.obsmaxaz && sensor.obsminaz !== sensor.obsmaxaz - 360) {
             for (az = sensor.obsmaxaz; az == sensor.obsmaxaz; az += 1) {
               for (rng = sensor.obsminrange; rng < sensor.obsmaxrange; rng += q) {
-                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
 
                 if (i === len) {
-                  console.error('No More Markers');
+                  console.debug('No More Markers');
                   break;
                 }
 
@@ -12027,10 +12154,10 @@ var propagateCruncher = () => {
 
             for (az = sensor.obsminaz; az == sensor.obsminaz; az += 1) {
               for (rng = sensor.obsminrange; rng < sensor.obsmaxrange; rng += q) {
-                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
 
                 if (i === len) {
-                  console.error('No More Markers');
+                  console.debug('No More Markers');
                   break;
                 }
 
@@ -12083,9 +12210,9 @@ var propagateCruncher = () => {
               y: satSelPosY,
               z: satSelPosZ
             };
-            satSelPos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(satSelPosEcf, gmst); // Find the Lat/Long of the Selected Satellite
+            satSelPos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(satSelPosEcf, gmst); // Find the Lat/Long of the Selected Satellite
 
-            satSelGeodetic = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToGeodetic(satSelPos, gmst); // pv.position is called positionEci originally
+            satSelGeodetic = satellite_js__WEBPACK_IMPORTED_MODULE_0__.eciToGeodetic(satSelPos, gmst); // pv.position is called positionEci originally
 
             satHeight = satSelGeodetic.height;
             satSelPosEarth = {
@@ -12118,15 +12245,15 @@ var propagateCruncher = () => {
                   height: 15
                 }; // Find the Az/El of the position on the earth
 
-                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(satSelPosEarth, satSelPosEcf); // azimuth = lookangles.azimuth;
+                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToLookAngles(satSelPosEarth, satSelPosEcf); // azimuth = lookangles.azimuth;
 
                 elevation = lookangles.elevation; // rangeSat = lookangles.rangeSat;
 
                 if (elevation * RAD2DEG > 0 && 90 - elevation * RAD2DEG < selectedSatFOV) {
-                  satSelPosEarth = satellite_js__WEBPACK_IMPORTED_MODULE_1__.geodeticToEcf(satSelPosEarth);
+                  satSelPosEarth = satellite_js__WEBPACK_IMPORTED_MODULE_0__.geodeticToEcf(satSelPosEarth);
 
                   if (i === len) {
-                    console.error('Ran out of Markers');
+                    console.debug('Ran out of Markers');
                     continue; // Only get so many markers.
                   }
 
@@ -12152,15 +12279,15 @@ var propagateCruncher = () => {
                   height: 15
                 }; // Find the Az/El of the position on the earth
 
-                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(satSelPosEarth, satSelPosEcf); // azimuth = lookangles.azimuth;
+                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToLookAngles(satSelPosEarth, satSelPosEcf); // azimuth = lookangles.azimuth;
 
                 elevation = lookangles.elevation; // rangeSat = lookangles.rangeSat;
 
                 if (elevation * RAD2DEG > 0 && 90 - elevation * RAD2DEG < selectedSatFOV) {
-                  satSelPosEarth = satellite_js__WEBPACK_IMPORTED_MODULE_1__.geodeticToEcf(satSelPosEarth);
+                  satSelPosEarth = satellite_js__WEBPACK_IMPORTED_MODULE_0__.geodeticToEcf(satSelPosEarth);
 
                   if (i === len) {
-                    console.error('Ran out of Markers');
+                    console.debug('Ran out of Markers');
                     continue; // Only get so many markers.
                   }
 
