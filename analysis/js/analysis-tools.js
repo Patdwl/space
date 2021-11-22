@@ -18682,7 +18682,7 @@ var keepTrackApi = window.keepTrackApi || {
             keepTrackApi.callbacks[params.method].push({ name: params.cbName, cb: params.cb });
         }
         else {
-            throw new Error("Invalid callback \"" + params.method + "\"!");
+            throw new Error("Invalid callback \"".concat(params.method, "\"!"));
         }
         return;
     },
@@ -18696,11 +18696,11 @@ var keepTrackApi = window.keepTrackApi || {
                 }
             }
             // If we got this far, it means we couldn't find the callback
-            throw new Error("Callback \"" + params.cbName + " not found\"!");
+            throw new Error("Callback \"".concat(params.cbName, " not found\"!"));
         }
         else {
             // Couldn't find the method
-            throw new Error("Invalid callback \"" + params.method + "\"!");
+            throw new Error("Invalid callback \"".concat(params.method, "\"!"));
         }
     },
     callbacks: {
@@ -18722,7 +18722,7 @@ var keepTrackApi = window.keepTrackApi || {
         rightBtnMenuAdd: [],
         updateDateTime: [],
         uiManagerFinal: [],
-        loadCatalog: [],
+        loadCatalog: []
     },
     methods: {
         selectSatData: function (sat, satId) {
@@ -18789,7 +18789,7 @@ var keepTrackApi = window.keepTrackApi || {
                         return [2 /*return*/, satData];
                 }
             });
-        }); },
+        }); }
     },
     programs: {
         timeManager: {},
@@ -18807,8 +18807,8 @@ var keepTrackApi = window.keepTrackApi || {
         sensorManager: {},
         starManager: {},
         uiManager: {},
-        uiInput: {},
-    },
+        uiInput: {}
+    }
 };
 window.keepTrackApi = keepTrackApi;
 
@@ -18865,7 +18865,7 @@ var stringPad = {
         var s = '   ' + num;
         return s.substr(s.length - size);
     },
-    pad0: function (str, max) { return (str.length < max ? stringPad.pad0('0' + str, max) : str); },
+    pad0: function (str, max) { return (str.length < max ? stringPad.pad0('0' + str, max) : str); }
 };
 var saveVariable = function (variable, filename) {
     try {
@@ -18890,7 +18890,7 @@ var saveCsv = function (items, name) {
         var blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
         if (!_external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__.saveAs)
             throw new Error('saveAs is unavailable!');
-        (0,_external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__.saveAs)(blob, name + ".csv");
+        (0,_external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__.saveAs)(blob, "".concat(name, ".csv"));
     }
     catch (error) {
         console.debug('Unable to Save File!');
@@ -18927,7 +18927,7 @@ var hex2RgbA = function (hex) {
     console.warn('Bad Hex! Using White Instead.');
     return [1, 1, 1, 1];
 };
-var rgbCss = function (values) { return "rgba(" + values[0] * 255 + "," + values[1] * 255 + "," + values[2] * 255 + "," + values[3] + ")"; };
+var rgbCss = function (values) { return "rgba(".concat(values[0] * 255, ",").concat(values[1] * 255, ",").concat(values[2] * 255, ",").concat(values[3], ")"); };
 /**
  *
  * @param {string} str Input string
@@ -19161,7 +19161,7 @@ var timeManager = {
         // Initialize
         timeManager.updatePropTime();
         timeManager.setSelectedDate(timeManager.propTimeVar);
-    },
+    }
 };
 
 
