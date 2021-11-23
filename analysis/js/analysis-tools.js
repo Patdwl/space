@@ -40529,7 +40529,10 @@ var lookAngles2Ecf = function (az, el, rng, lat, lon, alt) {
         lon: lon,
         alt: alt,
     };
-    var _a = satellite.geodeticToEcf(geodeticCoords), sitex = _a.sitex, sitey = _a.sitey, sitez = _a.sitez;
+    var site = satellite.geodeticToEcf(geodeticCoords);
+    var sitex = site.x;
+    var sitey = site.y;
+    var sitez = site.z;
     // some needed calculations
     var slat = Math.sin(lat);
     var slon = Math.sin(lon);
