@@ -38442,6 +38442,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var ootk__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ootk */ "./node_modules/ootk/dist/ootk.js");
 /* harmony import */ var ootk__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(ootk__WEBPACK_IMPORTED_MODULE_5__);
 /* harmony import */ var _lib_external_numeric__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../lib/external/numeric */ "./src/js/lib/external/numeric.js");
+/* harmony import */ var _timeManager_transforms__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../timeManager/transforms */ "./src/js/timeManager/transforms.ts");
 /**
  * /////////////////////////////////////////////////////////////////////////////
  *
@@ -38487,6 +38488,7 @@ var __read = (undefined && undefined.__read) || function (o, n) {
 
 
 
+
 window._numeric = _lib_external_numeric__WEBPACK_IMPORTED_MODULE_6__.numeric; // numeric break if it is not available globally
 var satellite = {};
 // Constants
@@ -38495,9 +38497,7 @@ var DEG2RAD = TAU / 360;
 var RAD2DEG = 360 / TAU;
 var MINUTES_PER_DAY = 1440;
 var MILLISECONDS_PER_DAY = 1.15741e-8;
-var getTearData = function (propTempOffset, satrec, sensor, isInFOV) {
-    var now = new Date(); // Make a time variable
-    now.setTime(Number(Date.now()) + propTempOffset); // Set the time variable to the time in the future
+var getTearData = function (now, satrec, sensor, isInFOV) {
     var aer = satellite.getRae(now, satrec, sensor);
     isInFOV !== null && isInFOV !== void 0 ? isInFOV : (isInFOV = satellite.checkIsInFOV(sensor, aer));
     if (isInFOV) {
@@ -38645,13 +38645,11 @@ var calculateVisMag = function (sat, sensor, propTime, sun) {
     var apparentMagnitude = intrinsicMagnitude + term2 + term3;
     return apparentMagnitude;
 };
-var altitudeCheck = function (tle1, tle2, propOffset) {
-    var timeManager = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs.timeManager;
+var altitudeCheck = function (tle1, tle2, now) {
     var satrec = satellite.twoline2satrec(tle1, tle2); // perform and store sat init calcs
-    var propTime = timeManager.propTimeCheck(propOffset, timeManager.propRealTime);
-    var j = timeManager.jday(propTime.getUTCFullYear(), propTime.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
-    propTime.getUTCDate(), propTime.getUTCHours(), propTime.getUTCMinutes(), propTime.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
-    j += propTime.getUTCMilliseconds() * MILLISECONDS_PER_DAY;
+    var j = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_7__.jday)(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
+    now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
+    j += now.getUTCMilliseconds() * MILLISECONDS_PER_DAY;
     var gmst = satellite.gstime(j);
     var m = (j - satrec.jdsatepoch) * MINUTES_PER_DAY;
     var positionEci = satellite.sgp4(satrec, m);
@@ -38712,9 +38710,9 @@ var getTEARR = function (sat, sensor, propTime) {
         now = propTime;
     }
     else {
-        now = timeManager.propTime();
+        now = timeManager.calculateSimulationTime();
     }
-    var j = timeManager.jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
+    var j = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_7__.jday)(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
     now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
     j += now.getUTCMilliseconds() * MILLISECONDS_PER_DAY;
     var gmst = satellite.gstime(j);
@@ -38789,13 +38787,13 @@ var nextpass = function (sat, sensor, searchLength, interval) {
     // If length and interval not set try to use defaults
     searchLength !== null && searchLength !== void 0 ? searchLength : (searchLength = satellite.lookanglesLength);
     interval !== null && interval !== void 0 ? interval : (interval = satellite.lookanglesInterval);
-    var propOffset = timeManager.getPropOffset();
-    var propTempOffset = 0;
+    var simulationTime = timeManager.calculateSimulationTime();
+    var offset = 0;
     var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
     for (var i = 0; i < searchLength * 24 * 60 * 60; i += interval) {
         // 5second Looks
-        propTempOffset = i * 1000 + propOffset; // Offset in seconds (msec * 1000)
-        var now = timeManager.propTimeCheck(propTempOffset, timeManager.propRealTime);
+        offset = i * 1000; // Offset in seconds (msec * 1000)
+        var now = timeManager.getOffsetTimeObj(offset, simulationTime);
         var aer = satellite.getRae(now, satrec, sensor);
         var isInFOV = satellite.checkIsInFOV(sensor, aer);
         if (isInFOV) {
@@ -38833,7 +38831,8 @@ var nextNpasses = function (sat, sensor, searchLength, interval, numPasses) {
     interval = interval || satellite.lookanglesInterval;
     numPasses = numPasses || 1;
     var passTimesArray = [];
-    var propOffset = timeManager.getPropOffset();
+    var simulationTime = timeManager.calculateSimulationTime();
+    var offset = 0;
     var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
     var orbitalPeriod = MINUTES_PER_DAY / ((satrec.no * MINUTES_PER_DAY) / TAU); // Seconds in a day divided by mean motion
     for (var i = 0; i < searchLength * 24 * 60 * 60; i += interval) {
@@ -38842,8 +38841,8 @@ var nextNpasses = function (sat, sensor, searchLength, interval, numPasses) {
         if (passTimesArray.length >= numPasses) {
             return passTimesArray;
         }
-        var propTempOffset = i + propOffset; // Offset in seconds (msec * 1000)
-        var now = timeManager.propTimeCheck(propTempOffset * 1000, timeManager.propRealTime);
+        offset = i * 1000; // Offset in seconds (msec * 1000)
+        var now = timeManager.getOffsetTimeObj(offset, simulationTime);
         var aer = satellite.getRae(now, satrec, sensor);
         var isInFOV = satellite.checkIsInFOV(sensor, aer);
         if (isInFOV) {
@@ -38862,15 +38861,17 @@ var getlookangles = function (sat) {
     }
     var sensor = sensorManager.currentSensor;
     // Set default timing settings. These will be changed to find look angles at different times in future.
-    var propOffset = timeManager.getPropOffset();
+    var simulationTime = timeManager.calculateSimulationTime();
+    var offset = 0;
     var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
     // const orbitalPeriod = MINUTES_PER_DAY / ((satrec.no * MINUTES_PER_DAY) / TAU); // Seconds in a day divided by mean motion
     // Use custom interval unless doing rise/set lookangles - then use 1 second
     var lookanglesInterval = satellite.isRiseSetLookangles ? 1 : satellite.lookanglesInterval;
     var looksArray = [];
     for (var i = 0; i < satellite.lookanglesLength * 24 * 60 * 60; i += lookanglesInterval) {
-        var propTempOffset = i * 1000 + propOffset; // Offset in seconds
-        var looksPass = getTearData(propTempOffset, satrec, sensor);
+        offset = i * 1000; // Offset in seconds (msec * 1000)
+        var now = timeManager.getOffsetTimeObj(offset, simulationTime);
+        var looksPass = getTearData(now, satrec, sensor);
         if (looksPass !== false) {
             looksArray.push(looksPass); // Update the table with looks for this 5 second chunk and then increase table counter by 1
             // i = i + (orbitalPeriod * 60 * 0.75); // Jump 3/4th to the next orbit
@@ -38944,10 +38945,8 @@ var getlookanglesMultiSite = function (sat) {
     if (!sensorManager.checkSensorSelected()) {
         isResetToDefault = true;
     }
-    var _propagateMultiSite = function (offset, satrec, sensor) {
+    var _propagateMultiSite = function (now, satrec, sensor) {
         // Setup Realtime and Offset Time
-        var propRealTimeTemp = Date.now();
-        var now = timeManager.propTimeCheck(offset, propRealTimeTemp);
         var aer = satellite.getRae(now, satrec, sensor);
         var isInFOV = satellite.checkIsInFOV(sensor, aer);
         if (isInFOV) {
@@ -38969,8 +38968,8 @@ var getlookanglesMultiSite = function (sat) {
     };
     // Save Current Sensor
     sensorManager.tempSensor = sensorManager.currentSensor;
-    // Determine time offset from real time
-    var propOffset = timeManager.getPropOffset();
+    var simulationTime = timeManager.calculateSimulationTime();
+    var offset = 0;
     // Get Satellite Info
     var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
     var orbitalPeriod = MINUTES_PER_DAY / ((satrec.no * MINUTES_PER_DAY) / TAU); // Seconds in a day divided by mean motion
@@ -38980,8 +38979,9 @@ var getlookanglesMultiSite = function (sat) {
         satellite.setobs(sensorManager.sensorListUS[sensorIndex]);
         for (var i = 0; i < satellite.lookanglesLength * 24 * 60 * 60; i += satellite.lookanglesInterval) {
             // 5second Looks
-            var propTempOffset = i * 1000 + propOffset; // Offset in seconds
-            var multiSitePass = _propagateMultiSite(propTempOffset, satrec, sensorManager.sensorListUS[sensorIndex]);
+            offset = i * 1000; // Offset in seconds (msec * 1000)
+            var now = timeManager.getOffsetTimeObj(offset, simulationTime);
+            var multiSitePass = _propagateMultiSite(now, satrec, sensorManager.sensorListUS[sensorIndex]);
             if (multiSitePass.time === '') {
                 multiSiteArray.push(multiSitePass); // Update the table with looks for this 5 second chunk and then increase table counter by 1
                 i = i + orbitalPeriod * 60 * 0.75; // Jump 3/4th to the next orbit
@@ -39063,7 +39063,7 @@ var getlookanglesMultiSite = function (sat) {
 //   try {
 //     propOffset = timeManager.getPropOffset() || 0;
 //     propRealTimeTemp = Date.now();
-//     now = timeManager.propTimeCheck(propOffset, propRealTimeTemp);
+//     now = timeManager.getOffsetTimeObj(propOffset, propRealTimeTemp);
 //   } catch {
 //     now = new Date();
 //   }
@@ -39325,7 +39325,7 @@ var findCloseObjects = function () {
 };
 // TODO: satellite.getOrbitByLatLon needs cleaned up badly
 /* istanbul ignore next */
-var getOrbitByLatLon = function (sat, goalLat, goalLon, upOrDown, propOffset, goalAlt, rascOffset) {
+var getOrbitByLatLon = function (sat, goalLat, goalLon, upOrDown, now, goalAlt, rascOffset) {
     var mainTLE1;
     var mainTLE2;
     var mainMeana;
@@ -39385,7 +39385,7 @@ var getOrbitByLatLon = function (sat, goalLat, goalLon, upOrDown, propOffset, go
         mainTLE1 = '1 ' + scc + 'U ' + intl + ' ' + epochyr + epochday + TLE1Ending; // M' and M'' are both set to 0 to put the object in a perfect stable orbit
         mainTLE2 = '2 ' + scc + ' ' + inc + ' ' + rasc + ' ' + ecen + ' ' + argPe + ' ' + meana + ' ' + meanmo + '    10';
         satrec = satellite.twoline2satrec(mainTLE1, mainTLE2);
-        var propNewArgPe = getOrbitByLatLonPropagate(propOffset, satrec, 3);
+        var propNewArgPe = getOrbitByLatLonPropagate(now, satrec, 3);
         // if (propNewArgPe === 1) {
         sat.TLE1 = mainTLE1;
         sat.TLE2 = mainTLE2;
@@ -39435,7 +39435,7 @@ var getOrbitByLatLon = function (sat, goalLat, goalLon, upOrDown, propOffset, go
         var TLE1 = '1 ' + scc + 'U ' + intl + ' ' + epochyr + epochday + TLE1Ending; // M' and M'' are both set to 0 to put the object in a perfect stable orbit
         var TLE2 = '2 ' + scc + ' ' + inc + ' ' + rasc + ' ' + ecen + ' ' + argPe + ' ' + meana + ' ' + meanmo + '    10';
         satrec = satellite.twoline2satrec(TLE1, TLE2);
-        var propagateResults = getOrbitByLatLonPropagate(propOffset, satrec, 1);
+        var propagateResults = getOrbitByLatLonPropagate(now, satrec, 1);
         if (propagateResults === 1) {
             mainTLE1 = TLE1;
             mainTLE2 = TLE2;
@@ -39488,7 +39488,7 @@ var getOrbitByLatLon = function (sat, goalLat, goalLon, upOrDown, propOffset, go
         mainTLE1 = '1 ' + scc + 'U ' + intl + ' ' + epochyr + epochday + TLE1Ending; // M' and M'' are both set to 0 to put the object in a perfect stable orbit
         mainTLE2 = '2 ' + scc + ' ' + inc + ' ' + rasc + ' ' + ecen + ' ' + argPe + ' ' + meana + ' ' + meanmo + '    10';
         satrec = satellite.twoline2satrec(mainTLE1, mainTLE2);
-        var propNewRasc = getOrbitByLatLonPropagate(propOffset, satrec, 2);
+        var propNewRasc = getOrbitByLatLonPropagate(now, satrec, 2);
         if (propNewRasc === 1) {
             sat.TLE1 = mainTLE1;
             rasc = rascNum / 100 + rascOffset;
@@ -39512,11 +39512,8 @@ var getOrbitByLatLon = function (sat, goalLat, goalLon, upOrDown, propOffset, go
         // 5 === If RASC outside 15 degrees then rotate RASC faster
         return propNewRasc;
     };
-    var getOrbitByLatLonPropagate = function (propOffset, satrec, type) {
-        var timeManager = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs.timeManager;
-        timeManager.propRealTime = Date.now();
-        var now = timeManager.propTimeCheck(propOffset, timeManager.propRealTime);
-        var j = timeManager.jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
+    var getOrbitByLatLonPropagate = function (now, satrec, type) {
+        var j = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_7__.jday)(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
         now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
         j += now.getUTCMilliseconds() * MILLISECONDS_PER_DAY;
         var gmst = satellite.gstime(j);
@@ -39668,8 +39665,8 @@ var getOrbitByLatLon = function (sat, goalLat, goalLon, upOrDown, propOffset, go
     }
     return [mainTLE1, mainTLE2];
 };
-var calculateLookAngles = function (sat, sensor, propOffset) {
-    var sensorManager = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs.sensorManager;
+var calculateLookAngles = function (sat, sensor) {
+    var _a = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs, sensorManager = _a.sensorManager, timeManager = _a.timeManager;
     (function _inputValidation() {
         // Check if there is a sensor
         if (typeof sensor == 'undefined') {
@@ -39703,17 +39700,12 @@ var calculateLookAngles = function (sat, sensor, propOffset) {
                 console.debug('sat parameter invalid format!');
             }
         }
-        if (typeof propOffset == 'undefined') {
-            propOffset = 0;
-        }
         if (typeof satellite.isRiseSetLookangles == 'undefined') {
             satellite.isRiseSetLookangles = false;
         }
     })();
-    // Set default timing settings. These will be changed to find look angles at different times in future.
-    if (typeof propOffset == 'undefined')
-        propOffset = 0; // Could be used for changing the time start
-    var propTempOffset = 0; // offset letting us propagate in the future (or past)
+    var simulationTime = timeManager.calculateSimulationTime();
+    var offset = 0;
     var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
     var lookanglesTable = []; // Iniially no rows to the table
     var tempLookanglesInterval;
@@ -39723,10 +39715,11 @@ var calculateLookAngles = function (sat, sensor, propOffset) {
     }
     for (var i = 0; i < satellite.lookanglesLength * 24 * 60 * 60; i += satellite.lookanglesInterval) {
         // satellite.lookanglesInterval in seconds
-        propTempOffset = i * 1000 + propOffset; // Offset in seconds (msec * 1000)
+        offset = i * 1000; // Offset in seconds (msec * 1000)
+        var now = timeManager.getOffsetTimeObj(offset, simulationTime);
         if (lookanglesTable.length <= 5000) {
             // Maximum of 1500 lines in the look angles table
-            var lookanglesRow = getTearData(propTempOffset, satrec, sensor);
+            var lookanglesRow = getTearData(now, satrec, sensor);
             if (lookanglesRow == false) {
                 lookanglesTable.push(lookanglesRow); // Update the table with looks for this 5 second chunk and then increase table counter by 1
             }
@@ -39773,8 +39766,8 @@ var findBestPasses = function (sats, sensor) {
     (0,_app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_3__.saveCsv)(sortedTableSatTimes, 'bestSatTimes');
 };
 /* istanbul ignore next */
-var findBestPass = function (sat, sensor, propOffset) {
-    var sensorManager = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs.sensorManager;
+var findBestPass = function (sat, sensor) {
+    var _a = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs, sensorManager = _a.sensorManager, timeManager = _a.timeManager;
     (function _inputValidation() {
         // Check if there is a sensor
         if (typeof sensor == 'undefined') {
@@ -39809,10 +39802,8 @@ var findBestPass = function (sat, sensor, propOffset) {
             }
         }
     })();
-    // Set default timing settings. These will be changed to find look angles at different times in future.
-    if (typeof propOffset == 'undefined')
-        propOffset = 0; // Could be used for changing the time start
-    var propTempOffset = 0; // offset letting us propagate in the future (or past)
+    var simulationTime = timeManager.calculateSimulationTime();
+    var offset = 0;
     var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
     var lookanglesTable = []; // Iniially no rows to the table
     var looksInterval = 5;
@@ -39828,15 +39819,12 @@ var findBestPass = function (sat, sensor, propOffset) {
     var start3 = false;
     var stop3 = false;
     var orbitalPeriod = MINUTES_PER_DAY / ((satrec.no * MINUTES_PER_DAY) / TAU); // Seconds in a day divided by mean motion
-    var _propagateBestPass = function (propTempOffset, satrec) {
-        var now = new Date(); // Make a time variable
-        now.setTime(Number(Date.now()) + propTempOffset); // Set the time variable to the time in the future
+    var _propagateBestPass = function (now, satrec) {
         var aer = satellite.getRae(now, satrec, sensor);
         var isInFOV = satellite.checkIsInFOV(sensor, aer);
         if (isInFOV) {
             // Previous Pass to Calculate first line of coverage
-            var now1 = new Date();
-            now1.setTime(Number(Date.now()) + propTempOffset - looksInterval * 1000);
+            var now1 = timeManager.getOffsetTimeObj(offset - looksInterval * 1000, simulationTime);
             var aer1 = satellite.getRae(now1, satrec, sensor);
             var isInFOV1 = satellite.checkIsInFOV(sensor, aer1);
             if (!isInFOV1) {
@@ -39852,8 +39840,8 @@ var findBestPass = function (sat, sensor, propOffset) {
             }
             else {
                 // Next Pass to Calculate Last line of coverage
-                now1.setTime(Number(Date.now()) + propTempOffset + looksInterval * 1000);
-                aer1 = satellite.getRae(now1, satrec, sensor);
+                var now1_1 = timeManager.getOffsetTimeObj(offset + looksInterval * 1000, simulationTime);
+                aer1 = satellite.getRae(now1_1, satrec, sensor);
                 isInFOV1 = satellite.checkIsInFOV(sensor, aer1);
                 if (!isInFOV1) {
                     // if it stops around 3
@@ -39906,10 +39894,11 @@ var findBestPass = function (sat, sensor, propOffset) {
     };
     for (var i = 0; i < looksLength * 24 * 60 * 60; i += looksInterval) {
         // satellite.lookanglesInterval in seconds
-        propTempOffset = i * 1000 + propOffset; // Offset in seconds (msec * 1000)
+        offset = i * 1000; // Offset in seconds (msec * 1000)
+        var now = timeManager.getOffsetTimeObj(offset, simulationTime);
         if (lookanglesTable.length <= 5000) {
             // Maximum of 1500 lines in the look angles table
-            var lookanglesRow = _propagateBestPass(propTempOffset, satrec);
+            var lookanglesRow = _propagateBestPass(now, satrec);
             // If data came back...
             if (typeof lookanglesRow.score !== 'undefined') {
                 lookanglesTable.push(lookanglesRow); // Update the table with looks for this 5 second chunk and then increase table counter by 1
@@ -39953,7 +39942,7 @@ satellite.genMlData = {};
 /* istanbul ignore next */
 satellite.genMlData.eci2inc = function (start, stop) {
     var _a = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs, timeManager = _a.timeManager, satSet = _a.satSet;
-    var startTime = timeManager.propTime();
+    var startTime = timeManager.calculateSimulationTime();
     var trainData = [];
     var trainTarget = [];
     var testData = [];
@@ -40013,7 +40002,7 @@ satellite.genMlData.eci2inc = function (start, stop) {
 /* istanbul ignore next */
 satellite.genMlData.tlePredict = function (start, stop) {
     var _a = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs, timeManager = _a.timeManager, satSet = _a.satSet;
-    var startTime = timeManager.propTime();
+    var startTime = timeManager.calculateSimulationTime();
     var satEciDataArray = [];
     var satEciData = [];
     //   let propLength = 1000 * 60 * 1440; //ms
@@ -40104,13 +40093,15 @@ var findNearbyObjectsByOrbit = function (sat) {
 /* istanbul ignore next */
 satellite.findClosestApproachTime = function (sat1, sat2, propOffset, propLength) {
     var timeManager = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs.timeManager;
+    var simulationTime = timeManager.calculateSimulationTime();
+    var offset = 0;
     var distArray = {};
     if (typeof propLength == 'undefined')
         propLength = 1440 * 60; // 1 Day
     var minDistance = 1000000;
     for (var t = 0; t < propLength; t++) {
-        var propTempOffset = propOffset + t * 1000;
-        var now = timeManager.propTimeCheck(propTempOffset, timeManager.propRealTime);
+        offset = t * 1000; // Offset in seconds (msec * 1000)
+        var now = timeManager.getOffsetTimeObj(offset, simulationTime);
         var sat1Pos = satellite.getEci(sat1, now);
         var sat2Pos = satellite.getEci(sat2, now);
         var distance_1 = Math.sqrt(Math.pow((sat1Pos.position.x - sat2Pos.position.x), 2) + Math.pow((sat1Pos.position.y - sat2Pos.position.y), 2) + Math.pow((sat1Pos.position.z - sat2Pos.position.z), 2));
@@ -40136,8 +40127,8 @@ satellite.findClosestApproachTime = function (sat1, sat2, propOffset, propLength
     //         ' ' +
     //         (1.0).toString(),
     // });
-    // timeManager.propRealTime = Date.now(); // Reset realtime...this might not be necessary...
-    // timeManager.propTime();
+    // timeManager.dynamicOffsetEpoch = Date.now(); // Reset realtime...this might not be necessary...
+    // timeManager.calculateSimulationTime();
     return distArray;
 };
 /* istanbul ignore next */
@@ -40153,7 +40144,7 @@ satellite.createManeuverAnalyst = function (satId, incVariation, meanmoVariation
     launchLon = satellite.degreesLong(TEARR.lon);
     alt = TEARR.alt;
     var upOrDown = mainsat.getDirection();
-    var currentEpoch = satellite.currentEpoch(timeManager.propTime());
+    var currentEpoch = satellite.currentEpoch(timeManager.calculateSimulationTime());
     mainsat.TLE1 = mainsat.TLE1.substr(0, 18) + currentEpoch[0] + currentEpoch[1] + mainsat.TLE1.substr(32);
     var TLEs;
     // Ignore argument of perigee for round orbits OPTIMIZE
@@ -40211,7 +40202,7 @@ satellite.createManeuverAnalyst = function (satId, incVariation, meanmoVariation
     sat.TLE1 = iTLE1;
     sat.TLE2 = iTLE2;
     sat.active = true;
-    if (satellite.altitudeCheck(iTLE1, iTLE2, timeManager.propOffset) > 1) {
+    if (satellite.altitudeCheck(iTLE1, iTLE2, timeManager.calculateSimulationTime()) > 1) {
         satSet.satCruncher.postMessage({
             type: 'satEdit',
             id: satId,
@@ -40288,12 +40279,11 @@ satellite.checkIsInFOV = function (sensor, rae) {
 var updateDopsTable = function (lat, lon, alt) {
     var timeManager = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs.timeManager;
     try {
-        var now = void 0;
         var tbl = document.getElementById('dops'); // Identify the table to update
         tbl.innerHTML = ''; // Clear the table from old object data
         // let tblLength = 0;
-        var propOffset = timeManager.getPropOffset();
-        var propTempOffset = 0;
+        var simulationTime = timeManager.calculateSimulationTime();
+        var offset = 0;
         var tr = tbl.insertRow();
         var tdT = tr.insertCell();
         tdT.appendChild(document.createTextNode('Time'));
@@ -40304,8 +40294,8 @@ var updateDopsTable = function (lat, lon, alt) {
         var tdG = tr.insertCell();
         tdG.appendChild(document.createTextNode('GDOP'));
         for (var t = 0; t < 1440; t++) {
-            propTempOffset = t * 1000 * 60 + propOffset; // Offset in seconds (msec * 1000)
-            now = timeManager.propTimeCheck(propTempOffset, timeManager.propRealTime);
+            offset = t * 1000 * 60; // Offset in seconds (msec * 1000)
+            var now = timeManager.getOffsetTimeObj(offset, simulationTime);
             var dops = satellite.getDops(lat, lon, alt, now);
             tr = tbl.insertRow();
             tdT = tr.insertCell();
@@ -40335,8 +40325,8 @@ var getDops = function (lat, lon, alt, propTime) {
         if (typeof groupsManager.GPSGroup == 'undefined') {
             groupsManager.GPSGroup = groupsManager.createGroup('nameRegex', /NAVSTAR/iu);
         }
-        propTime !== null && propTime !== void 0 ? propTime : (propTime = timeManager.propTime());
-        var j = timeManager.jday(propTime.getUTCFullYear(), propTime.getUTCMonth() + 1, propTime.getUTCDate(), propTime.getUTCHours(), propTime.getUTCMinutes(), propTime.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
+        propTime !== null && propTime !== void 0 ? propTime : (propTime = timeManager.calculateSimulationTime());
+        var j = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_7__.jday)(propTime.getUTCFullYear(), propTime.getUTCMonth() + 1, propTime.getUTCDate(), propTime.getUTCHours(), propTime.getUTCMinutes(), propTime.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
         j += propTime.getUTCMilliseconds() * 1.15741e-8;
         var gmst = satellite.gstime(j);
         var inViewList = [];
@@ -40473,16 +40463,16 @@ var getSunTimes = function (sat, sensor, searchLength, interval) {
     // If length and interval not set try to use defaults
     searchLength !== null && searchLength !== void 0 ? searchLength : (searchLength = satellite.lookanglesLength);
     interval !== null && interval !== void 0 ? interval : (interval = satellite.lookanglesInterval);
-    var propOffset = timeManager.getPropOffset();
-    var propTempOffset = 0;
+    var simulationTime = timeManager.calculateSimulationTime();
+    var offset = 0;
     var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
     var minDistanceApart = 100000000000;
     // var minDistTime;
     for (var i = 0; i < searchLength * 24 * 60 * 60; i += interval) {
         // 5second Looks
-        propTempOffset = i * 1000 + propOffset; // Offset in seconds (msec * 1000)
-        var now = timeManager.propTimeCheck(propTempOffset, timeManager.propRealTime);
-        var j = timeManager.jday(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
+        offset = i * 1000; // Offset in seconds (msec * 1000)
+        var now = timeManager.getOffsetTimeObj(offset, simulationTime);
+        var j = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_7__.jday)(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
         j += now.getUTCMilliseconds() * MILLISECONDS_PER_DAY;
         var gmst = satellite.gstime(j);
         var _b = __read(getSunDirection(j), 3), sunX = _b[0], sunY = _b[1], sunZ = _b[2];
@@ -40551,8 +40541,8 @@ var lookAngles2Ecf = function (az, el, rng, lat, lon, alt) {
 };
 var eci2ll = function (x, y, z) {
     var timeManager = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs.timeManager;
-    var propTime = timeManager.propTime();
-    var j = timeManager.jday(propTime.getUTCFullYear(), propTime.getUTCMonth() + 1, propTime.getUTCDate(), propTime.getUTCHours(), propTime.getUTCMinutes(), propTime.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
+    var propTime = timeManager.calculateSimulationTime();
+    var j = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_7__.jday)(propTime.getUTCFullYear(), propTime.getUTCMonth() + 1, propTime.getUTCDate(), propTime.getUTCHours(), propTime.getUTCMinutes(), propTime.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
     j += propTime.getUTCMilliseconds() * 1.15741e-8;
     var gmst = satellite.gstime(j);
     var latLon = satellite.eciToGeodetic({ x: x, y: y, z: z }, gmst);
@@ -40562,11 +40552,10 @@ var eci2ll = function (x, y, z) {
     latLon.lon = latLon.lon < -180 ? latLon.lon + 360 : latLon.lon;
     return latLon;
 };
-var getLlaTimeView = function (propOffset, sat) {
-    var _a = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs, timeManager = _a.timeManager, sensorManager = _a.sensorManager;
+var getLlaTimeView = function (now, sat) {
+    var sensorManager = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs.sensorManager;
     var satrec = satellite.twoline2satrec(sat.TLE1, sat.TLE2); // perform and store sat init calcs
-    var now = timeManager.propTimeCheck(propOffset, timeManager.propRealTime);
-    var j = timeManager.jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
+    var j = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_7__.jday)(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in rng 1-12.
     now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
     j += now.getUTCMilliseconds() * MILLISECONDS_PER_DAY;
     var gmst = satellite.gstime(j);
@@ -40617,16 +40606,17 @@ var getLlaTimeView = function (propOffset, sat) {
 var map = function (sat, i) {
     var timeManager = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs.timeManager;
     // Set default timing settings. These will be changed to find look angles at different times in future.
-    var propOffset = timeManager.getPropOffset();
-    var propTempOffset = ((i * sat.period) / 50) * 60 * 1000 + propOffset; // Offset in seconds (msec * 1000)
-    return getLlaTimeView(propTempOffset, sat);
+    var simulationTime = timeManager.calculateSimulationTime();
+    var offset = ((i * sat.period) / 50) * 60 * 1000; // Offset in seconds (msec * 1000)
+    var now = timeManager.getOffsetTimeObj(offset, simulationTime);
+    return getLlaTimeView(now, sat);
 };
 var calculateSensorPos = function (sensor) {
     var _a = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs, timeManager = _a.timeManager, sensorManager = _a.sensorManager;
     sensor !== null && sensor !== void 0 ? sensor : (sensor = sensorManager.currentSensor);
     if (typeof sensor == 'undefined')
         throw new Error('sensor required!');
-    var now = timeManager.propTime();
+    var now = timeManager.calculateSimulationTime();
     var j = _jday(now.getUTCFullYear(), now.getUTCMonth() + 1, now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
     j += now.getUTCMilliseconds() * 1.15741e-8; // days per millisecond
     var gmst = satellite.gstime(j);
@@ -40777,25 +40767,23 @@ window.satellite = satellite;
 
 /***/ }),
 
-/***/ "./src/js/timeManager/timeManager.ts":
-/*!*******************************************!*\
-  !*** ./src/js/timeManager/timeManager.ts ***!
-  \*******************************************/
+/***/ "./src/js/timeManager/transforms.ts":
+/*!******************************************!*\
+  !*** ./src/js/timeManager/transforms.ts ***!
+  \******************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "getDayOfYear": () => (/* binding */ getDayOfYear),
-/* harmony export */   "timeManager": () => (/* binding */ timeManager)
+/* harmony export */   "jday": () => (/* binding */ jday),
+/* harmony export */   "localToZulu": () => (/* binding */ localToZulu),
+/* harmony export */   "dateFromJday": () => (/* binding */ dateFromJday),
+/* harmony export */   "dateToLocalInIso": () => (/* binding */ dateToLocalInIso)
 /* harmony export */ });
-/* harmony import */ var _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @app/js/api/externalApi */ "./src/js/api/externalApi.ts");
-/* harmony import */ var _app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @app/js/lib/constants.js */ "./src/js/lib/constants.js");
-/* harmony import */ var _app_js_lib_external_dateFormat_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @app/js/lib/external/dateFormat.js */ "./src/js/lib/external/dateFormat.js");
-/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! jquery */ "./node_modules/jquery/dist/jquery.js");
-/* harmony import */ var jquery__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(jquery__WEBPACK_IMPORTED_MODULE_3__);
-
-
+/* harmony import */ var _lib_constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../lib/constants */ "./src/js/lib/constants.js");
+/* harmony import */ var _lib_external_dateFormat__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/external/dateFormat */ "./src/js/lib/external/dateFormat.js");
 
 
 var getDayOfYear = function (date) {
@@ -40814,184 +40802,35 @@ var getDayOfYear = function (date) {
         dayOfYear++;
     return dayOfYear;
 };
-var timeManager = {
-    dateObject: null,
-    propTimeVar: null,
-    datetimeInputDOM: null,
-    timeTextStr: null,
-    timeTextStrEmpty: null,
-    now: null,
-    propRealTime: null,
-    propOffset: null,
-    propRate: null,
-    dt: null,
-    drawDt: null,
-    updatePropTime: null,
-    propTime: null,
-    propTimeCheck: null,
-    setNow: null,
-    setLastTime: null,
-    setSelectedDate: null,
-    lastTime: null,
-    selectedDate: null,
-    setDrawDt: null,
-    setPropRateZero: null,
-    tDS: null,
-    iText: null,
-    propRate0: null,
-    dateDOM: null,
-    getPropOffset: null,
-    dateToISOLikeButLocal: null,
-    localToZulu: null,
-    getDayOfYear: null,
-    dateFromDay: null,
-    jday: null,
-    init: function () {
-        var settingsManager = _app_js_api_externalApi__WEBPACK_IMPORTED_MODULE_0__.keepTrackApi.programs.settingsManager;
-        // Variables pulled from timeManager.jday function to reduce garbage collection
-        var jDayStart;
-        var jDayDiff;
-        timeManager.dateObject = new Date();
-        timeManager.propTimeVar = timeManager.dateObject;
-        timeManager.datetimeInputDOM = jquery__WEBPACK_IMPORTED_MODULE_3___default()('#datetime-input-tb');
-        timeManager.timeTextStr = '';
-        timeManager.timeTextStrEmpty = '';
-        var propFrozen = Date.now(); // for when propRate 0
-        timeManager.now = propFrozen; // (initialized as Date.now)
-        timeManager.propRealTime = propFrozen; // actual time we're running it (initialized as Date.now)
-        timeManager.propOffset = 0.0; // offset we're propagating to, msec
-        timeManager.propRate = 1.0; // time rate multiplier for propagation
-        timeManager.dt = 0;
-        timeManager.drawDt = 0;
-        timeManager.updatePropTime = function (propTimeVar) {
-            if (typeof propTimeVar !== 'undefined' && propTimeVar !== null) {
-                timeManager.propTimeVar.setTime(propTimeVar);
-                return;
-            }
-            if (timeManager.propRate === 0) {
-                timeManager.propTimeVar.setTime(Number(timeManager.propRealTime) + timeManager.propOffset);
-            }
-            else {
-                timeManager.propTimeVar.setTime(Number(timeManager.propRealTime) + timeManager.propOffset + (Number(timeManager.now) - Number(timeManager.propRealTime)) * timeManager.propRate);
-            }
-        };
-        // Propagation Time Functions
-        timeManager.propTime = function () {
-            if (timeManager.propRate === 0) {
-                timeManager.propTimeVar.setTime(Number(timeManager.propRealTime) + timeManager.propOffset);
-            }
-            else {
-                timeManager.propTimeVar.setTime(Number(timeManager.propRealTime) + timeManager.propOffset + (Number(timeManager.now) - Number(timeManager.propRealTime)) * timeManager.propRate);
-            }
-            return timeManager.propTimeVar;
-        };
-        timeManager.propTimeCheck = function (propTempOffset, propRealTime) {
-            var now = new Date(); // Make a time variable
-            now.setTime(Number(propRealTime) + propTempOffset); // Set the time variable to the time in the future
-            return now;
-        };
-        timeManager.setNow = function (now, dt) {
-            timeManager.now = now;
-            timeManager.dt = dt;
-            timeManager.setLastTime(timeManager.propTimeVar);
-            timeManager.updatePropTime();
-            timeManager.setSelectedDate(timeManager.propTimeVar);
-            // Passing datetimeInput eliminates needing jQuery in main module
-            if (timeManager.lastTime - timeManager.propTimeVar < 300 && (settingsManager.isEditTime || !settingsManager.cruncherReady)) {
-                if (settingsManager.plugins.datetime) {
-                    timeManager.datetimeInputDOM.val(timeManager.selectedDate.toISOString().slice(0, 10) + ' ' + timeManager.selectedDate.toISOString().slice(11, 19));
-                }
-            }
-        };
-        timeManager.setDrawDt = function (drawDt) {
-            timeManager.drawDt = drawDt;
-        };
-        timeManager.setPropRateZero = function () {
-            timeManager.propRate = 0;
-            propFrozen = Date.now();
-        };
-        timeManager.setLastTime = function (now) {
-            timeManager.lastTime = now;
-        };
-        timeManager.setSelectedDate = function (selectedDate) {
-            timeManager.selectedDate = selectedDate;
-            // This function only applies when datetime plugin is enabled
-            if (settingsManager.plugins.datetime) {
-                if (timeManager.lastTime - timeManager.propTimeVar < 300) {
-                    timeManager.tDS = timeManager.propTimeVar.toJSON();
-                    timeManager.timeTextStr = timeManager.timeTextStrEmpty;
-                    for (timeManager.iText = 11; timeManager.iText < 20; timeManager.iText++) {
-                        if (timeManager.iText > 11)
-                            timeManager.timeTextStr += timeManager.tDS[timeManager.iText - 1];
-                    }
-                    timeManager.propRate0 = timeManager.propRate;
-                    settingsManager.isPropRateChange = false;
-                }
-                // textContent doesn't remove the Node! No unecessary DOM changes everytime time updates.
-                if (timeManager.dateDOM == null)
-                    timeManager.dateDOM = window.document.getElementById('datetime-text');
-                if (timeManager.dateDOM == null) {
-                    console.debug('Cant find datetime-text!');
-                    return;
-                }
-                timeManager.dateDOM.textContent = timeManager.timeTextStr;
-                // Load the current JDAY
-                var jday = timeManager.getDayOfYear(timeManager.propTime());
-                jquery__WEBPACK_IMPORTED_MODULE_3___default()('#jday').html(jday);
-            }
-        };
-        timeManager.getPropOffset = function () {
-            // timeManager.selectedDate = $('#datetime-text').text().substr(0, 19);
-            if (!timeManager.selectedDate) {
-                // console.debug(timeManager);
-                return 0;
-            }
-            // selectedDate = selectedDate.split(' ');
-            // selectedDate = new Date(selectedDate[0] + 'T' + selectedDate[1] + 'Z');
-            var today = new Date();
-            // Not using local scope caused time to drift backwards!
-            var propOffset = timeManager.selectedDate - today.getTime();
-            return propOffset;
-        };
-        timeManager.dateToISOLikeButLocal = function (date) {
-            var offsetMs = date.getTimezoneOffset() * 60 * 1000;
-            var msLocal = date.getTime() - offsetMs;
-            var dateLocal = new Date(msLocal);
-            var iso = dateLocal.toISOString();
-            iso = iso.replace('T', ' ');
-            var isoLocal = iso.slice(0, 19) + ' ' + dateLocal.toString().slice(25, 31);
-            return isoLocal;
-        };
-        timeManager.localToZulu = function (date) {
-            date = (0,_app_js_lib_external_dateFormat_js__WEBPACK_IMPORTED_MODULE_2__.dateFormat)(date, 'isoDateTime', true);
-            date = date.split(' ');
-            date = new Date(date[0] + 'T' + date[1] + 'Z');
-            return date;
-        };
-        // Get Day of Year
-        timeManager.getDayOfYear = getDayOfYear;
-        timeManager.dateFromDay = function (year, day) {
-            var date = new Date(year, 0); // initialize a date in `year-01-01`
-            return new Date(date.setDate(day)); // add the number of days
-        };
-        timeManager.jday = function (year, mon, day, hr, minute, sec) {
-            // from satellite.js
-            if (!year) {
-                // console.debug('timeManager.jday should always have a date passed to it!');
-                var now = new Date();
-                jDayStart = new Date(now.getFullYear(), 0, 0);
-                jDayDiff = now.getDate() - jDayStart.getDate();
-                return Math.floor(jDayDiff / _app_js_lib_constants_js__WEBPACK_IMPORTED_MODULE_1__.MILLISECONDS_PER_DAY);
-            }
-            else {
-                return (367.0 * year - Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) + Math.floor((275 * mon) / 9.0) + day + 1721013.5 + ((sec / 60.0 + minute) / 60.0 + hr) / 24.0 //  ut in days
-                );
-            }
-        };
-        // Initialize
-        timeManager.updatePropTime();
-        timeManager.setSelectedDate(timeManager.propTimeVar);
-    },
+var jday = function (year, mon, day, hr, minute, sec) {
+    if (!year) {
+        var now = new Date();
+        var jDayStart = new Date(now.getFullYear(), 0, 0);
+        var jDayDiff = now.getDate() - jDayStart.getDate();
+        return Math.floor(jDayDiff / _lib_constants__WEBPACK_IMPORTED_MODULE_0__.MILLISECONDS_PER_DAY);
+    }
+    else {
+        return 367.0 * year - Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) + Math.floor((275 * mon) / 9.0) + day + 1721013.5 + ((sec / 60.0 + minute) / 60.0 + hr) / 24.0;
+    }
+};
+var localToZulu = function (date) {
+    var dateStr = (0,_lib_external_dateFormat__WEBPACK_IMPORTED_MODULE_1__.dateFormat)(date, 'isoDateTime', true);
+    var dateArr = dateStr.split(' ');
+    date = new Date(dateArr[0] + 'T' + dateArr[1] + 'Z');
+    return date;
+};
+var dateFromJday = function (year, day) {
+    var date = new Date(year, 0); // initialize a date in `year-01-01`
+    return new Date(date.setDate(day));
+};
+var dateToLocalInIso = function (date) {
+    var offsetMs = date.getTimezoneOffset() * 60 * 1000;
+    var msLocal = date.getTime() - offsetMs;
+    var dateLocal = new Date(msLocal);
+    var iso = dateLocal.toISOString();
+    iso = iso.replace('T', ' ');
+    var isoLocal = iso.slice(0, 19) + ' ' + dateLocal.toString().slice(25, 31);
+    return isoLocal;
 };
 
 
@@ -41115,7 +40954,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _app_js_lib_external_dateFormat_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @app/js/lib/external/dateFormat.js */ "./src/js/lib/external/dateFormat.js");
 /* harmony import */ var _app_js_satMath_satMath__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @app/js/satMath/satMath */ "./src/js/satMath/satMath.ts");
 /* harmony import */ var _app_js_plugins_sensor_sensorList__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @app/js/plugins/sensor/sensorList */ "./src/js/plugins/sensor/sensorList.ts");
-/* harmony import */ var _app_js_timeManager_timeManager__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @app/js/timeManager/timeManager */ "./src/js/timeManager/timeManager.ts");
+/* harmony import */ var _app_js_timeManager_transforms__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @app/js/timeManager/transforms */ "./src/js/timeManager/transforms.ts");
+/* eslint-disable no-undef */
+
 /* /////////////////////////////////////////////////////////////////////////////
 
 (c) 2016-2020, Theodore Kruczek
@@ -41226,9 +41067,8 @@ _app_js_satMath_satMath__WEBPACK_IMPORTED_MODULE_3__.satellite.calculateLookAngl
 
     now.setTime(Number(Date.now()) + propTempOffset); // Set the time variable to the time in the future
 
-    var j = _jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in range 1-12.
+    var j = (0,_app_js_timeManager_transforms__WEBPACK_IMPORTED_MODULE_5__.jday)(now.getUTCFullYear(), now.getUTCMonth() + 1, // NOTE:, this function requires months in range 1-12.
     now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
-
 
     j += now.getUTCMilliseconds() * millisecondsPerDay;
     var gmst = _app_js_satMath_satMath__WEBPACK_IMPORTED_MODULE_3__.satellite.gstime(j);
@@ -41274,7 +41114,7 @@ _app_js_satMath_satMath__WEBPACK_IMPORTED_MODULE_3__.satellite.calculateLookAngl
         // Previous Pass to Calculate first line of coverage
         var now1 = new Date();
         now1.setTime(Number(Date.now()) + propTempOffset - _app_js_satMath_satMath__WEBPACK_IMPORTED_MODULE_3__.satellite.lookanglesInterval * 1000);
-        var j1 = _app_js_timeManager_timeManager__WEBPACK_IMPORTED_MODULE_5__.timeManager.jday(now1.getUTCFullYear(), now1.getUTCMonth() + 1, // NOTE:, this function requires months in range 1-12.
+        var j1 = (0,_app_js_timeManager_transforms__WEBPACK_IMPORTED_MODULE_5__.jday)(now1.getUTCFullYear(), now1.getUTCMonth() + 1, // NOTE:, this function requires months in range 1-12.
         now1.getUTCDate(), now1.getUTCHours(), now1.getUTCMinutes(), now1.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
 
         j1 += now1.getUTCMilliseconds() * millisecondsPerDay;
@@ -41304,7 +41144,7 @@ _app_js_satMath_satMath__WEBPACK_IMPORTED_MODULE_3__.satellite.calculateLookAngl
         } else {
           // Next Pass to Calculate Last line of coverage
           now1.setTime(Number(Date.now()) + propTempOffset - _app_js_satMath_satMath__WEBPACK_IMPORTED_MODULE_3__.satellite.lookanglesInterval * 1000);
-          j1 = _jday(now1.getUTCFullYear(), now1.getUTCMonth() + 1, // NOTE:, this function requires months in range 1-12.
+          j1 = (0,_app_js_timeManager_transforms__WEBPACK_IMPORTED_MODULE_5__.jday)(now1.getUTCFullYear(), now1.getUTCMonth() + 1, // NOTE:, this function requires months in range 1-12.
           now1.getUTCDate(), now1.getUTCHours(), now1.getUTCMinutes(), now1.getUTCSeconds()); // Converts time to jday (TLEs use epoch year/day)
 
           j1 += now1.getUTCMilliseconds() * millisecondsPerDay;
@@ -41376,21 +41216,6 @@ _app_js_satMath_satMath__WEBPACK_IMPORTED_MODULE_3__.satellite.calculateLookAngl
       };
     } else {
       return;
-    }
-  };
-
-  var _jday = (year, mon, day, hr, minute, sec) => {
-    // from satellite.js
-    if (!year) {
-      // console.debug('timeManager.jday should always have a date passed to it!');
-      var now;
-      now = Date.now();
-      var jDayStart = new Date(now.getFullYear(), 0, 0);
-      var jDayDiff = now - jDayStart;
-      return Math.floor(jDayDiff / millisecondsPerDay);
-    } else {
-      return 367.0 * year - Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) + Math.floor(275 * mon / 9.0) + day + 1721013.5 + ((sec / 60.0 + minute) / 60.0 + hr) / 24.0 //  ut in days
-      ;
     }
   };
 
@@ -41693,7 +41518,8 @@ var drawChart = data => {
   })(); // Actually Draw the Charts
 
 
-  var context = document.getElementById('satChart').getContext('2d');
+  var context = document.getElementById('satChart').getContext('2d'); // eslint-disable-next-line no-unused-vars
+
   var myChart = new Chart(context, {
     type: 'line',
     data: {

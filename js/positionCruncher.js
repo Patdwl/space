@@ -11029,11 +11029,11 @@ var timeSyncRunning = false; // Prevent Time Sync Loop From Running Twice
 
 var divisor = 1; // When running at high speeds, allow faster propagation
 
-var propOffset = 0; // offset varting us propagate in the future (or past)
-
+var dynamicOffsetEpoch = Date.now();
+var staticOffset = 0;
 var propRate = 1; // vars us run time faster (or slower) than normal
 
-var propRealTime = Date.now(); // vars us run time faster (or slower) than normal
+var propChangeTime = Date.now(); // vars us run time faster (or slower) than normal
 
 /** Settings */
 
@@ -11068,9 +11068,9 @@ sensor.defaultGd = defaultGd;
 sensor.observerGd = defaultGd; // Handles Incomming Messages to sat-cruncher from main thread
 
 onmessage = function onmessage(m) {
-  // Set propRealTime Once
-  if (typeof propRealTime == 'undefined') {
-    propRealTime = Date.now();
+  // Set propChangeTime Once
+  if (typeof propChangeTime == 'undefined') {
+    propChangeTime = Date.now();
   }
 
   if (m.data.isSunlightView) {
@@ -11167,12 +11167,9 @@ onmessage = function onmessage(m) {
 
   switch (m.data.typ) {
     case 'offset':
-      propOffset = Number(m.data.dat.split(' ')[0]);
-      propRate = Number(m.data.dat.split(' ')[1]); // if (!(oldPropRate == 0 && propRate == 0)) {
-      // Update propRealTime only if updating propOffset
-
-      propRealTime = Date.now(); // }
-      // Changing this to 0.1 caused issues...
+      staticOffset = m.data.staticOffset;
+      dynamicOffsetEpoch = m.data.dynamicOffsetEpoch;
+      propRate = m.data.propRate; // Changing this to 0.1 caused issues...
 
       divisor = 1;
       return;
@@ -11269,15 +11266,16 @@ onmessage = function onmessage(m) {
       break;
 
     case 'timeSync':
-      propRealTime = new Date(m.data.time);
+      // propChangeTime = new Date(m.data.time);
       break;
 
     default:
       console.warn('Unknown message typ: ' + m.data.typ);
       break;
-  }
+  } // Don't start before getting satData!
 
-  if (!propagationRunning) {
+
+  if (!propagationRunning && m.data.typ === 'satdata') {
     len = -1; // propagteCruncher needs to start at -1 not 0
 
     propagateCruncher();
@@ -11293,7 +11291,8 @@ var timeSyncLoop = () => {
     typ: 'timeSync',
     time: propTime().getTime(),
     propRate: propRate,
-    propOffset: propOffset
+    staticOffset: staticOffset,
+    dynamicOffsetEpoch: dynamicOffsetEpoch
   };
   postMessage(postMessageArray);
   setTimeout(timeSyncLoop, 250);
@@ -12390,12 +12389,9 @@ var jday = (year, mon, day, hr, minute, sec) => {
 
 
 var propTime = () => {
-  'use strict';
-
   var now = new Date();
-  var realElapsedMsec = Number(now) - Number(propRealTime);
-  var scaledMsec = realElapsedMsec * propRate;
-  now.setTime(Number(propRealTime) + propOffset + scaledMsec);
+  var dynamicPropOffset = now.getTime() - dynamicOffsetEpoch;
+  now.setTime(dynamicOffsetEpoch + staticOffset + dynamicPropOffset * propRate);
   return now;
 };
 })();

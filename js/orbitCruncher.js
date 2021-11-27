@@ -3157,9 +3157,9 @@ __webpack_require__.r(__webpack_exports__);
 
 'use strict';
 
-var propRealTime;
-var propOffset;
-var propRate;
+var dynamicOffsetEpoch;
+var staticOffset;
+var propRate = 1.0;
 /** CONSTANTS */
 
 var TAU = 2 * Math.PI; // PI * 2 -- This makes understanding the formulas easier
@@ -3187,6 +3187,18 @@ onmessage = function onmessage(m) {
 
   }
 
+  if (typeof m.data.dynamicOffsetEpoch !== 'undefined') {
+    dynamicOffsetEpoch = m.data.dynamicOffsetEpoch;
+  }
+
+  if (typeof m.data.staticOffset !== 'undefined') {
+    staticOffset = m.data.staticOffset;
+  }
+
+  if (typeof m.data.propRate !== 'undefined') {
+    propRate = m.data.propRate;
+  }
+
   if (m.data.isInit) {
     var satData = JSON.parse(m.data.satData);
     orbitFadeFactor = JSON.parse(m.data.orbitFadeFactor);
@@ -3205,14 +3217,13 @@ onmessage = function onmessage(m) {
     }
 
     NUM_SEGS = m.data.numSegs;
-  } else {
+  }
+
+  if (m.data.satId) {
     //  var start = performance.now();
     // IDEA: figure out how to calculate the orbit points on constant
     // position slices, not timeslices (ugly perigees on HEOs)
     var satId = m.data.satId;
-    propRealTime = m.data.realTime;
-    propOffset = m.data.offset;
-    propRate = m.data.rate;
     var pointsOut = new Float32Array((NUM_SEGS + 1) * 4);
     var nowDate = propTime();
     var nowJ = jday(nowDate.getUTCFullYear(), nowDate.getUTCMonth() + 1, nowDate.getUTCDate(), nowDate.getUTCHours(), nowDate.getUTCMinutes(), nowDate.getUTCSeconds());
@@ -3285,14 +3296,9 @@ var jday = (year, mon, day, hr, minute, sec) => {
 };
 
 var propTime = () => {
-  'use strict';
-
   var now = new Date();
-  var realElapsedMsec = Number(now) - Number(propRealTime);
-  var scaledMsec = realElapsedMsec * propRate;
-  now.setTime(Number(propRealTime) + propOffset + scaledMsec); // next line will slow things down tremendously!
-  // console.log('orbit propTime: ' + now + ' elapsed=' + realElapsedMsec/1000);
-
+  var dynamicPropOffset = now.getTime() - dynamicOffsetEpoch;
+  now.setTime(dynamicOffsetEpoch + staticOffset + dynamicPropOffset * propRate);
   return now;
 };
 })();
