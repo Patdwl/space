@@ -2,745 +2,141 @@
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./src/js/lib/external/meuusjs.js":
-/*!****************************************!*\
-  !*** ./src/js/lib/external/meuusjs.js ***!
-  \****************************************/
+/***/ "./src/js/lib/external/dateFormat.js":
+/*!*******************************************!*\
+  !*** ./src/js/lib/external/dateFormat.js ***!
+  \*******************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "A": () => (/* binding */ A)
+/* harmony export */   "dateFormat": () => (/* binding */ dateFormat)
 /* harmony export */ });
-/*!
- Copyright (c) 2016 Fabio Soldati, www.peakfinder.org
- License MIT: http://www.opensource.org/licenses/MIT
-*/
-var A = {
-  JMod: 2400000.5,
-  J2000: 2451545,
-  J1900: 2415020,
-  B1900: 2415020.3135,
-  B1950: 2433282.4235,
-  JulianYear: 365.25,
-  JulianCentury: 36525,
-  BesselianYear: 365.2421988,
-  AU: 149597870
-};
+/* */
 
-A.EclCoord = function (a, b, c) {
-  if (isNaN(a) || isNaN(b)) throw Error("Invalid EclCoord object: (" + a + ", " + b + ")");
-  this.lat = a;
-  this.lng = b;
-  void 0 !== c && (this.h = c);
-};
+/*! Date Format 1.2.4
+ * (c) 2007-2009 Steven Levithan <stevenlevithan.com>
+ * MIT license
+ *
+ * Includes enhancements by:
+ * Scott Trenda <scott.trenda.net>
+ * Kris Kowal <cixar.com/~kris.kowal/>
+ * Theodore Kruczek
+ *
+ * Accepts a date, a mask, or a date and a mask.
+ * Returns a formatted version of the given date.
+ * The date defaults to the current date/time.
+ * The mask defaults to formats.masks.default.
+ */
+var pad = (val, len) => {
+  val = String(val);
+  len = len || 2;
 
-A.EclCoord.prototype = {
-  toWgs84String: function toWgs84String() {
-    return A.Math.formatNum(180 * this.lat / Math.PI) + ", " + A.Math.formatNum(180 * -this.lng / Math.PI);
+  while (val.length < len) {
+    val = '0' + val;
   }
+
+  return val;
 };
 
-A.EclCoord.fromWgs84 = function (a, b, c) {
-  return new A.EclCoord(a * Math.PI / 180, -b * Math.PI / 180, c);
-};
-
-A.EqCoord = function (a, b) {
-  if (isNaN(a) || isNaN(b)) throw Error("Invalid EqCoord object: (" + a + ", " + b + ")");
-  this.ra = a;
-  this.dec = b;
-};
-
-A.EqCoord.prototype = {
-  toString: function toString() {
-    return "ra:" + A.Math.formatNum(180 * this.ra / Math.PI) + ", dec:" + A.Math.formatNum(180 * this.dec / Math.PI);
+var formats = {
+  masks: {
+    // Common Formats
+    default: 'ddd mmm dd yyyy HH:MM:ss',
+    shortDate: 'm/d/yy',
+    mediumDate: 'mmm d, yyyy',
+    longDate: 'mmmm d, yyyy',
+    fullDate: 'dddd, mmmm d, yyyy',
+    shortTime: 'h:MM TT',
+    mediumTime: 'h:MM:ss TT',
+    longTime: 'h:MM:ss TT Z',
+    isoDate: 'yyyy-mm-dd',
+    isoTime: 'HH:MM:ss',
+    isoDateTime: "yyyy-mm-dd' 'HH:MM:ss",
+    isoUtcDateTime: "UTC:yyyy-mm-dd'T'HH:MM:ss'Z'"
+  },
+  i18n: {
+    // Internationalization strings
+    dayNames: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+    monthNames: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
   }
-};
+}; // eslint-disable-next-line prefer-named-capture-group
 
-A.HzCoord = function (a, b) {
-  if (isNaN(a) || isNaN(b)) throw Error("Invalid HzCoord object: (" + a + ", " + b + ")");
-  this.az = a;
-  this.alt = b;
-};
+var token = /d{1,4}|m{1,4}|yy(?:yy)?|([HMThst])\1?|[LSZlo]|"(?:(?!")[\s\S])*"|'(?:(?!')[\s\S])*'/g;
+var timezone = /\b(?:[ACEMP][DPS]T|(?:Pacific|Mountain|Central|Eastern|Atlantic) (?:Standard|Daylight|Prevailing) Time|(?:GMT|UTC)(?:[\+\x2D][0-9]{4})?)\b/g;
+var timezoneClip = /(?:(?![\+\x2D0-9A-Z])[\s\S])/g;
 
-A.HzCoord.prototype = {
-  toString: function toString() {
-    return "azi:" + A.Math.formatNum(180 * this.az / Math.PI) + ", alt:" + A.Math.formatNum(180 * this.alt / Math.PI);
+var dateFormat = function dateFormat(date, mask, utc) {
+  // You can't provide utc if you skip other args (use the "UTC:" mask prefix)
+  if (arguments.length === 1 && Object.prototype.toString.call(date) === '[object String]' && !/[0-9]/.test(date)) {
+    mask = date; // eslint-disable-next-line no-undefined
+
+    date = undefined;
+  } // Passing date through Date applies Date.parse, if necessary
+
+
+  date = date ? new Date(date) : new Date();
+  if (Number.isNaN(date)) throw SyntaxError("invalid date - ".concat(date));
+  mask = String(formats.masks[mask] || mask || formats.masks['default']); // Allow setting the utc argument via the mask
+
+  if (mask.slice(0, 4) === 'UTC:') {
+    mask = mask.slice(4);
+    utc = true;
   }
-};
-A.Coord = {
-  dmsToDeg: function dmsToDeg(a, b, c, d) {
-    d = (60 * (60 * b + c) + d) / 3600;
-    return a ? -d : d;
-  },
-  calcAngle: function calcAngle(a, b, c, d) {
-    return A.Coord.dmsToDeg(a, b, c, d) * Math.PI / 180;
-  },
-  calcRA: function calcRA(a, b, c) {
-    return A.Coord.dmsToDeg(!1, a, b, c) % 24 * 15 * Math.PI / 180;
-  },
-  secondsToHMSStr: function secondsToHMSStr(a) {
-    var b = Math.floor(a / 86400);
-    a = A.Math.pMod(a, 86400);
-    var c = Math.floor(a / 3600) % 24,
-        d = Math.floor(a / 60) % 60;
-    a = Math.floor(a % 60);
-    return (0 !== b ? b + "d " : "") + (10 > c ? "0" : "") + c + ":" + (10 > d ? "0" : "") + d + ":" + (10 > a ? "0" : "") + a;
-  },
-  secondsToHMStr: function secondsToHMStr(a) {
-    var b = Math.floor(a / 86400);
-    a = A.Math.pMod(a, 86400);
-    var c = Math.floor(a / 3600) % 24;
-    a = Math.floor(a / 60) % 60;
-    return (0 !== b ? b + "d " : "") + (10 > c ? "0" : "") + c + ":" + (10 > a ? "0" : "") + a;
-  },
-  eqToEcl: function eqToEcl(a, b) {
-    var c = Math.sin(a.ra),
-        d = Math.sin(a.dec),
-        e = Math.cos(a.dec),
-        f = Math.sin(b);
-    b = Math.cos(b);
-    return new A.EclCoord(Math.atan2(c * b + d / e * f, Math.cos(a.ra)), Math.asin(d * b - e * f * c));
-  },
-  eclToEq: function eclToEq(a, b) {
-    var c = Math.sin(a.lat),
-        d = Math.sin(a.lng),
-        e = Math.cos(a.lng),
-        f = Math.sin(b);
-    b = Math.cos(b);
-    a = Math.atan2(c * b - d / e * f, Math.cos(a.lat));
-    0 > a && (a += 2 * Math.PI);
-    return new A.EqCoord(a, Math.asin(d * b + e * f * c));
-  },
-  eqToHz: function eqToHz(a, b, c) {
-    c = c - b.lng - a.ra;
-    var d = Math.cos(c),
-        e = Math.sin(b.lat);
-    b = Math.cos(b.lat);
-    var f = Math.sin(a.dec);
-    a = Math.cos(a.dec);
-    return new A.HzCoord(Math.atan2(Math.sin(c), d * e - f / a * b), Math.asin(e * f + b * a * d));
-  }
-};
-A.DeltaT = {
-  jdToJde: function jdToJde(a, b) {
-    b || (b = A.DeltaT.estimate(a));
-    return a + b / 86400;
-  },
-  jdeToJd: function jdeToJd(a, b) {
-    b || (b = A.DeltaT.estimate(a));
-    return a - b / 86400;
-  },
-  decimalYear: function decimalYear(a) {
-    a = A.JulianDay.jdToCalendar(a);
-    return a.y + (a.m - .5) / 12;
-  },
-  estimate: function estimate(a) {
-    var b = A.DeltaT.decimalYear(a);
-    a = Math.pow;
-    return -500 > b ? -20 + 32 * a((b - 1820) / 100, 2) : 500 > b ? (b /= 100, 10583.6 - 1014.41 * b + 33.78311 * a(b, 2) - 5.952053 * a(b, 3) - .1798452 * a(b, 4) + .022174192 * a(b, 5) + .0090316521 * a(b, 6)) : 1600 > b ? (b = (b - 1E3) / 100, 1574.2 - 556.01 * b + 71.23472 * a(b, 2) + .319781 * a(b, 3) - .8503463 * a(b, 4) - .005050998 * a(b, 5) + .0083572073 * a(b, 6)) : 1700 > b ? (b -= 1600, 120 - .9808 * b - .01532 * a(b, 2) + a(b, 3) / 7129) : 1800 > b ? (b -= 1700, 8.83 + .1603 * b - .0059285 * a(b, 2) + 1.3336E-4 * a(b, 3) - a(b, 4) / 1174E3) : 1860 > b ? (b -= 1800, 13.72 - .332447 * b + .0068612 * a(b, 2) + .0041116 * a(b, 3) - 3.7436E-4 * a(b, 4) + 1.21272E-5 * a(b, 5) - 1.699E-7 * a(b, 6) + 8.75E-10 * a(b, 7)) : 1900 > b ? (b -= 1860, 7.62 + .5737 * b - .251754 * a(b, 2) + .01680668 * a(b, 3) - 4.473624E-4 * a(b, 4) + a(b, 5) / 233174) : 1920 > b ? (b -= 1900, -2.79 + 1.494119 * b - .0598939 * a(b, 2) + .0061966 * a(b, 3) - 1.97E-4 * a(b, 4)) : 1941 > b ? (b -= 1920, 21.2 + .84493 * b - .0761 * a(b, 2) + .0020936 * a(b, 3)) : 1961 > b ? (b -= 1950, 29.07 + .407 * b - a(b, 2) / 233 + a(b, 3) / 2547) : 1986 > b ? (b -= 1975, 45.45 + 1.067 * b - a(b, 2) / 260 - a(b, 3) / 718) : 2005 > b ? (b -= 2E3, 63.86 + .3345 * b - .060374 * a(b, 2) + .0017275 * a(b, 3) + 6.51814E-4 * a(b, 4) + 2.373599E-5 * a(b, 5)) : 2050 > b ? (b -= 2E3, 62.92 + .32217 * b + .005589 * a(b, 2)) : 2150 > b ? -20 + 32 * a((b - 1820) / 100, 2) - .5628 * (2150 - b) : -20 + 32 * a((b - 1820) / 100, 2);
-  }
-};
-A.Globe = {
-  Er: 6378.14,
-  Fl: 1 / 298.257,
-  parallaxConstants: function parallaxConstants(a, b) {
-    b || (b = 0);
-    var c = 1 - A.Globe.Fl;
-    b = .001 * b / A.Globe.Er;
-    return {
-      rhoslat: Math.sin(Math.atan(c * Math.tan(a))) * c + b * Math.sin(a),
-      rhoclat: Math.cos(Math.atan(c * Math.tan(a))) + b * Math.cos(a)
-    };
-  }
-};
-A.Interp = {
-  newLen3: function newLen3(a, b, c) {
-    if (3 != c.length) throw "Error not 3";
-    if (b == a) throw "Error no x range";
-    var d = c[1] - c[0],
-        e = c[2] - c[1];
-    return {
-      x1: a,
-      x3: b,
-      y: c,
-      a: d,
-      b: e,
-      c: e - d,
-      abSum: d + e,
-      xSum: b + a,
-      xDiff: b - a
-    };
-  },
-  interpolateX: function interpolateX(a, b) {
-    return A.Interp.interpolateN(a, (2 * b - a.xSum) / a.xDiff);
-  },
-  interpolateN: function interpolateN(a, b) {
-    return a.y[1] + .5 * b * (a.abSum + b * a.c);
-  }
-};
 
-A.JulianDay = function (a, b) {
-  a instanceof Date && (a = A.JulianDay.dateToJD(a));
-  this.jd = a;
-  this.deltaT = b ? b : A.DeltaT.estimate(this.jd);
-  this.jde = A.DeltaT.jdToJde(this.jd, this.deltaT);
-};
+  var _ = utc ? 'getUTC' : 'get';
 
-A.JulianDay.prototype = {
-  toCalendar: function toCalendar() {
-    return A.JulianDay.jdToCalendar(this.jd);
-  },
-  toDate: function toDate() {
-    return A.JulianDay.jdToDate(this.jd);
-  },
-  jdJ2000Century: function jdJ2000Century() {
-    return (this.jd - A.J2000) / A.JulianCentury;
-  },
-  jdeJ2000Century: function jdeJ2000Century() {
-    return (this.jde - A.J2000) / A.JulianCentury;
-  },
-  startOfDay: function startOfDay() {
-    return new A.JulianDay(Math.floor(this.jde - .5) + .5, this.deltaT);
-  }
-};
-A.JulianDay.gregorianTimeStart = Date.UTC(1582, 9, 4);
+  var d = date[_ + 'Date']();
 
-A.JulianDay.jdFromGregorian = function (a, b, c) {
-  return new A.JulianDay(A.JulianDay.jdFromGregorian(a, b, c));
-};
+  var D = date[_ + 'Day']();
 
-A.JulianDay.jdFromJulian = function (a, b, c) {
-  return new A.JulianDay(A.JulianDay.calendarJulianToJD(a, b, c));
-};
+  var m = date[_ + 'Month']();
 
-A.JulianDay.jdFromJDE = function (a) {
-  var b = A.DeltaT.estimate(a);
-  a = A.DeltaT.jdeToJd(a, b);
-  return new A.JulianDay(a, b);
-};
+  var y = date[_ + 'FullYear']();
 
-A.JulianDay.dateToJD = function (a) {
-  var b = a.getUTCDate() + A.JulianDay.secondsFromHMS(a.getUTCHours(), a.getUTCMinutes(), a.getUTCSeconds()) / 86400;
-  return a.getTime() < A.JulianDay.gregorianTimeStart ? A.JulianDay.calendarJulianToJD(a.getUTCFullYear(), a.getUTCMonth() + 1, b) : A.JulianDay.calendarGregorianToJD(a.getUTCFullYear(), a.getUTCMonth() + 1, b);
-};
+  var H = date[_ + 'Hours']();
 
-A.JulianDay.calendarGregorianToJD = function (a, b, c) {
-  if (1 == b || 2 == b) a--, b += 12;
-  var d = Math.floor(a / 100);
-  return Math.floor(36525 * (a + 4716) / 100) + Math.floor(306 * (b + 1) / 10) + (2 - d + Math.floor(d / 4)) + c - 1524.5;
-};
+  var M = date[_ + 'Minutes']();
 
-A.JulianDay.calendarJulianToJD = function (a, b, c) {
-  if (1 == b || 2 == b) a--, b += 12;
-  return Math.floor(36525 * (a + 4716) / 100) + Math.floor(306 * (b + 1) / 10) + c - 1524.5;
-};
+  var s = date[_ + 'Seconds']();
 
-A.JulianDay.secondsFromHMS = function (a, b, c) {
-  return 3600 * a + 60 * b + c;
-};
+  var L = date[_ + 'Milliseconds']();
 
-A.JulianDay.jdToDate = function (a) {
-  var b = A.JulianDay.jdToCalendar(a);
-  a = A.Math.modF(a + .5)[1];
-  a = Math.round(86400 * a);
-  return new Date(Date.UTC(b.y, b.m - 1, Math.floor(b.d), Math.floor(a / 3600) % 24, Math.floor(a / 60) % 60, Math.floor(a % 60)));
-};
-
-A.JulianDay.jdToCalendar = function (a) {
-  a = A.Math.modF(a + .5);
-  var b = a[0],
-      c = b;
-  2299151 <= b && (c = Math.floor((100 * b - 186721625) / 3652425), c = b + 1 + c - Math.floor(c / 4));
-  var d = c + 1524;
-  b = Math.floor((100 * d - 12210) / 36525);
-  var e = Math.floor(36525 * b / 100);
-  c = Math.floor(1E4 * (d - e) / 306001);
-  a = d - e - Math.floor(306001 * c / 1E4) + a[1];
-  c = 14 == c || 15 == c ? c - 13 : c - 1;
-  return {
-    y: 1 == c || 2 == c ? Math.floor(b) - 4715 : Math.floor(b) - 4716,
-    m: c,
-    d: a
+  var o = utc ? 0 : date.getTimezoneOffset();
+  var flags = {
+    d: d,
+    dd: pad(d),
+    ddd: formats.i18n.dayNames[D],
+    dddd: formats.i18n.dayNames[D + 7],
+    m: m + 1,
+    mm: pad(m + 1),
+    mmm: formats.i18n.monthNames[m],
+    mmmm: formats.i18n.monthNames[m + 12],
+    yy: String(y).slice(2),
+    yyyy: y,
+    h: H % 12 || 12,
+    hh: pad(H % 12 || 12),
+    H: H,
+    HH: pad(H),
+    M: M,
+    MM: pad(M),
+    s: s,
+    ss: pad(s),
+    l: pad(L, 3),
+    L: pad(L > 99 ? Math.round(L / 10) : L),
+    t: H < 12 ? 'a' : 'p',
+    tt: H < 12 ? 'am' : 'pm',
+    T: H < 12 ? 'A' : 'P',
+    TT: H < 12 ? 'AM' : 'PM',
+    Z: utc ? 'UTC' : (String(date).match(timezone) || ['']).pop().replace(timezoneClip, ''),
+    o: (o > 0 ? '-' : '+') + pad(Math.floor(Math.abs(o) / 60) * 100 + Math.abs(o) % 60, 4),
+    S: ['th', 'st', 'nd', 'rd'][d % 10 > 3 ? 0 : (d % 100 - d % 10 !== 10) * d % 10]
   };
+  return mask.replace(token, function ($0) {
+    return $0 in flags ? flags[$0] : $0.slice(1, $0.length - 1);
+  });
 };
 
-A.JulianDay.leapYearGregorian = function (a) {
-  return 0 === a % 4 && 0 !== a % 100 || 0 === a % 400;
-};
-
-A.JulianDay.dayOfYear = function (a, b, c, d) {
-  a = 2;
-  d && a--;
-  return A.JulianDay._wholeMonths(b, a) + c;
-};
-
-A.JulianDay._wholeMonths = function (a, b) {
-  return Math.round(275 * a / 9 - (a + 9) / 12 * b - 30);
-};
-
-A.Math = {
-  pMod: function pMod(a, b) {
-    a %= b;
-    0 > a && (a += b);
-    return a;
-  },
-  modF: function modF(a) {
-    return 0 > a ? (a = -a, [-Math.floor(a), -(a % 1)]) : [Math.floor(a), a % 1];
-  },
-  horner: function horner(a, b) {
-    var c = b.length - 1;
-    if (0 >= c) throw "empty array not supported";
-
-    for (var d = b[c]; 0 < c;) {
-      c--, d = d * a + b[c];
-    }
-
-    return d;
-  },
-  formatNum: function formatNum(a, b) {
-    b = Math.pow(10, b | 4);
-    return Math.round(a * b) / b;
-  }
-};
-A.Moon = {
-  parallax: function parallax(a) {
-    return Math.asin(6378.14 / a);
-  },
-  apparentEquatorial: function apparentEquatorial(a) {
-    var b = A.Moon.geocentricPosition(a),
-        c = A.Nutation.nutation(a);
-    a = A.Nutation.meanObliquityLaskar(a) + c.deltaobliquity;
-    return {
-      eq: A.Coord.eclToEq(new A.EclCoord(b.lng + c.deltalng, b.lat), a),
-      delta: b.delta
-    };
-  },
-  apparentTopocentric: function apparentTopocentric(a, b, c) {
-    var d = A.Moon.apparentEquatorial(a),
-        e = A.Globe.parallaxConstants(b.lat, b.h),
-        f = A.Moon.parallax(d.delta);
-    c || (c = A.Sidereal.apparentInRa(a));
-    return {
-      eq: A.Parallax.topocentric(d.eq, f, e.rhoslat, e.rhoclat, b.lng, c),
-      delta: d.delta
-    };
-  },
-  topocentricPosition: function topocentricPosition(a, b, c) {
-    var d = A.Sidereal.apparentInRa(a);
-    a = A.Moon.apparentTopocentric(a, b, d);
-    var e = A.Coord.eqToHz(a.eq, b, d);
-    !0 === c && (e.alt += A.Refraction.bennett2(e.alt));
-    b = A.Moon.parallacticAngle(b.lat, d - (b.lng + a.eq.ra), a.eq.dec);
-    return {
-      hz: e,
-      eq: a.eq,
-      delta: a.delta,
-      q: b
-    };
-  },
-  approxTransit: function approxTransit(a, b) {
-    a = a.startOfDay();
-    return A.Rise.approxTransit(b, A.Sidereal.apparent0UT(a), A.Moon.apparentTopocentric(a, b).eq);
-  },
-  approxTimes: function approxTimes(a, b) {
-    a = a.startOfDay();
-    var c = A.Moon.apparentTopocentric(a, b),
-        d = A.Moon.parallax(c.delta);
-    d = A.Rise.stdh0Lunar(d);
-    a = A.Sidereal.apparent0UT(a);
-    return A.Rise.approxTimes(b, d, a, c.eq);
-  },
-  times: function times(a, b) {
-    a = a.startOfDay();
-    var c = A.Moon.apparentTopocentric(new A.JulianDay(a.jd - 1, a.deltaT), b),
-        d = A.Moon.apparentTopocentric(a, b),
-        e = A.Moon.apparentTopocentric(new A.JulianDay(a.jd + 1, a.deltaT), b),
-        f = A.Moon.parallax(d.delta);
-    f = A.Rise.stdh0Lunar(f);
-    var g = A.Sidereal.apparent0UT(a);
-    return A.Rise.times(b, a.deltaT, f, g, [c.eq, d.eq, e.eq]);
-  },
-  parallacticAngle: function parallacticAngle(a, b, c) {
-    return Math.atan2(Math.sin(b), Math.tan(a) * Math.cos(c) - Math.sin(c) * Math.cos(b));
-  },
-  geocentricPosition: function geocentricPosition(a) {
-    var b = Math.PI / 180,
-        c = a.jdeJ2000Century();
-    a = A.Math.pMod(A.Math.horner(c, [218.3164477 * b, 481267.88123421 * b, -.0015786 * b, b / 538841, -b / 65194E3]), 2 * Math.PI);
-    var d = A.Math.pMod(A.Math.horner(c, [297.8501921 * b, 445267.1114034 * b, -.0018819 * b, b / 545868, -b / 113065E3]), 2 * Math.PI),
-        e = A.Math.pMod(A.Math.horner(c, [357.5291092 * b, 35999.0502909 * b, -1.535E-4 * b, b / 2449E4]), 2 * Math.PI),
-        f = A.Math.pMod(A.Math.horner(c, [134.9633964 * b, 477198.8675055 * b, .0087414 * b, b / 69699, -b / 14712E3]), 2 * Math.PI),
-        g = A.Math.pMod(A.Math.horner(c, [93.272095 * b, 483202.0175233 * b, -.0036539 * b, -b / 3526E3, b / 86331E4]), 2 * Math.PI),
-        l = 119.75 * b + 131.849 * b * c,
-        m = 53.09 * b + 479264.29 * b * c,
-        h = 313.45 * b + 481266.484 * b * c;
-    c = A.Math.horner(c, [1, -.002516, -7.4E-6]);
-    var p = c * c;
-    m = 3958 * Math.sin(l) + 1962 * Math.sin(a - g) + 318 * Math.sin(m);
-    var n = 0;
-    l = -2235 * Math.sin(a) + 382 * Math.sin(h) + 175 * Math.sin(l - g) + 175 * Math.sin(l + g) + 127 * Math.sin(a - f) - 115 * Math.sin(a + f);
-
-    for (h = 0; h < A.Moon.ta.length; h++) {
-      var k = A.Moon.ta[h];
-      var r = d * k[0] + e * k[1] + f * k[2] + g * k[3],
-          q = Math.sin(r);
-      r = Math.cos(r);
-
-      switch (k[1]) {
-        case 0:
-          m += k[4] * q;
-          n += k[5] * r;
-          break;
-
-        case 1:
-        case -1:
-          m += k[4] * q * c;
-          n += k[5] * r * c;
-          break;
-
-        case 2:
-        case -2:
-          m += k[4] * q * p;
-          n += k[5] * r * p;
-          break;
-
-        default:
-          throw "error";
-      }
-    }
-
-    for (h = 0; h < A.Moon.tb.length; h++) {
-      switch (k = A.Moon.tb[h], q = Math.sin(d * k[0] + e * k[1] + f * k[2] + g * k[3]), k[1]) {
-        case 0:
-          l += k[4] * q;
-          break;
-
-        case 1:
-        case -1:
-          l += k[4] * q * c;
-          break;
-
-        case 2:
-        case -2:
-          l += k[4] * q * p;
-          break;
-
-        default:
-          throw "error";
-      }
-    }
-
-    return {
-      lng: A.Math.pMod(a, 2 * Math.PI) + 1E-6 * m * b,
-      lat: 1E-6 * l * b,
-      delta: 385000.56 + .001 * n
-    };
-  },
-  ta: [[0, 0, 1, 0, 6288774, -20905355], [2, 0, -1, 0, 1274027, -3699111], [2, 0, 0, 0, 658314, -2955968], [0, 0, 2, 0, 213618, -569925], [0, 1, 0, 0, -185116, 48888], [0, 0, 0, 2, -114332, -3149], [2, 0, -2, 0, 58793, 246158], [2, -1, -1, 0, 57066, -152138], [2, 0, 1, 0, 53322, -170733], [2, -1, 0, 0, 45758, -204586], [0, 1, -1, 0, -40923, -129620], [1, 0, 0, 0, -34720, 108743], [0, 1, 1, 0, -30383, 104755], [2, 0, 0, -2, 15327, 10321], [0, 0, 1, 2, -12528, 0], [0, 0, 1, -2, 10980, 79661], [4, 0, -1, 0, 10675, -34782], [0, 0, 3, 0, 10034, -23210], [4, 0, -2, 0, 8548, -21636], [2, 1, -1, 0, -7888, 24208], [2, 1, 0, 0, -6766, 30824], [1, 0, -1, 0, -5163, -8379], [1, 1, 0, 0, 4987, -16675], [2, -1, 1, 0, 4036, -12831], [2, 0, 2, 0, 3994, -10445], [4, 0, 0, 0, 3861, -11650], [2, 0, -3, 0, 3665, 14403], [0, 1, -2, 0, -2689, -7003], [2, 0, -1, 2, -2602, 0], [2, -1, -2, 0, 2390, 10056], [1, 0, 1, 0, -2348, 6322], [2, -2, 0, 0, 2236, -9884], [0, 1, 2, 0, -2120, 5751], [0, 2, 0, 0, -2069, 0], [2, -2, -1, 0, 2048, -4950], [2, 0, 1, -2, -1773, 4130], [2, 0, 0, 2, -1595, 0], [4, -1, -1, 0, 1215, -3958], [0, 0, 2, 2, -1110, 0], [3, 0, -1, 0, -892, 3258], [2, 1, 1, 0, -810, 2616], [4, -1, -2, 0, 759, -1897], [0, 2, -1, 0, -713, -2117], [2, 2, -1, 0, -700, 2354], [2, 1, -2, 0, 691, 0], [2, -1, 0, -2, 596, 0], [4, 0, 1, 0, 549, -1423], [0, 0, 4, 0, 537, -1117], [4, -1, 0, 0, 520, -1571], [1, 0, -2, 0, -487, -1739], [2, 1, 0, -2, -399, 0], [0, 0, 2, -2, -381, -4421], [1, 1, 1, 0, 351, 0], [3, 0, -2, 0, -340, 0], [4, 0, -3, 0, 330, 0], [2, -1, 2, 0, 327, 0], [0, 2, 1, 0, -323, 1165], [1, 1, -1, 0, 299, 0], [2, 0, 3, 0, 294, 0], [2, 0, -1, -2, 0, 8752]],
-  tb: [[0, 0, 0, 1, 5128122], [0, 0, 1, 1, 280602], [0, 0, 1, -1, 277693], [2, 0, 0, -1, 173237], [2, 0, -1, 1, 55413], [2, 0, -1, -1, 46271], [2, 0, 0, 1, 32573], [0, 0, 2, 1, 17198], [2, 0, 1, -1, 9266], [0, 0, 2, -1, 8822], [2, -1, 0, -1, 8216], [2, 0, -2, -1, 4324], [2, 0, 1, 1, 4200], [2, 1, 0, -1, -3359], [2, -1, -1, 1, 2463], [2, -1, 0, 1, 2211], [2, -1, -1, -1, 2065], [0, 1, -1, -1, -1870], [4, 0, -1, -1, 1828], [0, 1, 0, 1, -1794], [0, 0, 0, 3, -1749], [0, 1, -1, 1, -1565], [1, 0, 0, 1, -1491], [0, 1, 1, 1, -1475], [0, 1, 1, -1, -1410], [0, 1, 0, -1, -1344], [1, 0, 0, -1, -1335], [0, 0, 3, 1, 1107], [4, 0, 0, -1, 1021], [4, 0, -1, 1, 833], [0, 0, 1, -3, 777], [4, 0, -2, 1, 671], [2, 0, 0, -3, 607], [2, 0, 2, -1, 596], [2, -1, 1, -1, 491], [2, 0, -2, 1, -451], [0, 0, 3, -1, 439], [2, 0, 2, 1, 422], [2, 0, -3, -1, 421], [2, 1, -1, 1, -366], [2, 1, 0, 1, -351], [4, 0, 0, 1, 331], [2, -1, 1, 1, 315], [2, -2, 0, -1, 302], [0, 0, 1, 3, -283], [2, 1, 1, -1, -229], [1, 1, 0, -1, 223], [1, 1, 0, 1, 223], [0, 1, -2, -1, -220], [2, 1, -1, -1, -220], [1, 0, 1, 1, -185], [2, -1, -2, -1, 181], [0, 1, 2, 1, -177], [4, 0, -2, -1, 176], [4, -1, -1, -1, 166], [1, 0, 1, -1, -164], [4, 0, 1, -1, 132], [1, 0, -1, -1, -119], [4, -1, 0, -1, 115], [2, -2, 0, 1, 107]]
-};
-A.MoonIllum = {
-  phaseAngleEq: function phaseAngleEq(a, b, c, d) {
-    a = A.MoonIllum._coselong(a, c);
-    return Math.atan2(d * Math.sin(Math.acos(a)), b - d * a);
-  },
-  phaseAngleEq2: function phaseAngleEq2(a, b) {
-    return Math.acos(-A.MoonIllum._coselong(a, b));
-  },
-  illuminated: function illuminated(a) {
-    return (1 + Math.cos(a)) / 2;
-  },
-  positionAngle: function positionAngle(a, b) {
-    var c = Math.cos(b.dec);
-    return Math.atan2(c * Math.sin(b.ra - a.ra), Math.sin(b.dec) * Math.cos(a.dec) - c * Math.sin(a.dec) * Math.cos(b.ra - a.ra));
-  },
-  _coselong: function _coselong(a, b) {
-    return Math.sin(b.dec) * Math.sin(a.dec) + Math.cos(b.dec) * Math.cos(a.dec) * Math.cos(b.ra - a.ra);
-  }
-};
-A.Nutation = {
-  nutation: function nutation(a) {
-    a = a.jdeJ2000Century();
-
-    for (var b = A.Math.horner(a, [297.85036, 445267.11148, -.0019142, 1 / 189474]) * Math.PI / 180, c = A.Math.horner(a, [357.52772, 35999.05034, -1.603E-4, -1 / 3E5]) * Math.PI / 180, d = A.Math.horner(a, [134.96298, 477198.867398, .0086972, 1 / 5620]) * Math.PI / 180, e = A.Math.horner(a, [93.27191, 483202.017538, -.0036825, 1 / 327270]) * Math.PI / 180, f = A.Math.horner(a, [125.04452, -1934.136261, .0020708, 1 / 45E4]) * Math.PI / 180, g = 0, l = 0, m = A.Nutation.table22A.length - 1; 0 <= m; m--) {
-      var h = A.Nutation.table22A[m],
-          p = h[0] * b + h[1] * c + h[2] * d + h[3] * e + h[4] * f,
-          n = Math.cos(p);
-      g += Math.sin(p) * (h[5] + h[6] * a);
-      l += n * (h[7] + h[8] * a);
-    }
-
-    return {
-      deltalng: 1E-4 / 3600 * g * (Math.PI / 180),
-      deltaobliquity: 1E-4 / 3600 * l * (Math.PI / 180)
-    };
-  },
-  nutationInRA: function nutationInRA(a) {
-    var b = A.Nutation.meanObliquityLaskar(a);
-    a = A.Nutation.nutation(a);
-    return a.deltalng * Math.cos(b + a.deltaobliquity);
-  },
-  trueObliquity: function trueObliquity(a) {
-    var b = A.Nutation.meanObliquityLaskar(a);
-    a = A.Nutation.nutation(a);
-    return b + a.deltaobliquity;
-  },
-  meanObliquity: function meanObliquity(a) {
-    return A.Math.horner(a.jdeJ2000Century(), [84381.448 / 3600 * (Math.PI / 180), -46.815 / 3600 * (Math.PI / 180), -5.9E-4 / 3600 * (Math.PI / 180), .001813 / 3600 * (Math.PI / 180)]);
-  },
-  meanObliquityLaskar: function meanObliquityLaskar(a) {
-    return A.Math.horner(.01 * a.jdeJ2000Century(), [84381.448 / 3600 * (Math.PI / 180), -4680.93 / 3600 * (Math.PI / 180), -1.55 / 3600 * (Math.PI / 180), 1999.25 / 3600 * (Math.PI / 180), -51.38 / 3600 * (Math.PI / 180), -249.67 / 3600 * (Math.PI / 180), -39.05 / 3600 * (Math.PI / 180), 7.12 / 3600 * (Math.PI / 180), 27.87 / 3600 * (Math.PI / 180), 5.79 / 3600 * (Math.PI / 180), 2.45 / 3600 * (Math.PI / 180)]);
-  },
-  table22A: [[0, 0, 0, 0, 1, -171996, -174.2, 92025, 8.9], [-2, 0, 0, 2, 2, -13187, -1.6, 5736, -3.1], [0, 0, 0, 2, 2, -2274, -.2, 977, -.5], [0, 0, 0, 0, 2, 2062, .2, -895, .5], [0, 1, 0, 0, 0, 1426, -3.4, 54, -.1], [0, 0, 1, 0, 0, 712, .1, -7, 0], [-2, 1, 0, 2, 2, -517, 1.2, 224, -.6], [0, 0, 0, 2, 1, -386, -.4, 200, 0], [0, 0, 1, 2, 2, -301, 0, 129, -.1], [-2, -1, 0, 2, 2, 217, -.5, -95, .3], [-2, 0, 1, 0, 0, -158, 0, 0, 0], [-2, 0, 0, 2, 1, 129, .1, -70, 0], [0, 0, -1, 2, 2, 123, 0, -53, 0], [2, 0, 0, 0, 0, 63, 0, 0, 0], [0, 0, 1, 0, 1, 63, .1, -33, 0], [2, 0, -1, 2, 2, -59, 0, 26, 0], [0, 0, -1, 0, 1, -58, -.1, 32, 0], [0, 0, 1, 2, 1, -51, 0, 27, 0], [-2, 0, 2, 0, 0, 48, 0, 0, 0], [0, 0, -2, 2, 1, 46, 0, -24, 0], [2, 0, 0, 2, 2, -38, 0, 16, 0], [0, 0, 2, 2, 2, -31, 0, 13, 0], [0, 0, 2, 0, 0, 29, 0, 0, 0], [-2, 0, 1, 2, 2, 29, 0, -12, 0], [0, 0, 0, 2, 0, 26, 0, 0, 0], [-2, 0, 0, 2, 0, -22, 0, 0, 0], [0, 0, -1, 2, 1, 21, 0, -10, 0], [0, 2, 0, 0, 0, 17, -.1, 0, 0], [2, 0, -1, 0, 1, 16, 0, -8, 0], [-2, 2, 0, 2, 2, -16, .1, 7, 0], [0, 1, 0, 0, 1, -15, 0, 9, 0], [-2, 0, 1, 0, 1, -13, 0, 7, 0], [0, -1, 0, 0, 1, -12, 0, 6, 0], [0, 0, 2, -2, 0, 11, 0, 0, 0], [2, 0, -1, 2, 1, -10, 0, 5, 0], [2, 0, 1, 2, 2, -8, 0, 3, 0], [0, 1, 0, 2, 2, 7, 0, -3, 0], [-2, 1, 1, 0, 0, -7, 0, 0, 0], [0, -1, 0, 2, 2, -7, 0, 3, 0], [2, 0, 0, 2, 1, -7, 0, 3, 0], [2, 0, 1, 0, 0, 6, 0, 0, 0], [-2, 0, 2, 2, 2, 6, 0, -3, 0], [-2, 0, 1, 2, 1, 6, 0, -3, 0], [2, 0, -2, 0, 1, -6, 0, 3, 0], [2, 0, 0, 0, 1, -6, 0, 3, 0], [0, -1, 1, 0, 0, 5, 0, 0, 0], [-2, -1, 0, 2, 1, -5, 0, 3, 0], [-2, 0, 0, 0, 1, -5, 0, 3, 0], [0, 0, 2, 2, 1, -5, 0, 3, 0], [-2, 0, 2, 0, 1, 4, 0, 0, 0], [-2, 1, 0, 2, 1, 4, 0, 0, 0], [0, 0, 1, -2, 0, 4, 0, 0, 0], [-1, 0, 1, 0, 0, -4, 0, 0, 0], [-2, 1, 0, 0, 0, -4, 0, 0, 0], [1, 0, 0, 0, 0, -4, 0, 0, 0], [0, 0, 1, 2, 0, 3, 0, 0, 0], [0, 0, -2, 2, 2, -3, 0, 0, 0], [-1, -1, 1, 0, 0, -3, 0, 0, 0], [0, 1, 1, 0, 0, -3, 0, 0, 0], [0, -1, 1, 2, 2, -3, 0, 0, 0], [2, -1, -1, 2, 2, -3, 0, 0, 0], [0, 0, 3, 2, 2, -3, 0, 0, 0], [2, -1, 0, 2, 2, -3, 0, 0, 0]]
-};
-A.Parallax = {
-  earthsunParallax: 8.794 / 60 / 60 * Math.PI / 180,
-  horizontal: function horizontal(a) {
-    return 8.794 / 60 / 60 * Math.PI / 180 / a;
-  },
-  topocentric: function topocentric(a, b, c, d, e, f) {
-    e = A.Math.pMod(f - e - a.ra, 2 * Math.PI);
-    b = Math.sin(b);
-    f = Math.cos(e);
-    var g = Math.cos(a.dec);
-    e = Math.atan2(-d * b * Math.sin(e), g - d * b * f);
-    return new A.EqCoord(a.ra + e, Math.atan2((Math.sin(a.dec) - c * b) * Math.cos(e), g - d * b * f));
-  },
-  topocentric2: function topocentric2(a, b, c, d, e, f) {
-    e = A.Math.pMod(f - e - a.ra, 2 * Math.PI);
-    f = Math.cos(a.dec);
-    return new A.EqCoord(a.ra + -b * d * Math.sin(e) / f, a.dec + -b * (c * f - d * Math.cos(e) * Math.sin(a.dec)));
-  }
-};
-A.Refraction = {
-  bennett: function bennett(a) {
-    0 > a && (a = 0);
-    var b = Math.PI / 180;
-    return b / 60 / Math.tan(a + 7.31 * b * b / (a + 4.4 * b));
-  },
-  bennett2: function bennett2(a) {
-    var b = Math.PI / 180,
-        c = 60 / b,
-        d = .06 / c;
-    c = 14.7 * c * b;
-    b *= 13;
-    a = A.Refraction.bennett(a);
-    return a - d * Math.sin(c * a + b);
-  },
-  saemundsson: function saemundsson(a) {
-    var b = Math.PI / 180;
-    return 1.02 * b / 60 / Math.tan(a + 10.3 * b * b / (a + 5.11 * b));
-  }
-};
-A.Rise = {
-  meanRefraction: .5667 * Math.PI / 180,
-  stdh0Stellar: -.5667 * Math.PI / 180,
-  stdh0Solar: -.8333 * Math.PI / 180,
-  stdh0LunarMean: .125 * Math.PI / 180,
-  stdh0Lunar: function stdh0Lunar(a) {
-    return .7275 * a - A.Rise.meanRefraction;
-  },
-  circumpolar: function circumpolar(a, b, c) {
-    a = (Math.sin(b) - Math.sin(a) * Math.sin(c)) / (Math.cos(a) * Math.cos(c));
-    return -1 > a || 1 < a ? null : a;
-  },
-  approxTransit: function approxTransit(a, b, c) {
-    return 43200 * (c.ra + a.lng) / Math.PI - b;
-  },
-  approxTimes: function approxTimes(a, b, c, d) {
-    b = A.Rise.circumpolar(a.lat, b, d.dec);
-    if (!b) return null;
-    b = 43200 * Math.acos(b) / Math.PI;
-    a = 43200 * (d.ra + a.lng) / Math.PI - c;
-    return {
-      transit: A.Math.pMod(a, 86400),
-      transitd: Math.floor(a / 86400),
-      rise: A.Math.pMod(a - b, 86400),
-      rised: Math.floor((a - b) / 86400),
-      set: A.Math.pMod(a + b, 86400),
-      setd: Math.floor((a + b) / 86400)
-    };
-  },
-  times: function times(a, b, c, d, e) {
-    function f(e) {
-      var f = A.Math.pMod(d + 360.985647 * e / 360, 86400),
-          g = e + b,
-          h = A.Interp.interpolateX(l, g);
-      g = A.Interp.interpolateX(m, g);
-      f = f * Math.PI / 43200 - (a.lng + h);
-      h = Math.cos(g);
-      return A.Math.pMod(e + (p * Math.sin(g) + n * h * Math.cos(f) - c) / (h * n * Math.sin(f)) * 43200 / Math.PI, 86400);
-    }
-
-    var g = A.Rise.approxTimes(a, c, d, e[1]);
-    if (!g) return null;
-    var l = A.Interp.newLen3(-86400, 86400, [e[0].ra, e[1].ra, e[2].ra]),
-        m = A.Interp.newLen3(-86400, 86400, [e[0].dec, e[1].dec, e[2].dec]);
-    e = d + 360.985647 * g.transit / 360;
-    var h = A.Interp.interpolateX(l, g.transit + b);
-    g.transit = A.Math.pMod(g.transit - (e - 43200 * (a.lng + h) / Math.PI), 86400);
-    var p = Math.sin(a.lat),
-        n = Math.cos(a.lat);
-    g.rise = f(g.rise);
-    g.set = f(g.set);
-    return g;
-  }
-};
-A.Sidereal = {
-  iau82: [24110.54841, 8640184.812866, .093104, 6.2E-6],
-  jdToCFrac: function jdToCFrac(a) {
-    a = A.Math.modF(a.jd + .5);
-    return [new A.JulianDay(a[0] - .5).jdJ2000Century(), a[1]];
-  },
-  mean: function mean(a) {
-    return A.Math.pMod(A.Sidereal._mean(a), 86400);
-  },
-  _mean: function _mean(a) {
-    a = A.Sidereal._mean0UT(a);
-    return a.s + 86636.55536784 * a.f;
-  },
-  _meanInRA: function _meanInRA(a) {
-    a = A.Sidereal._mean0UT(a);
-    return a.s * Math.PI / 43200 + 2.0054758187 * a.f * Math.PI;
-  },
-  mean0UT: function mean0UT(a) {
-    a = A.Sidereal._mean0UT(a);
-    return A.Math.pMod(a.s, 86400);
-  },
-  _mean0UT: function _mean0UT(a) {
-    a = A.Sidereal.jdToCFrac(a);
-    return {
-      s: A.Math.horner(a[0], A.Sidereal.iau82),
-      f: a[1]
-    };
-  },
-  apparentInRa: function apparentInRa(a) {
-    var b = A.Sidereal._meanInRA(a);
-
-    a = A.Nutation.nutationInRA(a);
-    return A.Math.pMod(b + a, 2 * Math.PI);
-  },
-  apparent: function apparent(a) {
-    var b = A.Sidereal._mean(a);
-
-    a = 648E3 * A.Nutation.nutationInRA(a) / Math.PI / 15;
-    return A.Math.pMod(b + a, 86400);
-  },
-  apparentLocal: function apparentLocal(a, b) {
-    a = A.Sidereal.apparent(a);
-    return A.Math.pMod(a - 43200 * b / Math.PI, 86400);
-  },
-  apparent0UT: function apparent0UT(a) {
-    var b = A.Math.modF(a.jd + .5);
-    a = A.Math.modF(a.jde + .5);
-    b = A.Math.horner((b[0] - .5 - A.J2000) / 36525, A.Sidereal.iau82) + 86636.55536784 * b[1];
-    a = 648E3 * A.Nutation.nutationInRA(new A.JulianDay(a[0])) / Math.PI / 15;
-    return A.Math.pMod(b + a, 86400);
-  }
-};
-A.Solar = {
-  earthsunDelta: 149597870,
-  apparentEquatorial: function apparentEquatorial(a) {
-    var b = a.jdJ2000Century(),
-        c = A.Solar.node(b);
-    b = A.Solar.apparentLongitude(b, c);
-    a = A.Nutation.meanObliquityLaskar(a) + .00256 * Math.PI / 180 * Math.cos(c);
-    c = Math.sin(b);
-    return new A.EqCoord(Math.atan2(Math.cos(a) * c, Math.cos(b)), Math.asin(Math.sin(a) * c));
-  },
-  apparentTopocentric: function apparentTopocentric(a, b, c) {
-    var d = A.Solar.apparentEquatorial(a),
-        e = A.Globe.parallaxConstants(b.lat, b.h);
-    c || (c = A.Sidereal.apparentInRa(a));
-    return A.Parallax.topocentric2(d, A.Parallax.earthsunParallax, e.rhoslat, e.rhoclat, b.lng, c);
-  },
-  topocentricPosition: function topocentricPosition(a, b, c) {
-    var d = A.Sidereal.apparentInRa(a);
-    a = A.Solar.apparentTopocentric(a, b, d);
-    b = A.Coord.eqToHz(a, b, d);
-    !0 === c && (b.alt += A.Refraction.bennett2(b.alt));
-    return {
-      hz: b,
-      eq: a
-    };
-  },
-  approxTransit: function approxTransit(a, b) {
-    a = a.startOfDay();
-    return A.Rise.approxTransit(b, A.Sidereal.apparent0UT(a), A.Solar.apparentTopocentric(a, b));
-  },
-  approxTimes: function approxTimes(a, b) {
-    var c = a.startOfDay();
-    a = A.Solar.apparentTopocentric(c, b);
-    var d = A.Rise.stdh0Solar;
-    c = A.Sidereal.apparent0UT(c);
-    return A.Rise.approxTimes(b, d, c, a);
-  },
-  times: function times(a, b) {
-    a = a.startOfDay();
-    var c = A.Solar.apparentTopocentric(new A.JulianDay(a.jd - 1, a.deltaT), b),
-        d = A.Solar.apparentTopocentric(a, b),
-        e = A.Solar.apparentTopocentric(new A.JulianDay(a.jd + 1, a.deltaT), b),
-        f = A.Rise.stdh0Solar,
-        g = A.Sidereal.apparent0UT(a);
-    return A.Rise.times(b, a.deltaT, f, g, [c, d, e]);
-  },
-  meanAnomaly: function meanAnomaly(a) {
-    return A.Math.horner(a, [357.52911, 35999.05029, -1.537E-4]) * Math.PI / 180;
-  },
-  trueLongitude: function trueLongitude(a) {
-    var b = A.Math.horner(a, [280.46646, 36000.76983, 3.032E-4]) * Math.PI / 180,
-        c = A.Solar.meanAnomaly(a);
-    a = (A.Math.horner(a, [1.914602, -.004817, -1.4E-5]) * Math.sin(c) + (.019993 - 1.01E-4 * a) * Math.sin(2 * c) + 2.89E-4 * Math.sin(3 * c)) * Math.PI / 180;
-    return {
-      s: A.Math.pMod(b + a, 2 * Math.PI),
-      v: A.Math.pMod(c + a, 2 * Math.PI)
-    };
-  },
-  apparentLongitude: function apparentLongitude(a, b) {
-    b || (b = A.Solar.node(a));
-    return A.Solar.trueLongitude(a).s - .00569 * Math.PI / 180 - .00478 * Math.PI / 180 * Math.sin(b);
-  },
-  node: function node(a) {
-    return (125.04 - 1934.136 * a) * Math.PI / 180;
-  }
-};
-A.Solistice = {
-  march: function march(a) {
-    return 1E3 > a ? A.Solistice._eq(a, A.Solistice.mc0) : A.Solistice._eq(a - 2E3, A.Solistice.mc2);
-  },
-  june: function june(a) {
-    return 1E3 > a ? A.Solistice._eq(a, A.Solistice.jc0) : A.Solistice._eq(a - 2E3, A.Solistice.jc2);
-  },
-  september: function september(a) {
-    return 1E3 > a ? A.Solistice._eq(a, A.Solistice.sc0) : A.Solistice._eq(a - 2E3, A.Solistice.sc2);
-  },
-  december: function december(a) {
-    return 1E3 > a ? A.Solistice._eq(a, A.Solistice.dc0) : A.Solistice._eq(a - 2E3, A.Solistice.dc2);
-  },
-  _eq: function _eq(a, b) {
-    a = A.Math.horner(.001 * a, b);
-    b = (a - A.J2000) / A.JulianCentury;
-    var c = 35999.373 * Math.PI / 180 * b - 2.47 * Math.PI / 180;
-    c = 1 + .0334 * Math.cos(c) + 7E-4 * Math.cos(2 * c);
-
-    for (var d = 0, e = this.terms.length - 1; 0 <= e; e--) {
-      var f = this.terms[e];
-      d += f[0] * Math.cos((f[1] + f[2] * b) * Math.PI / 180);
-    }
-
-    return a + 1E-5 * d / c;
-  },
-  mc0: [1721139.29189, 365242.1374, .06134, .00111, -7.1E-4],
-  jc0: [1721233.25401, 365241.72562, -.05232, .00907, 2.5E-4],
-  sc0: [1721325.70455, 365242.49558, -.11677, -.00297, 7.4E-4],
-  dc0: [1721414.39987, 365242.88257, -.00769, -.00933, -6E-5],
-  mc2: [2451623.80984, 365242.37404, .05169, -.00411, -5.7E-4],
-  jc2: [2451716.56767, 365241.62603, .00325, .00888, -3E-4],
-  sc2: [2451810.21715, 365242.01767, -.11575, .00337, 7.8E-4],
-  dc2: [2451900.05952, 365242.74049, -.06223, -.00823, 3.2E-4],
-  terms: [[485, 324.96, 1934.136], [203, 337.23, 32964.467], [199, 342.08, 20.186], [182, 27.85, 445267.112], [156, 73.14, 45036.886], [136, 171.52, 22518.443], [77, 222.54, 65928.934], [74, 296.72, 3034.906], [70, 243.58, 9037.513], [58, 119.81, 33718.147], [52, 297.17, 150.678], [50, 21.02, 2281.226], [45, 247.54, 29929.562], [44, 325.15, 31555.956], [29, 60.93, 4443.417], [18, 155.12, 67555.328], [17, 288.79, 4562.452], [16, 198.04, 62894.029], [14, 199.76, 31436.921], [12, 95.39, 14577.848], [12, 287.11, 31931.756], [12, 320.81, 34777.259], [9, 227.73, 1222.114], [8, 15.45, 16859.074]]
-};
 
 
 /***/ }),
@@ -7459,8 +6855,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "SunCalc": () => (/* binding */ SunCalc)
 /* harmony export */ });
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./constants */ "./src/js/lib/constants.ts");
 /*!
 SunCalc is a JavaScript library for calculating sun/moon position and light phases.
 https://github.com/mourner/suncalc
@@ -7491,108 +6886,81 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 sun calculations are based on http://aa.quae.nl/en/reken/zonpositie.html formulas
 */
-class SunCalc {
-  // https://tauday.com/tau-manifesto
+
+var SunCalc = {
+  MILLISECONDS_IN_A_DAY: 1000 * 60 * 60 * 24,
+  J1970: 2440588,
+  J2000: 2451545,
+  J0: 0.0009,
   // calculations for sun times
+  // Make some variables we can reusue a bunch
+  lw: null,
+  phi: null,
+  d: null,
+  H: null,
+  h: null,
   // sun times configuration (angle, morning name, evening name)
-  static toJulian(date) {
-    return date.valueOf() / SunCalc.MILLISECONDS_IN_A_DAY - 0.5 + SunCalc.J1970;
-  }
+  times: [[-0.833, 'sunrise', 'sunset'], [-0.3, 'sunriseEnd', 'sunsetStart'], [-6, 'dawn', 'dusk'], [-12, 'nauticalDawn', 'nauticalDusk'], [-18, 'nightEnd', 'night'], [6, 'goldenHourEnd', 'goldenHour']],
+  toJulian: date => date.valueOf() / SunCalc.MILLISECONDS_IN_A_DAY - 0.5 + SunCalc.J1970,
+  fromJulian: j => new Date((j + 0.5 - SunCalc.J1970) * SunCalc.MILLISECONDS_IN_A_DAY),
 
-  static fromJulian(j) {
-    return new Date((j + 0.5 - SunCalc.J1970) * SunCalc.MILLISECONDS_IN_A_DAY);
-  }
-
-  static toDays(date) {
+  toDays(date) {
     return SunCalc.toJulian(date) - SunCalc.J2000;
-  }
+  },
 
+  e: _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * 23.4397,
   // obliquity of the Earth
-  static rightAscension(l, b) {
-    return Math.atan2(Math.sin(l) * Math.cos(SunCalc.e) - Math.tan(b) * Math.sin(SunCalc.e), Math.cos(l));
-  }
-
-  static declination(l, b) {
-    return Math.asin(Math.sin(b) * Math.cos(SunCalc.e) + Math.cos(b) * Math.sin(SunCalc.e) * Math.sin(l));
-  }
-
-  static azimuth(H, phi, dec) {
-    return Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(dec) * Math.cos(phi));
-  }
-
-  static altitude(H, phi, dec) {
-    return Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H));
-  }
-
-  static siderealTime(d, lw) {
-    return SunCalc.TAU / 360 * (280.16 + 360.9856235 * d) - lw;
-  }
-
-  static astroRefraction(h) {
+  rightAscension: (l, b) => Math.atan2(Math.sin(l) * Math.cos(SunCalc.e) - Math.tan(b) * Math.sin(SunCalc.e), Math.cos(l)),
+  declination: (l, b) => Math.asin(Math.sin(b) * Math.cos(SunCalc.e) + Math.cos(b) * Math.sin(SunCalc.e) * Math.sin(l)),
+  azimuth: (H, phi, dec) => Math.atan2(Math.sin(H), Math.cos(H) * Math.sin(phi) - Math.tan(dec) * Math.cos(phi)),
+  altitude: (H, phi, dec) => Math.asin(Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.cos(H)),
+  siderealTime: (d, lw) => _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * (280.16 + 360.9856235 * d) - lw,
+  astroRefraction: h => {
     if (h < 0) // the following formula works for positive altitudes only.
       h = 0; // if h = -0.08901179 a div/0 would occur.
     // formula 16.4 of "Astronomical Algorithms" 2nd edition by Jean Meeus (Willmann-Bell, Richmond) 1998.
-    // 1.02 / Math.tan(h + 10.26 / (h + 5.10)) h in degrees, result in arc minutes -> converted to SunCalc.TAU / 360:
+    // 1.02 / Math.tan(h + 10.26 / (h + 5.10)) h in degrees, result in arc minutes -> converted to TAU / 360:
 
     return 0.0002967 / Math.tan(h + 0.00312536 / (h + 0.08901179));
-  } // general sun calculations
-
-
-  static solarMeanAnomaly(d) {
-    return SunCalc.TAU / 360 * (357.5291 + 0.98560028 * d);
-  }
-
-  static eclipticLongitude(M) {
-    var C = SunCalc.TAU / 360 * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M)),
+  },
+  // general sun calculations
+  solarMeanAnomaly: d => _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * (357.5291 + 0.98560028 * d),
+  eclipticLongitude: M => {
+    var C = _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * (1.9148 * Math.sin(M) + 0.02 * Math.sin(2 * M) + 0.0003 * Math.sin(3 * M)),
         // equation of center
-    P = SunCalc.TAU / 360 * 102.9372; // perihelion of the Earth
+    P = _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * 102.9372; // perihelion of the Earth
 
-    return M + C + P + SunCalc.TAU / 2;
-  }
-
-  static sunCoords(d) {
+    return M + C + P + _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 2;
+  },
+  sunCoords: d => {
     var M = SunCalc.solarMeanAnomaly(d),
         L = SunCalc.eclipticLongitude(M);
     return {
       dec: SunCalc.declination(L, 0),
       ra: SunCalc.rightAscension(L, 0)
     };
-  }
-
-  static julianCycle(d, lw) {
-    return Math.round(d - SunCalc.J0 - lw / (2 * SunCalc.TAU / 2));
-  }
-
-  static approxTransit(Ht, lw, n) {
-    return SunCalc.J0 + (Ht + lw) / (2 * SunCalc.TAU / 2) + n;
-  }
-
-  static solarTransitJ(ds, M, L) {
-    return SunCalc.J2000 + ds + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L);
-  }
-
-  static hourAngle(h, phi, d) {
-    return Math.acos((Math.sin(h) - Math.sin(phi) * Math.sin(d)) / (Math.cos(phi) * Math.cos(d)));
-  } // returns set time for the given sun altitude
-
-
-  static getSetJ(h, lw, phi, dec, n, M, L) {
+  },
+  julianCycle: (d, lw) => Math.round(d - SunCalc.J0 - lw / (2 * _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 2)),
+  approxTransit: (Ht, lw, n) => SunCalc.J0 + (Ht + lw) / (2 * _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 2) + n,
+  solarTransitJ: (ds, M, L) => SunCalc.J2000 + ds + 0.0053 * Math.sin(M) - 0.0069 * Math.sin(2 * L),
+  hourAngle: (h, phi, d) => Math.acos((Math.sin(h) - Math.sin(phi) * Math.sin(d)) / (Math.cos(phi) * Math.cos(d))),
+  // returns set time for the given sun altitude
+  getSetJ: (h, lw, phi, dec, n, M, L) => {
     var w = SunCalc.hourAngle(h, phi, dec),
         a = SunCalc.approxTransit(w, lw, n);
     return SunCalc.solarTransitJ(a, M, L);
-  }
-
-  static moonCoords(d) {
+  },
+  moonCoords: d => {
     // geocentric ecliptic coordinates of the moon
-    var L = SunCalc.TAU / 360 * (218.316 + 13.176396 * d),
+    var L = _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * (218.316 + 13.176396 * d),
         // ecliptic longitude
-    M = SunCalc.TAU / 360 * (134.963 + 13.064993 * d),
+    M = _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * (134.963 + 13.064993 * d),
         // mean anomaly
-    F = SunCalc.TAU / 360 * (93.272 + 13.22935 * d),
+    F = _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * (93.272 + 13.22935 * d),
         // mean distance
-    l = L + SunCalc.TAU / 360 * 6.289 * Math.sin(M),
+    l = L + _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * 6.289 * Math.sin(M),
         // longitude
-    b = SunCalc.TAU / 360 * 5.128 * Math.sin(F),
+    b = _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * 5.128 * Math.sin(F),
         // latitude
     dt = 385001 - 20905 * Math.cos(M); // distance to the moon in km
 
@@ -7601,16 +6969,11 @@ class SunCalc {
       dec: SunCalc.declination(l, b),
       dist: dt
     };
-  }
-
-  static hoursLater(date, h) {
-    return new Date(date.valueOf() + h * SunCalc.MILLISECONDS_IN_A_DAY / 24);
-  } // Make some variables we can reusue a bunch
-
-
-  static getStarPosition(date, lat, lng, c) {
-    SunCalc.lw = SunCalc.DEG2RAD * -lng;
-    SunCalc.phi = SunCalc.DEG2RAD * lat;
+  },
+  hoursLater: (date, h) => new Date(date.valueOf() + h * SunCalc.MILLISECONDS_IN_A_DAY / 24),
+  getStarPosition: (date, lat, lng, c) => {
+    SunCalc.lw = _constants__WEBPACK_IMPORTED_MODULE_0__.DEG2RAD * -lng;
+    SunCalc.phi = _constants__WEBPACK_IMPORTED_MODULE_0__.DEG2RAD * lat;
     SunCalc.d = SunCalc.toDays(date);
     SunCalc.H = SunCalc.siderealTime(SunCalc.d, SunCalc.lw) - c.ra / 12 * Math.PI;
     SunCalc.h = SunCalc.altitude(SunCalc.H, SunCalc.phi, c.dec / 180 * Math.PI);
@@ -7624,12 +6987,11 @@ class SunCalc {
       pname: c.pname,
       dist: c.dist
     };
-  } // calculates sun position for a given date and latitude/longitude
-
-
-  static getSunPosition(date, lat, lng) {
-    var lw = SunCalc.TAU / 360 * -lng,
-        phi = SunCalc.TAU / 360 * lat,
+  },
+  // calculates sun position for a given date and latitude/longitude
+  getSunPosition: (date, lat, lng) => {
+    var lw = _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * -lng,
+        phi = _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * lat,
         d = SunCalc.toDays(date),
         c = SunCalc.sunCoords(d),
         H = SunCalc.siderealTime(d, lw) - c.ra;
@@ -7637,17 +6999,15 @@ class SunCalc {
       azimuth: SunCalc.azimuth(H, phi, c.dec),
       altitude: SunCalc.altitude(H, phi, c.dec)
     };
-  } // adds a custom time to the times config
-
-
-  static addTime(angle, riseName, setName) {
+  },
+  // adds a custom time to the times config
+  addTime: (angle, riseName, setName) => {
     SunCalc.times.push([angle, riseName, setName]);
-  } // calculates sun times for a given date and latitude/longitude
-
-
-  static getTimes(date, lat, lng) {
-    var lw = SunCalc.TAU / 360 * -lng,
-        phi = SunCalc.TAU / 360 * lat,
+  },
+  // calculates sun times for a given date and latitude/longitude
+  getTimes: (date, lat, lng) => {
+    var lw = _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * -lng,
+        phi = _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * lat,
         d = SunCalc.toDays(date),
         n = SunCalc.julianCycle(d, lw),
         ds = SunCalc.approxTransit(0, lw, n),
@@ -7667,19 +7027,18 @@ class SunCalc {
 
     for (i = 0, len = SunCalc.times.length; i < len; i += 1) {
       time = SunCalc.times[i];
-      Jset = SunCalc.getSetJ(time[0] * SunCalc.TAU / 360, lw, phi, dec, n, M, L);
+      Jset = SunCalc.getSetJ(time[0] * _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360, lw, phi, dec, n, M, L);
       Jrise = Jnoon - (Jset - Jnoon);
       result[time[1]] = SunCalc.fromJulian(Jrise);
       result[time[2]] = SunCalc.fromJulian(Jset);
     }
 
     return result;
-  } // moon calculations, based on http://aa.quae.nl/en/reken/hemelpositie.html formulas
-
-
-  static getMoonPosition(date, lat, lng) {
-    var lw = SunCalc.TAU / 360 * -lng,
-        phi = SunCalc.TAU / 360 * lat,
+  },
+  // moon calculations, based on http://aa.quae.nl/en/reken/hemelpositie.html formulas
+  getMoonPosition: (date, lat, lng) => {
+    var lw = _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * -lng,
+        phi = _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360 * lat,
         d = SunCalc.toDays(date),
         c = SunCalc.moonCoords(d),
         H = SunCalc.siderealTime(d, lw) - c.ra,
@@ -7694,12 +7053,11 @@ class SunCalc {
       distance: c.dist,
       parallacticAngle: pa
     };
-  } // calculations for illumination parameters of the moon,
+  },
+  // calculations for illumination parameters of the moon,
   // based on http://idlastro.gsfc.nasa.gov/ftp/pro/astro/mphase.pro formulas and
   // Chapter 48 of "Astronomical Algorithms" 2nd edition by Jean Meeus (Willmann-Bell, Richmond) 1998.
-
-
-  static getMoonIllumination(date) {
+  getMoonIllumination: date => {
     var d = SunCalc.toDays(date || new Date()),
         s = SunCalc.sunCoords(d),
         m = SunCalc.moonCoords(d),
@@ -7710,16 +7068,15 @@ class SunCalc {
         angle = Math.atan2(Math.cos(s.dec) * Math.sin(s.ra - m.ra), Math.sin(s.dec) * Math.cos(m.dec) - Math.cos(s.dec) * Math.sin(m.dec) * Math.cos(s.ra - m.ra));
     return {
       fraction: (1 + Math.cos(inc)) / 2,
-      phase: 0.5 + 0.5 * inc * (angle < 0 ? -1 : 1) / SunCalc.TAU / 2,
+      phase: 0.5 + 0.5 * inc * (angle < 0 ? -1 : 1) / _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 2,
       angle: angle
     };
-  } // calculations for moon rise/set times are based on http://www.stargazing.net/kepler/moonrise.html article
-
-
-  static getMoonTimes(date, lat, lng, inUTC) {
+  },
+  // calculations for moon rise/set times are based on http://www.stargazing.net/kepler/moonrise.html article
+  getMoonTimes: (date, lat, lng, inUTC) => {
     var t = new Date(date);
     if (inUTC) t.setUTCHours(0, 0, 0, 0);else t.setHours(0, 0, 0, 0);
-    var hc = 0.133 * SunCalc.TAU / 360,
+    var hc = 0.133 * _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360,
         h0 = SunCalc.getMoonPosition(t, lat, lng).altitude - hc,
         h1,
         h2,
@@ -7771,36 +7128,7 @@ class SunCalc {
     if (!rise && !set) result[ye > 0 ? 'alwaysUp' : 'alwaysDown'] = true;
     return result;
   }
-
-}
-
-_defineProperty(SunCalc, "MILLISECONDS_IN_A_DAY", 1000 * 60 * 60 * 24);
-
-_defineProperty(SunCalc, "TAU", Math.PI * 2);
-
-_defineProperty(SunCalc, "J1970", 2440588);
-
-_defineProperty(SunCalc, "J2000", 2451545);
-
-_defineProperty(SunCalc, "J0", 0.0009);
-
-_defineProperty(SunCalc, "times", [[-0.833, 'sunrise', 'sunset'], [-0.3, 'sunriseEnd', 'sunsetStart'], [-6, 'dawn', 'dusk'], [-12, 'nauticalDawn', 'nauticalDusk'], [-18, 'nightEnd', 'night'], [6, 'goldenHourEnd', 'goldenHour']]);
-
-_defineProperty(SunCalc, "e", SunCalc.TAU / 360 * 23.4397);
-
-_defineProperty(SunCalc, "lw", void 0);
-
-_defineProperty(SunCalc, "phi", void 0);
-
-_defineProperty(SunCalc, "d", void 0);
-
-_defineProperty(SunCalc, "H", void 0);
-
-_defineProperty(SunCalc, "h", void 0);
-
-_defineProperty(SunCalc, "DEG2RAD", SunCalc.TAU / 360);
-
-
+};
 
 /***/ }),
 
@@ -10890,6 +10218,2411 @@ function ecfToLookAngles(observerGeodetic, satelliteEcf) {
 
 
 
+/***/ }),
+
+/***/ "./src/js/api/SpaceObjectType.ts":
+/*!***************************************!*\
+  !*** ./src/js/api/SpaceObjectType.ts ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "SpaceObjectType": () => (/* binding */ SpaceObjectType)
+/* harmony export */ });
+var SpaceObjectType;
+(function (SpaceObjectType) {
+    SpaceObjectType[SpaceObjectType["UNKNOWN"] = 0] = "UNKNOWN";
+    SpaceObjectType[SpaceObjectType["PAYLOAD"] = 1] = "PAYLOAD";
+    SpaceObjectType[SpaceObjectType["ROCKET_BODY"] = 2] = "ROCKET_BODY";
+    SpaceObjectType[SpaceObjectType["DEBRIS"] = 3] = "DEBRIS";
+    SpaceObjectType[SpaceObjectType["SPECIAL"] = 4] = "SPECIAL";
+    SpaceObjectType[SpaceObjectType["RADAR_MEASUREMENT"] = 5] = "RADAR_MEASUREMENT";
+    SpaceObjectType[SpaceObjectType["RADAR_TRACK"] = 6] = "RADAR_TRACK";
+    SpaceObjectType[SpaceObjectType["RADAR_OBJECT"] = 7] = "RADAR_OBJECT";
+    SpaceObjectType[SpaceObjectType["BALLISTIC_MISSILE"] = 8] = "BALLISTIC_MISSILE";
+    SpaceObjectType[SpaceObjectType["STAR"] = 9] = "STAR";
+    SpaceObjectType[SpaceObjectType["INTERGOVERNMENTAL_ORGANIZATION"] = 10] = "INTERGOVERNMENTAL_ORGANIZATION";
+    SpaceObjectType[SpaceObjectType["SUBORBITAL_PAYLOAD_OPERATOR"] = 11] = "SUBORBITAL_PAYLOAD_OPERATOR";
+    SpaceObjectType[SpaceObjectType["PAYLOAD_OWNER"] = 12] = "PAYLOAD_OWNER";
+    SpaceObjectType[SpaceObjectType["METEOROLOGICAL_ROCKET_LAUNCH_AGENCY_OR_MANUFACTURER"] = 13] = "METEOROLOGICAL_ROCKET_LAUNCH_AGENCY_OR_MANUFACTURER";
+    SpaceObjectType[SpaceObjectType["PAYLOAD_MANUFACTURER"] = 14] = "PAYLOAD_MANUFACTURER";
+    SpaceObjectType[SpaceObjectType["LAUNCH_AGENCY"] = 15] = "LAUNCH_AGENCY";
+    SpaceObjectType[SpaceObjectType["LAUNCH_SITE"] = 16] = "LAUNCH_SITE";
+    SpaceObjectType[SpaceObjectType["LAUNCH_POSITION"] = 17] = "LAUNCH_POSITION";
+    SpaceObjectType[SpaceObjectType["LAUNCH_FACILITY"] = 18] = "LAUNCH_FACILITY";
+    SpaceObjectType[SpaceObjectType["CONTORL_FACILITY"] = 19] = "CONTORL_FACILITY";
+    SpaceObjectType[SpaceObjectType["GROUND_SENSOR_STATION"] = 20] = "GROUND_SENSOR_STATION";
+    SpaceObjectType[SpaceObjectType["OPTICAL"] = 21] = "OPTICAL";
+    SpaceObjectType[SpaceObjectType["MECHANICAL"] = 22] = "MECHANICAL";
+    SpaceObjectType[SpaceObjectType["PHASED_ARRAY_RADAR"] = 23] = "PHASED_ARRAY_RADAR";
+    SpaceObjectType[SpaceObjectType["OBSERVER"] = 24] = "OBSERVER";
+    SpaceObjectType[SpaceObjectType["BISTATIC_RADIO_TELESCOPE"] = 25] = "BISTATIC_RADIO_TELESCOPE";
+    SpaceObjectType[SpaceObjectType["COUNTRY"] = 26] = "COUNTRY";
+    SpaceObjectType[SpaceObjectType["LAUNCH_VEHICLE_MANUFACTURER"] = 27] = "LAUNCH_VEHICLE_MANUFACTURER";
+    SpaceObjectType[SpaceObjectType["ENGINE_MANUFACTURER"] = 28] = "ENGINE_MANUFACTURER";
+})(SpaceObjectType || (SpaceObjectType = {}));
+
+
+/***/ }),
+
+/***/ "./src/js/lib/constants.ts":
+/*!*********************************!*\
+  !*** ./src/js/lib/constants.ts ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "ZOOM_EXP": () => (/* binding */ ZOOM_EXP),
+/* harmony export */   "PI": () => (/* binding */ PI),
+/* harmony export */   "TAU": () => (/* binding */ TAU),
+/* harmony export */   "DEG2RAD": () => (/* binding */ DEG2RAD),
+/* harmony export */   "RAD2DEG": () => (/* binding */ RAD2DEG),
+/* harmony export */   "MILLISECONDS_PER_DAY": () => (/* binding */ MILLISECONDS_PER_DAY),
+/* harmony export */   "MINUTES_PER_DAY": () => (/* binding */ MINUTES_PER_DAY),
+/* harmony export */   "PLANETARIUM_DIST": () => (/* binding */ PLANETARIUM_DIST),
+/* harmony export */   "RADIUS_OF_DRAW_SUN": () => (/* binding */ RADIUS_OF_DRAW_SUN),
+/* harmony export */   "SUN_SCALAR_DISTANCE": () => (/* binding */ SUN_SCALAR_DISTANCE),
+/* harmony export */   "RADIUS_OF_DRAW_MOON": () => (/* binding */ RADIUS_OF_DRAW_MOON),
+/* harmony export */   "MOON_SCALAR_DISTANCE": () => (/* binding */ MOON_SCALAR_DISTANCE),
+/* harmony export */   "cMPerSec": () => (/* binding */ cMPerSec),
+/* harmony export */   "cKmPerSec": () => (/* binding */ cKmPerSec),
+/* harmony export */   "cKmPerMs": () => (/* binding */ cKmPerMs),
+/* harmony export */   "RADIUS_OF_EARTH": () => (/* binding */ RADIUS_OF_EARTH),
+/* harmony export */   "GROUND_BUFFER_DISTANCE": () => (/* binding */ GROUND_BUFFER_DISTANCE),
+/* harmony export */   "RADIUS_OF_SUN": () => (/* binding */ RADIUS_OF_SUN),
+/* harmony export */   "STAR_DISTANCE": () => (/* binding */ STAR_DISTANCE),
+/* harmony export */   "DISTANCE_TO_SUN": () => (/* binding */ DISTANCE_TO_SUN)
+/* harmony export */ });
+const ZOOM_EXP = 3;
+const PI = Math.PI;
+const TAU = 2 * Math.PI;
+const DEG2RAD = TAU / 360;
+const RAD2DEG = 360 / TAU;
+// export const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
+// TODO: this is really MILLISECONDS_TO_DAYS
+const MILLISECONDS_PER_DAY = 1.15741e-8;
+const MINUTES_PER_DAY = 1440;
+const PLANETARIUM_DIST = 3;
+const RADIUS_OF_DRAW_SUN = 9000;
+const SUN_SCALAR_DISTANCE = 250000;
+const RADIUS_OF_DRAW_MOON = 4000;
+const MOON_SCALAR_DISTANCE = 200000;
+const cMPerSec = 299792458;
+const cKmPerSec = 299792458 / 1000;
+const cKmPerMs = 299792458 / 1000 / 1000;
+const RADIUS_OF_EARTH = 6371; // Radius of Earth in kilometers
+const GROUND_BUFFER_DISTANCE = 1; // Distance objects are placed above earth to avoid z-buffer fighting
+const RADIUS_OF_SUN = 695700; // Radius of the Sun in kilometers
+const STAR_DISTANCE = 250000; // Artificial Star Distance - Lower numberrReduces webgl depth buffer
+const DISTANCE_TO_SUN = 149597870; // Distance from Earth to the Sun in kilometers
+
+
+/***/ }),
+
+/***/ "./src/js/lib/external/meuusjs.ts":
+/*!****************************************!*\
+  !*** ./src/js/lib/external/meuusjs.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "A": () => (/* binding */ A)
+/* harmony export */ });
+// @ts-nocheck
+const A = { JMod: 2400000.5, J2000: 2451545, J1900: 2415020, B1900: 2415020.3135, B1950: 2433282.4235, JulianYear: 365.25, JulianCentury: 36525, BesselianYear: 365.2421988, AU: 149597870 };
+A.EclCoord = function (a, b, c) {
+    if (isNaN(a) || isNaN(b))
+        throw Error('Invalid EclCoord object: (' + a + ', ' + b + ')');
+    this.lat = a;
+    this.lng = b;
+    void 0 !== c && (this.h = c);
+};
+A.EclCoord.prototype = {
+    toWgs84String: function () {
+        return A.Math.formatNum((180 * this.lat) / Math.PI) + ', ' + A.Math.formatNum((180 * -this.lng) / Math.PI);
+    },
+};
+A.EclCoordfromWgs84 = function (a, b, c) {
+    return new A.EclCoord((a * Math.PI) / 180, (-b * Math.PI) / 180, c);
+};
+A.EqCoord = function (a, b) {
+    if (isNaN(a) || isNaN(b))
+        throw Error('Invalid EqCoord object: (' + a + ', ' + b + ')');
+    this.ra = a;
+    this.dec = b;
+};
+A.EqCoord.prototype = {
+    toString: function () {
+        return 'ra:' + A.Math.formatNum((180 * this.ra) / Math.PI) + ', dec:' + A.Math.formatNum((180 * this.dec) / Math.PI);
+    },
+};
+A.HzCoord = function (a, b) {
+    if (isNaN(a) || isNaN(b))
+        throw Error('Invalid HzCoord object: (' + a + ', ' + b + ')');
+    this.az = a;
+    this.alt = b;
+};
+A.HzCoord.prototype = {
+    toString: function () {
+        return 'azi:' + A.Math.formatNum((180 * this.az) / Math.PI) + ', alt:' + A.Math.formatNum((180 * this.alt) / Math.PI);
+    },
+};
+A.Coord = {
+    dmsToDeg: function (a, b, c, d) {
+        d = (60 * (60 * b + c) + d) / 3600;
+        return a ? -d : d;
+    },
+    calcAngle: function (a, b, c, d) {
+        return (A.Coord.dmsToDeg(a, b, c, d) * Math.PI) / 180;
+    },
+    calcRA: function (a, b, c) {
+        return ((A.Coord.dmsToDeg(!1, a, b, c) % 24) * 15 * Math.PI) / 180;
+    },
+    secondsToHMSStr: function (a) {
+        var b = Math.floor(a / 86400);
+        a = A.Math.pMod(a, 86400);
+        var c = Math.floor(a / 3600) % 24, d = Math.floor(a / 60) % 60;
+        a = Math.floor(a % 60);
+        return (0 !== b ? b + 'd ' : '') + (10 > c ? '0' : '') + c + ':' + (10 > d ? '0' : '') + d + ':' + (10 > a ? '0' : '') + a;
+    },
+    secondsToHMStr: function (a) {
+        var b = Math.floor(a / 86400);
+        a = A.Math.pMod(a, 86400);
+        var c = Math.floor(a / 3600) % 24;
+        a = Math.floor(a / 60) % 60;
+        return (0 !== b ? b + 'd ' : '') + (10 > c ? '0' : '') + c + ':' + (10 > a ? '0' : '') + a;
+    },
+    eqToEcl: function (a, b) {
+        var c = Math.sin(a.ra), d = Math.sin(a.dec), e = Math.cos(a.dec), f = Math.sin(b);
+        b = Math.cos(b);
+        return new A.EclCoord(Math.atan2(c * b + (d / e) * f, Math.cos(a.ra)), Math.asin(d * b - e * f * c));
+    },
+    eclToEq: function (a, b) {
+        var c = Math.sin(a.lat), d = Math.sin(a.lng), e = Math.cos(a.lng), f = Math.sin(b);
+        b = Math.cos(b);
+        let a2 = Math.atan2(c * b - (d / e) * f, Math.cos(a.lat));
+        0 > a2 && (a2 += 2 * Math.PI);
+        return new A.EqCoord(a2, Math.asin(d * b + e * f * c));
+    },
+    eqToHz: function (a, b, c) {
+        c = c - b.lng - a.ra;
+        var d = Math.cos(c), e = Math.sin(b.lat);
+        b = Math.cos(b.lat);
+        var f = Math.sin(a.dec);
+        a = Math.cos(a.dec);
+        return new A.HzCoord(Math.atan2(Math.sin(c), d * e - (f / a) * b), Math.asin(e * f + b * a * d));
+    },
+};
+A.DeltaT = {
+    jdToJde: function (a, b) {
+        b || (b = A.DeltaT.estimate(a));
+        return a + b / 86400;
+    },
+    jdeToJd: function (a, b) {
+        b || (b = A.DeltaT.estimate(a));
+        return a - b / 86400;
+    },
+    decimalYear: function (a) {
+        a = A.JulianDay.jdToCalendar(a);
+        return a.y + (a.m - 0.5) / 12;
+    },
+    estimate: function (a) {
+        var b = A.DeltaT.decimalYear(a);
+        a = Math.pow;
+        return -500 > b
+            ? -20 + 32 * a((b - 1820) / 100, 2)
+            : 500 > b
+                ? ((b /= 100), 10583.6 - 1014.41 * b + 33.78311 * a(b, 2) - 5.952053 * a(b, 3) - 0.1798452 * a(b, 4) + 0.022174192 * a(b, 5) + 0.0090316521 * a(b, 6))
+                : 1600 > b
+                    ? ((b = (b - 1e3) / 100), 1574.2 - 556.01 * b + 71.23472 * a(b, 2) + 0.319781 * a(b, 3) - 0.8503463 * a(b, 4) - 0.005050998 * a(b, 5) + 0.0083572073 * a(b, 6))
+                    : 1700 > b
+                        ? ((b -= 1600), 120 - 0.9808 * b - 0.01532 * a(b, 2) + a(b, 3) / 7129)
+                        : 1800 > b
+                            ? ((b -= 1700), 8.83 + 0.1603 * b - 0.0059285 * a(b, 2) + 1.3336e-4 * a(b, 3) - a(b, 4) / 1174e3)
+                            : 1860 > b
+                                ? ((b -= 1800), 13.72 - 0.332447 * b + 0.0068612 * a(b, 2) + 0.0041116 * a(b, 3) - 3.7436e-4 * a(b, 4) + 1.21272e-5 * a(b, 5) - 1.699e-7 * a(b, 6) + 8.75e-10 * a(b, 7))
+                                : 1900 > b
+                                    ? ((b -= 1860), 7.62 + 0.5737 * b - 0.251754 * a(b, 2) + 0.01680668 * a(b, 3) - 4.473624e-4 * a(b, 4) + a(b, 5) / 233174)
+                                    : 1920 > b
+                                        ? ((b -= 1900), -2.79 + 1.494119 * b - 0.0598939 * a(b, 2) + 0.0061966 * a(b, 3) - 1.97e-4 * a(b, 4))
+                                        : 1941 > b
+                                            ? ((b -= 1920), 21.2 + 0.84493 * b - 0.0761 * a(b, 2) + 0.0020936 * a(b, 3))
+                                            : 1961 > b
+                                                ? ((b -= 1950), 29.07 + 0.407 * b - a(b, 2) / 233 + a(b, 3) / 2547)
+                                                : 1986 > b
+                                                    ? ((b -= 1975), 45.45 + 1.067 * b - a(b, 2) / 260 - a(b, 3) / 718)
+                                                    : 2005 > b
+                                                        ? ((b -= 2e3), 63.86 + 0.3345 * b - 0.060374 * a(b, 2) + 0.0017275 * a(b, 3) + 6.51814e-4 * a(b, 4) + 2.373599e-5 * a(b, 5))
+                                                        : 2050 > b
+                                                            ? ((b -= 2e3), 62.92 + 0.32217 * b + 0.005589 * a(b, 2))
+                                                            : 2150 > b
+                                                                ? -20 + 32 * a((b - 1820) / 100, 2) - 0.5628 * (2150 - b)
+                                                                : -20 + 32 * a((b - 1820) / 100, 2);
+    },
+};
+A.Globe = {
+    Er: 6378.14,
+    Fl: 1 / 298.257,
+    parallaxConstants: function (a, b) {
+        b || (b = 0);
+        var c = 1 - A.Globe.Fl;
+        b = (0.001 * b) / A.Globe.Er;
+        return { rhoslat: Math.sin(Math.atan(c * Math.tan(a))) * c + b * Math.sin(a), rhoclat: Math.cos(Math.atan(c * Math.tan(a))) + b * Math.cos(a) };
+    },
+};
+A.Interp = {
+    newLen3: function (a, b, c) {
+        if (3 != c.length)
+            throw 'Error not 3';
+        if (b == a)
+            throw 'Error no x range';
+        var d = c[1] - c[0], e = c[2] - c[1];
+        return { x1: a, x3: b, y: c, a: d, b: e, c: e - d, abSum: d + e, xSum: b + a, xDiff: b - a };
+    },
+    interpolateX: function (a, b) {
+        return A.Interp.interpolateN(a, (2 * b - a.xSum) / a.xDiff);
+    },
+    interpolateN: function (a, b) {
+        return a.y[1] + 0.5 * b * (a.abSum + b * a.c);
+    },
+};
+A.JulianDay = function (a, b) {
+    a instanceof Date && (a = A.JulianDay.dateToJD(a));
+    this.jd = a;
+    this.deltaT = b ? b : A.DeltaT.estimate(this.jd);
+    this.jde = A.DeltaT.jdToJde(this.jd, this.deltaT);
+};
+A.JulianDay.prototype = {
+    toCalendar: function () {
+        return A.JulianDay.jdToCalendar(this.jd);
+    },
+    toDate: function () {
+        return A.JulianDay.jdToDate(this.jd);
+    },
+    jdJ2000Century: function () {
+        return (this.jd - A.J2000) / A.JulianCentury;
+    },
+    jdeJ2000Century: function () {
+        return (this.jde - A.J2000) / A.JulianCentury;
+    },
+    startOfDay: function () {
+        return new A.JulianDay(Math.floor(this.jde - 0.5) + 0.5, this.deltaT);
+    },
+};
+A.JulianDay.gregorianTimeStart = Date.UTC(1582, 9, 4);
+A.JulianDay.jdFromGregorian = function (a, b, c) {
+    return new A.JulianDay(A.JulianDay.jdFromGregorian(a, b, c));
+};
+A.JulianDay.jdFromJulian = function (a, b, c) {
+    return new A.JulianDay(A.JulianDay.calendarJulianToJD(a, b, c));
+};
+A.JulianDay.jdFromJDE = function (a) {
+    var b = A.DeltaT.estimate(a);
+    a = A.DeltaT.jdeToJd(a, b);
+    return new A.JulianDay(a, b);
+};
+A.JulianDay.dateToJD = function (a) {
+    var b = a.getUTCDate() + A.JulianDay.secondsFromHMS(a.getUTCHours(), a.getUTCMinutes(), a.getUTCSeconds()) / 86400;
+    return a.getTime() < A.JulianDay.gregorianTimeStart ? A.JulianDay.calendarJulianToJD(a.getUTCFullYear(), a.getUTCMonth() + 1, b) : A.JulianDay.calendarGregorianToJD(a.getUTCFullYear(), a.getUTCMonth() + 1, b);
+};
+A.JulianDay.calendarGregorianToJD = function (a, b, c) {
+    if (1 == b || 2 == b)
+        a--, (b += 12);
+    var d = Math.floor(a / 100);
+    return Math.floor((36525 * (a + 4716)) / 100) + Math.floor((306 * (b + 1)) / 10) + (2 - d + Math.floor(d / 4)) + c - 1524.5;
+};
+A.JulianDay.calendarJulianToJD = function (a, b, c) {
+    if (1 == b || 2 == b)
+        a--, (b += 12);
+    return Math.floor((36525 * (a + 4716)) / 100) + Math.floor((306 * (b + 1)) / 10) + c - 1524.5;
+};
+A.JulianDay.secondsFromHMS = function (a, b, c) {
+    return 3600 * a + 60 * b + c;
+};
+A.JulianDay.jdToDate = function (a) {
+    var b = A.JulianDay.jdToCalendar(a);
+    a = A.Math.modF(a + 0.5)[1];
+    a = Math.round(86400 * a);
+    return new Date(Date.UTC(b.y, b.m - 1, Math.floor(b.d), Math.floor(a / 3600) % 24, Math.floor(a / 60) % 60, Math.floor(a % 60)));
+};
+A.JulianDay.jdToCalendar = function (a) {
+    a = A.Math.modF(a + 0.5);
+    var b = a[0], c = b;
+    2299151 <= b && ((c = Math.floor((100 * b - 186721625) / 3652425)), (c = b + 1 + c - Math.floor(c / 4)));
+    var d = c + 1524;
+    b = Math.floor((100 * d - 12210) / 36525);
+    var e = Math.floor((36525 * b) / 100);
+    c = Math.floor((1e4 * (d - e)) / 306001);
+    a = d - e - Math.floor((306001 * c) / 1e4) + a[1];
+    c = 14 == c || 15 == c ? c - 13 : c - 1;
+    return { y: 1 == c || 2 == c ? Math.floor(b) - 4715 : Math.floor(b) - 4716, m: c, d: a };
+};
+A.JulianDay.leapYearGregorian = function (a) {
+    return (0 === a % 4 && 0 !== a % 100) || 0 === a % 400;
+};
+A.JulianDay.dayOfYear = function (a, b, c, d) {
+    a = 2;
+    d && a--;
+    return A.JulianDay._wholeMonths(b, a) + c;
+};
+A.JulianDay._wholeMonths = function (a, b) {
+    return Math.round((275 * a) / 9 - ((a + 9) / 12) * b - 30);
+};
+A.Math = {
+    pMod: function (a, b) {
+        a %= b;
+        0 > a && (a += b);
+        return a;
+    },
+    modF: function (a) {
+        return 0 > a ? ((a = -a), [-Math.floor(a), -(a % 1)]) : [Math.floor(a), a % 1];
+    },
+    horner: function (a, b) {
+        var c = b.length - 1;
+        if (0 >= c)
+            throw 'empty array not supported';
+        for (var d = b[c]; 0 < c;)
+            c--, (d = d * a + b[c]);
+        return d;
+    },
+    formatNum: function (a, b) {
+        b = Math.pow(10, b | 4);
+        return Math.round(a * b) / b;
+    },
+};
+A.Moon = {
+    parallax: function (a) {
+        return Math.asin(6378.14 / a);
+    },
+    apparentEquatorial: function (a) {
+        var b = A.Moon.geocentricPosition(a), c = A.Nutation.nutation(a);
+        a = A.Nutation.meanObliquityLaskar(a) + c.deltaobliquity;
+        return { eq: A.Coord.eclToEq(new A.EclCoord(b.lng + c.deltalng, b.lat), a), delta: b.delta };
+    },
+    apparentTopocentric: function (a, b, c) {
+        var d = A.Moon.apparentEquatorial(a), e = A.Globe.parallaxConstants(b.lat, b.h), f = A.Moon.parallax(d.delta);
+        c || (c = A.Sidereal.apparentInRa(a));
+        return { eq: A.Parallax.topocentric(d.eq, f, e.rhoslat, e.rhoclat, b.lng, c), delta: d.delta };
+    },
+    topocentricPosition: function (a, b, c) {
+        var d = A.Sidereal.apparentInRa(a);
+        a = A.Moon.apparentTopocentric(a, b, d);
+        var e = A.Coord.eqToHz(a.eq, b, d);
+        !0 === c && (e.alt += A.Refraction.bennett2(e.alt));
+        b = A.Moon.parallacticAngle(b.lat, d - (b.lng + a.eq.ra), a.eq.dec);
+        return { hz: e, eq: a.eq, delta: a.delta, q: b };
+    },
+    approxTransit: function (a, b) {
+        a = a.startOfDay();
+        return A.Rise.approxTransit(b, A.Sidereal.apparent0UT(a), A.Moon.apparentTopocentric(a, b).eq);
+    },
+    approxTimes: function (a, b) {
+        a = a.startOfDay();
+        var c = A.Moon.apparentTopocentric(a, b), d = A.Moon.parallax(c.delta);
+        d = A.Rise.stdh0Lunar(d);
+        a = A.Sidereal.apparent0UT(a);
+        return A.Rise.approxTimes(b, d, a, c.eq);
+    },
+    times: function (a, b) {
+        a = a.startOfDay();
+        var c = A.Moon.apparentTopocentric(new A.JulianDay(a.jd - 1, a.deltaT), b), d = A.Moon.apparentTopocentric(a, b), e = A.Moon.apparentTopocentric(new A.JulianDay(a.jd + 1, a.deltaT), b), f = A.Moon.parallax(d.delta);
+        f = A.Rise.stdh0Lunar(f);
+        var g = A.Sidereal.apparent0UT(a);
+        return A.Rise.times(b, a.deltaT, f, g, [c.eq, d.eq, e.eq]);
+    },
+    parallacticAngle: function (a, b, c) {
+        return Math.atan2(Math.sin(b), Math.tan(a) * Math.cos(c) - Math.sin(c) * Math.cos(b));
+    },
+    geocentricPosition: function (a) {
+        var b = Math.PI / 180, c = a.jdeJ2000Century();
+        a = A.Math.pMod(A.Math.horner(c, [218.3164477 * b, 481267.88123421 * b, -0.0015786 * b, b / 538841, -b / 65194e3]), 2 * Math.PI);
+        var d = A.Math.pMod(A.Math.horner(c, [297.8501921 * b, 445267.1114034 * b, -0.0018819 * b, b / 545868, -b / 113065e3]), 2 * Math.PI), e = A.Math.pMod(A.Math.horner(c, [357.5291092 * b, 35999.0502909 * b, -1.535e-4 * b, b / 2449e4]), 2 * Math.PI), f = A.Math.pMod(A.Math.horner(c, [134.9633964 * b, 477198.8675055 * b, 0.0087414 * b, b / 69699, -b / 14712e3]), 2 * Math.PI), g = A.Math.pMod(A.Math.horner(c, [93.272095 * b, 483202.0175233 * b, -0.0036539 * b, -b / 3526e3, b / 86331e4]), 2 * Math.PI), l = 119.75 * b + 131.849 * b * c, m = 53.09 * b + 479264.29 * b * c, h = 313.45 * b + 481266.484 * b * c;
+        c = A.Math.horner(c, [1, -0.002516, -7.4e-6]);
+        var p = c * c;
+        m = 3958 * Math.sin(l) + 1962 * Math.sin(a - g) + 318 * Math.sin(m);
+        var n = 0;
+        l = -2235 * Math.sin(a) + 382 * Math.sin(h) + 175 * Math.sin(l - g) + 175 * Math.sin(l + g) + 127 * Math.sin(a - f) - 115 * Math.sin(a + f);
+        for (h = 0; h < A.Moon.ta.length; h++) {
+            var k = A.Moon.ta[h];
+            var r = d * k[0] + e * k[1] + f * k[2] + g * k[3], q = Math.sin(r);
+            r = Math.cos(r);
+            switch (k[1]) {
+                case 0:
+                    m += k[4] * q;
+                    n += k[5] * r;
+                    break;
+                case 1:
+                case -1:
+                    m += k[4] * q * c;
+                    n += k[5] * r * c;
+                    break;
+                case 2:
+                case -2:
+                    m += k[4] * q * p;
+                    n += k[5] * r * p;
+                    break;
+                default:
+                    throw 'error';
+            }
+        }
+        for (h = 0; h < A.Moon.tb.length; h++)
+            switch (((k = A.Moon.tb[h]), (q = Math.sin(d * k[0] + e * k[1] + f * k[2] + g * k[3])), k[1])) {
+                case 0:
+                    l += k[4] * q;
+                    break;
+                case 1:
+                case -1:
+                    l += k[4] * q * c;
+                    break;
+                case 2:
+                case -2:
+                    l += k[4] * q * p;
+                    break;
+                default:
+                    throw 'error';
+            }
+        return { lng: A.Math.pMod(a, 2 * Math.PI) + 1e-6 * m * b, lat: 1e-6 * l * b, delta: 385000.56 + 0.001 * n };
+    },
+    ta: [
+        [0, 0, 1, 0, 6288774, -20905355],
+        [2, 0, -1, 0, 1274027, -3699111],
+        [2, 0, 0, 0, 658314, -2955968],
+        [0, 0, 2, 0, 213618, -569925],
+        [0, 1, 0, 0, -185116, 48888],
+        [0, 0, 0, 2, -114332, -3149],
+        [2, 0, -2, 0, 58793, 246158],
+        [2, -1, -1, 0, 57066, -152138],
+        [2, 0, 1, 0, 53322, -170733],
+        [2, -1, 0, 0, 45758, -204586],
+        [0, 1, -1, 0, -40923, -129620],
+        [1, 0, 0, 0, -34720, 108743],
+        [0, 1, 1, 0, -30383, 104755],
+        [2, 0, 0, -2, 15327, 10321],
+        [0, 0, 1, 2, -12528, 0],
+        [0, 0, 1, -2, 10980, 79661],
+        [4, 0, -1, 0, 10675, -34782],
+        [0, 0, 3, 0, 10034, -23210],
+        [4, 0, -2, 0, 8548, -21636],
+        [2, 1, -1, 0, -7888, 24208],
+        [2, 1, 0, 0, -6766, 30824],
+        [1, 0, -1, 0, -5163, -8379],
+        [1, 1, 0, 0, 4987, -16675],
+        [2, -1, 1, 0, 4036, -12831],
+        [2, 0, 2, 0, 3994, -10445],
+        [4, 0, 0, 0, 3861, -11650],
+        [2, 0, -3, 0, 3665, 14403],
+        [0, 1, -2, 0, -2689, -7003],
+        [2, 0, -1, 2, -2602, 0],
+        [2, -1, -2, 0, 2390, 10056],
+        [1, 0, 1, 0, -2348, 6322],
+        [2, -2, 0, 0, 2236, -9884],
+        [0, 1, 2, 0, -2120, 5751],
+        [0, 2, 0, 0, -2069, 0],
+        [2, -2, -1, 0, 2048, -4950],
+        [2, 0, 1, -2, -1773, 4130],
+        [2, 0, 0, 2, -1595, 0],
+        [4, -1, -1, 0, 1215, -3958],
+        [0, 0, 2, 2, -1110, 0],
+        [3, 0, -1, 0, -892, 3258],
+        [2, 1, 1, 0, -810, 2616],
+        [4, -1, -2, 0, 759, -1897],
+        [0, 2, -1, 0, -713, -2117],
+        [2, 2, -1, 0, -700, 2354],
+        [2, 1, -2, 0, 691, 0],
+        [2, -1, 0, -2, 596, 0],
+        [4, 0, 1, 0, 549, -1423],
+        [0, 0, 4, 0, 537, -1117],
+        [4, -1, 0, 0, 520, -1571],
+        [1, 0, -2, 0, -487, -1739],
+        [2, 1, 0, -2, -399, 0],
+        [0, 0, 2, -2, -381, -4421],
+        [1, 1, 1, 0, 351, 0],
+        [3, 0, -2, 0, -340, 0],
+        [4, 0, -3, 0, 330, 0],
+        [2, -1, 2, 0, 327, 0],
+        [0, 2, 1, 0, -323, 1165],
+        [1, 1, -1, 0, 299, 0],
+        [2, 0, 3, 0, 294, 0],
+        [2, 0, -1, -2, 0, 8752],
+    ],
+    tb: [
+        [0, 0, 0, 1, 5128122],
+        [0, 0, 1, 1, 280602],
+        [0, 0, 1, -1, 277693],
+        [2, 0, 0, -1, 173237],
+        [2, 0, -1, 1, 55413],
+        [2, 0, -1, -1, 46271],
+        [2, 0, 0, 1, 32573],
+        [0, 0, 2, 1, 17198],
+        [2, 0, 1, -1, 9266],
+        [0, 0, 2, -1, 8822],
+        [2, -1, 0, -1, 8216],
+        [2, 0, -2, -1, 4324],
+        [2, 0, 1, 1, 4200],
+        [2, 1, 0, -1, -3359],
+        [2, -1, -1, 1, 2463],
+        [2, -1, 0, 1, 2211],
+        [2, -1, -1, -1, 2065],
+        [0, 1, -1, -1, -1870],
+        [4, 0, -1, -1, 1828],
+        [0, 1, 0, 1, -1794],
+        [0, 0, 0, 3, -1749],
+        [0, 1, -1, 1, -1565],
+        [1, 0, 0, 1, -1491],
+        [0, 1, 1, 1, -1475],
+        [0, 1, 1, -1, -1410],
+        [0, 1, 0, -1, -1344],
+        [1, 0, 0, -1, -1335],
+        [0, 0, 3, 1, 1107],
+        [4, 0, 0, -1, 1021],
+        [4, 0, -1, 1, 833],
+        [0, 0, 1, -3, 777],
+        [4, 0, -2, 1, 671],
+        [2, 0, 0, -3, 607],
+        [2, 0, 2, -1, 596],
+        [2, -1, 1, -1, 491],
+        [2, 0, -2, 1, -451],
+        [0, 0, 3, -1, 439],
+        [2, 0, 2, 1, 422],
+        [2, 0, -3, -1, 421],
+        [2, 1, -1, 1, -366],
+        [2, 1, 0, 1, -351],
+        [4, 0, 0, 1, 331],
+        [2, -1, 1, 1, 315],
+        [2, -2, 0, -1, 302],
+        [0, 0, 1, 3, -283],
+        [2, 1, 1, -1, -229],
+        [1, 1, 0, -1, 223],
+        [1, 1, 0, 1, 223],
+        [0, 1, -2, -1, -220],
+        [2, 1, -1, -1, -220],
+        [1, 0, 1, 1, -185],
+        [2, -1, -2, -1, 181],
+        [0, 1, 2, 1, -177],
+        [4, 0, -2, -1, 176],
+        [4, -1, -1, -1, 166],
+        [1, 0, 1, -1, -164],
+        [4, 0, 1, -1, 132],
+        [1, 0, -1, -1, -119],
+        [4, -1, 0, -1, 115],
+        [2, -2, 0, 1, 107],
+    ],
+};
+A.MoonIllum = {
+    phaseAngleEq: function (a, b, c, d) {
+        a = A.MoonIllum._coselong(a, c);
+        return Math.atan2(d * Math.sin(Math.acos(a)), b - d * a);
+    },
+    phaseAngleEq2: function (a, b) {
+        return Math.acos(-A.MoonIllum._coselong(a, b));
+    },
+    illuminated: function (a) {
+        return (1 + Math.cos(a)) / 2;
+    },
+    positionAngle: function (a, b) {
+        var c = Math.cos(b.dec);
+        return Math.atan2(c * Math.sin(b.ra - a.ra), Math.sin(b.dec) * Math.cos(a.dec) - c * Math.sin(a.dec) * Math.cos(b.ra - a.ra));
+    },
+    _coselong: function (a, b) {
+        return Math.sin(b.dec) * Math.sin(a.dec) + Math.cos(b.dec) * Math.cos(a.dec) * Math.cos(b.ra - a.ra);
+    },
+};
+A.Nutation = {
+    nutation: function (a) {
+        a = a.jdeJ2000Century();
+        for (var b = (A.Math.horner(a, [297.85036, 445267.11148, -0.0019142, 1 / 189474]) * Math.PI) / 180, c = (A.Math.horner(a, [357.52772, 35999.05034, -1.603e-4, -1 / 3e5]) * Math.PI) / 180, d = (A.Math.horner(a, [134.96298, 477198.867398, 0.0086972, 1 / 5620]) * Math.PI) / 180, e = (A.Math.horner(a, [93.27191, 483202.017538, -0.0036825, 1 / 327270]) * Math.PI) / 180, f = (A.Math.horner(a, [125.04452, -1934.136261, 0.0020708, 1 / 45e4]) * Math.PI) / 180, g = 0, l = 0, m = A.Nutation.table22A.length - 1; 0 <= m; m--) {
+            var h = A.Nutation.table22A[m], p = h[0] * b + h[1] * c + h[2] * d + h[3] * e + h[4] * f, n = Math.cos(p);
+            g += Math.sin(p) * (h[5] + h[6] * a);
+            l += n * (h[7] + h[8] * a);
+        }
+        return { deltalng: (1e-4 / 3600) * g * (Math.PI / 180), deltaobliquity: (1e-4 / 3600) * l * (Math.PI / 180) };
+    },
+    nutationInRA: function (a) {
+        var b = A.Nutation.meanObliquityLaskar(a);
+        a = A.Nutation.nutation(a);
+        return a.deltalng * Math.cos(b + a.deltaobliquity);
+    },
+    trueObliquity: function (a) {
+        var b = A.Nutation.meanObliquityLaskar(a);
+        a = A.Nutation.nutation(a);
+        return b + a.deltaobliquity;
+    },
+    meanObliquity: function (a) {
+        return A.Math.horner(a.jdeJ2000Century(), [(84381.448 / 3600) * (Math.PI / 180), (-46.815 / 3600) * (Math.PI / 180), (-5.9e-4 / 3600) * (Math.PI / 180), (0.001813 / 3600) * (Math.PI / 180)]);
+    },
+    meanObliquityLaskar: function (a) {
+        return A.Math.horner(0.01 * a.jdeJ2000Century(), [
+            (84381.448 / 3600) * (Math.PI / 180),
+            (-4680.93 / 3600) * (Math.PI / 180),
+            (-1.55 / 3600) * (Math.PI / 180),
+            (1999.25 / 3600) * (Math.PI / 180),
+            (-51.38 / 3600) * (Math.PI / 180),
+            (-249.67 / 3600) * (Math.PI / 180),
+            (-39.05 / 3600) * (Math.PI / 180),
+            (7.12 / 3600) * (Math.PI / 180),
+            (27.87 / 3600) * (Math.PI / 180),
+            (5.79 / 3600) * (Math.PI / 180),
+            (2.45 / 3600) * (Math.PI / 180),
+        ]);
+    },
+    table22A: [
+        [0, 0, 0, 0, 1, -171996, -174.2, 92025, 8.9],
+        [-2, 0, 0, 2, 2, -13187, -1.6, 5736, -3.1],
+        [0, 0, 0, 2, 2, -2274, -0.2, 977, -0.5],
+        [0, 0, 0, 0, 2, 2062, 0.2, -895, 0.5],
+        [0, 1, 0, 0, 0, 1426, -3.4, 54, -0.1],
+        [0, 0, 1, 0, 0, 712, 0.1, -7, 0],
+        [-2, 1, 0, 2, 2, -517, 1.2, 224, -0.6],
+        [0, 0, 0, 2, 1, -386, -0.4, 200, 0],
+        [0, 0, 1, 2, 2, -301, 0, 129, -0.1],
+        [-2, -1, 0, 2, 2, 217, -0.5, -95, 0.3],
+        [-2, 0, 1, 0, 0, -158, 0, 0, 0],
+        [-2, 0, 0, 2, 1, 129, 0.1, -70, 0],
+        [0, 0, -1, 2, 2, 123, 0, -53, 0],
+        [2, 0, 0, 0, 0, 63, 0, 0, 0],
+        [0, 0, 1, 0, 1, 63, 0.1, -33, 0],
+        [2, 0, -1, 2, 2, -59, 0, 26, 0],
+        [0, 0, -1, 0, 1, -58, -0.1, 32, 0],
+        [0, 0, 1, 2, 1, -51, 0, 27, 0],
+        [-2, 0, 2, 0, 0, 48, 0, 0, 0],
+        [0, 0, -2, 2, 1, 46, 0, -24, 0],
+        [2, 0, 0, 2, 2, -38, 0, 16, 0],
+        [0, 0, 2, 2, 2, -31, 0, 13, 0],
+        [0, 0, 2, 0, 0, 29, 0, 0, 0],
+        [-2, 0, 1, 2, 2, 29, 0, -12, 0],
+        [0, 0, 0, 2, 0, 26, 0, 0, 0],
+        [-2, 0, 0, 2, 0, -22, 0, 0, 0],
+        [0, 0, -1, 2, 1, 21, 0, -10, 0],
+        [0, 2, 0, 0, 0, 17, -0.1, 0, 0],
+        [2, 0, -1, 0, 1, 16, 0, -8, 0],
+        [-2, 2, 0, 2, 2, -16, 0.1, 7, 0],
+        [0, 1, 0, 0, 1, -15, 0, 9, 0],
+        [-2, 0, 1, 0, 1, -13, 0, 7, 0],
+        [0, -1, 0, 0, 1, -12, 0, 6, 0],
+        [0, 0, 2, -2, 0, 11, 0, 0, 0],
+        [2, 0, -1, 2, 1, -10, 0, 5, 0],
+        [2, 0, 1, 2, 2, -8, 0, 3, 0],
+        [0, 1, 0, 2, 2, 7, 0, -3, 0],
+        [-2, 1, 1, 0, 0, -7, 0, 0, 0],
+        [0, -1, 0, 2, 2, -7, 0, 3, 0],
+        [2, 0, 0, 2, 1, -7, 0, 3, 0],
+        [2, 0, 1, 0, 0, 6, 0, 0, 0],
+        [-2, 0, 2, 2, 2, 6, 0, -3, 0],
+        [-2, 0, 1, 2, 1, 6, 0, -3, 0],
+        [2, 0, -2, 0, 1, -6, 0, 3, 0],
+        [2, 0, 0, 0, 1, -6, 0, 3, 0],
+        [0, -1, 1, 0, 0, 5, 0, 0, 0],
+        [-2, -1, 0, 2, 1, -5, 0, 3, 0],
+        [-2, 0, 0, 0, 1, -5, 0, 3, 0],
+        [0, 0, 2, 2, 1, -5, 0, 3, 0],
+        [-2, 0, 2, 0, 1, 4, 0, 0, 0],
+        [-2, 1, 0, 2, 1, 4, 0, 0, 0],
+        [0, 0, 1, -2, 0, 4, 0, 0, 0],
+        [-1, 0, 1, 0, 0, -4, 0, 0, 0],
+        [-2, 1, 0, 0, 0, -4, 0, 0, 0],
+        [1, 0, 0, 0, 0, -4, 0, 0, 0],
+        [0, 0, 1, 2, 0, 3, 0, 0, 0],
+        [0, 0, -2, 2, 2, -3, 0, 0, 0],
+        [-1, -1, 1, 0, 0, -3, 0, 0, 0],
+        [0, 1, 1, 0, 0, -3, 0, 0, 0],
+        [0, -1, 1, 2, 2, -3, 0, 0, 0],
+        [2, -1, -1, 2, 2, -3, 0, 0, 0],
+        [0, 0, 3, 2, 2, -3, 0, 0, 0],
+        [2, -1, 0, 2, 2, -3, 0, 0, 0],
+    ],
+};
+A.Parallax = {
+    earthsunParallax: ((8.794 / 60 / 60) * Math.PI) / 180,
+    horizontal: function (a) {
+        return ((8.794 / 60 / 60) * Math.PI) / 180 / a;
+    },
+    topocentric: function (a, b, c, d, e, f) {
+        e = A.Math.pMod(f - e - a.ra, 2 * Math.PI);
+        b = Math.sin(b);
+        f = Math.cos(e);
+        var g = Math.cos(a.dec);
+        e = Math.atan2(-d * b * Math.sin(e), g - d * b * f);
+        return new A.EqCoord(a.ra + e, Math.atan2((Math.sin(a.dec) - c * b) * Math.cos(e), g - d * b * f));
+    },
+    topocentric2: function (a, b, c, d, e, f) {
+        e = A.Math.pMod(f - e - a.ra, 2 * Math.PI);
+        f = Math.cos(a.dec);
+        return new A.EqCoord(a.ra + (-b * d * Math.sin(e)) / f, a.dec + -b * (c * f - d * Math.cos(e) * Math.sin(a.dec)));
+    },
+};
+A.Refraction = {
+    bennett: function (a) {
+        0 > a && (a = 0);
+        var b = Math.PI / 180;
+        return b / 60 / Math.tan(a + (7.31 * b * b) / (a + 4.4 * b));
+    },
+    bennett2: function (a) {
+        var b = Math.PI / 180, c = 60 / b, d = 0.06 / c;
+        c = 14.7 * c * b;
+        b *= 13;
+        a = A.Refraction.bennett(a);
+        return a - d * Math.sin(c * a + b);
+    },
+    saemundsson: function (a) {
+        var b = Math.PI / 180;
+        return (1.02 * b) / 60 / Math.tan(a + (10.3 * b * b) / (a + 5.11 * b));
+    },
+};
+A.Rise = {
+    meanRefraction: (0.5667 * Math.PI) / 180,
+    stdh0Stellar: (-0.5667 * Math.PI) / 180,
+    stdh0Solar: (-0.8333 * Math.PI) / 180,
+    stdh0LunarMean: (0.125 * Math.PI) / 180,
+    stdh0Lunar: function (a) {
+        return 0.7275 * a - A.Rise.meanRefraction;
+    },
+    circumpolar: function (a, b, c) {
+        a = (Math.sin(b) - Math.sin(a) * Math.sin(c)) / (Math.cos(a) * Math.cos(c));
+        return -1 > a || 1 < a ? null : a;
+    },
+    approxTransit: function (a, b, c) {
+        return (43200 * (c.ra + a.lng)) / Math.PI - b;
+    },
+    approxTimes: function (a, b, c, d) {
+        b = A.Rise.circumpolar(a.lat, b, d.dec);
+        if (!b)
+            return null;
+        b = (43200 * Math.acos(b)) / Math.PI;
+        a = (43200 * (d.ra + a.lng)) / Math.PI - c;
+        return { transit: A.Math.pMod(a, 86400), transitd: Math.floor(a / 86400), rise: A.Math.pMod(a - b, 86400), rised: Math.floor((a - b) / 86400), set: A.Math.pMod(a + b, 86400), setd: Math.floor((a + b) / 86400) };
+    },
+    times: function (a, b, c, d, e) {
+        function f(e) {
+            var f = A.Math.pMod(d + (360.985647 * e) / 360, 86400), g = e + b, h = A.Interp.interpolateX(l, g);
+            g = A.Interp.interpolateX(m, g);
+            f = (f * Math.PI) / 43200 - (a.lng + h);
+            h = Math.cos(g);
+            return A.Math.pMod(e + (((p * Math.sin(g) + n * h * Math.cos(f) - c) / (h * n * Math.sin(f))) * 43200) / Math.PI, 86400);
+        }
+        var g = A.Rise.approxTimes(a, c, d, e[1]);
+        if (!g)
+            return null;
+        var l = A.Interp.newLen3(-86400, 86400, [e[0].ra, e[1].ra, e[2].ra]), m = A.Interp.newLen3(-86400, 86400, [e[0].dec, e[1].dec, e[2].dec]);
+        e = d + (360.985647 * g.transit) / 360;
+        var h = A.Interp.interpolateX(l, g.transit + b);
+        g.transit = A.Math.pMod(g.transit - (e - (43200 * (a.lng + h)) / Math.PI), 86400);
+        var p = Math.sin(a.lat), n = Math.cos(a.lat);
+        g.rise = f(g.rise);
+        g.set = f(g.set);
+        return g;
+    },
+};
+A.Sidereal = {
+    iau82: [24110.54841, 8640184.812866, 0.093104, 6.2e-6],
+    jdToCFrac: function (a) {
+        a = A.Math.modF(a.jd + 0.5);
+        return [new A.JulianDay(a[0] - 0.5).jdJ2000Century(), a[1]];
+    },
+    mean: function (a) {
+        return A.Math.pMod(A.Sidereal._mean(a), 86400);
+    },
+    _mean: function (a) {
+        a = A.Sidereal._mean0UT(a);
+        return a.s + 86636.55536784 * a.f;
+    },
+    _meanInRA: function (a) {
+        a = A.Sidereal._mean0UT(a);
+        return (a.s * Math.PI) / 43200 + 2.0054758187 * a.f * Math.PI;
+    },
+    mean0UT: function (a) {
+        a = A.Sidereal._mean0UT(a);
+        return A.Math.pMod(a.s, 86400);
+    },
+    _mean0UT: function (a) {
+        a = A.Sidereal.jdToCFrac(a);
+        return { s: A.Math.horner(a[0], A.Sidereal.iau82), f: a[1] };
+    },
+    apparentInRa: function (a) {
+        var b = A.Sidereal._meanInRA(a);
+        a = A.Nutation.nutationInRA(a);
+        return A.Math.pMod(b + a, 2 * Math.PI);
+    },
+    apparent: function (a) {
+        var b = A.Sidereal._mean(a);
+        a = (648e3 * A.Nutation.nutationInRA(a)) / Math.PI / 15;
+        return A.Math.pMod(b + a, 86400);
+    },
+    apparentLocal: function (a, b) {
+        a = A.Sidereal.apparent(a);
+        return A.Math.pMod(a - (43200 * b) / Math.PI, 86400);
+    },
+    apparent0UT: function (a) {
+        var b = A.Math.modF(a.jd + 0.5);
+        a = A.Math.modF(a.jde + 0.5);
+        b = A.Math.horner((b[0] - 0.5 - A.J2000) / 36525, A.Sidereal.iau82) + 86636.55536784 * b[1];
+        a = (648e3 * A.Nutation.nutationInRA(new A.JulianDay(a[0]))) / Math.PI / 15;
+        return A.Math.pMod(b + a, 86400);
+    },
+};
+A.Solar = {
+    earthsunDelta: 149597870,
+    apparentEquatorial: function (a) {
+        var b = a.jdJ2000Century(), c = A.Solar.node(b);
+        b = A.Solar.apparentLongitude(b, c);
+        a = A.Nutation.meanObliquityLaskar(a) + ((0.00256 * Math.PI) / 180) * Math.cos(c);
+        c = Math.sin(b);
+        return new A.EqCoord(Math.atan2(Math.cos(a) * c, Math.cos(b)), Math.asin(Math.sin(a) * c));
+    },
+    apparentTopocentric: function (a, b, c) {
+        var d = A.Solar.apparentEquatorial(a), e = A.Globe.parallaxConstants(b.lat, b.h);
+        c || (c = A.Sidereal.apparentInRa(a));
+        return A.Parallax.topocentric2(d, A.Parallax.earthsunParallax, e.rhoslat, e.rhoclat, b.lng, c);
+    },
+    topocentricPosition: function (a, b, c) {
+        var d = A.Sidereal.apparentInRa(a);
+        a = A.Solar.apparentTopocentric(a, b, d);
+        b = A.Coord.eqToHz(a, b, d);
+        !0 === c && (b.alt += A.Refraction.bennett2(b.alt));
+        return { hz: b, eq: a };
+    },
+    approxTransit: function (a, b) {
+        a = a.startOfDay();
+        return A.Rise.approxTransit(b, A.Sidereal.apparent0UT(a), A.Solar.apparentTopocentric(a, b));
+    },
+    approxTimes: function (a, b) {
+        var c = a.startOfDay();
+        a = A.Solar.apparentTopocentric(c, b);
+        var d = A.Rise.stdh0Solar;
+        c = A.Sidereal.apparent0UT(c);
+        return A.Rise.approxTimes(b, d, c, a);
+    },
+    times: function (a, b) {
+        a = a.startOfDay();
+        var c = A.Solar.apparentTopocentric(new A.JulianDay(a.jd - 1, a.deltaT), b), d = A.Solar.apparentTopocentric(a, b), e = A.Solar.apparentTopocentric(new A.JulianDay(a.jd + 1, a.deltaT), b), f = A.Rise.stdh0Solar, g = A.Sidereal.apparent0UT(a);
+        return A.Rise.times(b, a.deltaT, f, g, [c, d, e]);
+    },
+    meanAnomaly: function (a) {
+        return (A.Math.horner(a, [357.52911, 35999.05029, -1.537e-4]) * Math.PI) / 180;
+    },
+    trueLongitude: function (a) {
+        var b = (A.Math.horner(a, [280.46646, 36000.76983, 3.032e-4]) * Math.PI) / 180, c = A.Solar.meanAnomaly(a);
+        a = ((A.Math.horner(a, [1.914602, -0.004817, -1.4e-5]) * Math.sin(c) + (0.019993 - 1.01e-4 * a) * Math.sin(2 * c) + 2.89e-4 * Math.sin(3 * c)) * Math.PI) / 180;
+        return { s: A.Math.pMod(b + a, 2 * Math.PI), v: A.Math.pMod(c + a, 2 * Math.PI) };
+    },
+    apparentLongitude: function (a, b) {
+        b || (b = A.Solar.node(a));
+        return A.Solar.trueLongitude(a).s - (0.00569 * Math.PI) / 180 - ((0.00478 * Math.PI) / 180) * Math.sin(b);
+    },
+    node: function (a) {
+        return ((125.04 - 1934.136 * a) * Math.PI) / 180;
+    },
+};
+A.Solistice = {
+    march: function (a) {
+        return 1e3 > a ? A.Solistice._eq(a, A.Solistice.mc0) : A.Solistice._eq(a - 2e3, A.Solistice.mc2);
+    },
+    june: function (a) {
+        return 1e3 > a ? A.Solistice._eq(a, A.Solistice.jc0) : A.Solistice._eq(a - 2e3, A.Solistice.jc2);
+    },
+    september: function (a) {
+        return 1e3 > a ? A.Solistice._eq(a, A.Solistice.sc0) : A.Solistice._eq(a - 2e3, A.Solistice.sc2);
+    },
+    december: function (a) {
+        return 1e3 > a ? A.Solistice._eq(a, A.Solistice.dc0) : A.Solistice._eq(a - 2e3, A.Solistice.dc2);
+    },
+    _eq: function (a, b) {
+        a = A.Math.horner(0.001 * a, b);
+        b = (a - A.J2000) / A.JulianCentury;
+        var c = ((35999.373 * Math.PI) / 180) * b - (2.47 * Math.PI) / 180;
+        c = 1 + 0.0334 * Math.cos(c) + 7e-4 * Math.cos(2 * c);
+        for (var d = 0, e = this.terms.length - 1; 0 <= e; e--) {
+            var f = this.terms[e];
+            d += f[0] * Math.cos(((f[1] + f[2] * b) * Math.PI) / 180);
+        }
+        return a + (1e-5 * d) / c;
+    },
+    mc0: [1721139.29189, 365242.1374, 0.06134, 0.00111, -7.1e-4],
+    jc0: [1721233.25401, 365241.72562, -0.05232, 0.00907, 2.5e-4],
+    sc0: [1721325.70455, 365242.49558, -0.11677, -0.00297, 7.4e-4],
+    dc0: [1721414.39987, 365242.88257, -0.00769, -0.00933, -6e-5],
+    mc2: [2451623.80984, 365242.37404, 0.05169, -0.00411, -5.7e-4],
+    jc2: [2451716.56767, 365241.62603, 0.00325, 0.00888, -3e-4],
+    sc2: [2451810.21715, 365242.01767, -0.11575, 0.00337, 7.8e-4],
+    dc2: [2451900.05952, 365242.74049, -0.06223, -0.00823, 3.2e-4],
+    terms: [
+        [485, 324.96, 1934.136],
+        [203, 337.23, 32964.467],
+        [199, 342.08, 20.186],
+        [182, 27.85, 445267.112],
+        [156, 73.14, 45036.886],
+        [136, 171.52, 22518.443],
+        [77, 222.54, 65928.934],
+        [74, 296.72, 3034.906],
+        [70, 243.58, 9037.513],
+        [58, 119.81, 33718.147],
+        [52, 297.17, 150.678],
+        [50, 21.02, 2281.226],
+        [45, 247.54, 29929.562],
+        [44, 325.15, 31555.956],
+        [29, 60.93, 4443.417],
+        [18, 155.12, 67555.328],
+        [17, 288.79, 4562.452],
+        [16, 198.04, 62894.029],
+        [14, 199.76, 31436.921],
+        [12, 95.39, 14577.848],
+        [12, 287.11, 31931.756],
+        [12, 320.81, 34777.259],
+        [9, 227.73, 1222.114],
+        [8, 15.45, 16859.074],
+    ],
+};
+
+
+
+/***/ }),
+
+/***/ "./src/js/timeManager/transforms.ts":
+/*!******************************************!*\
+  !*** ./src/js/timeManager/transforms.ts ***!
+  \******************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "getDayOfYear": () => (/* binding */ getDayOfYear),
+/* harmony export */   "jday": () => (/* binding */ jday),
+/* harmony export */   "localToZulu": () => (/* binding */ localToZulu),
+/* harmony export */   "dateFromJday": () => (/* binding */ dateFromJday),
+/* harmony export */   "dateToLocalInIso": () => (/* binding */ dateToLocalInIso)
+/* harmony export */ });
+/* harmony import */ var _lib_constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../lib/constants */ "./src/js/lib/constants.ts");
+/* harmony import */ var _lib_external_dateFormat__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/external/dateFormat */ "./src/js/lib/external/dateFormat.js");
+
+
+const getDayOfYear = (date) => {
+    date = date || new Date();
+    const _isLeapYear = (date) => {
+        const year = date.getFullYear();
+        if ((year & 3) !== 0)
+            return false;
+        return year % 100 !== 0 || year % 400 === 0;
+    };
+    const dayCount = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+    const mn = date.getMonth();
+    const dn = date.getUTCDate();
+    let dayOfYear = dayCount[mn] + dn;
+    if (mn > 1 && _isLeapYear(date))
+        dayOfYear++;
+    return dayOfYear;
+};
+const jday = (year, mon, day, hr, minute, sec) => {
+    if (!year) {
+        const now = new Date();
+        const jDayStart = new Date(now.getFullYear(), 0, 0);
+        const jDayDiff = now.getDate() - jDayStart.getDate();
+        return Math.floor(jDayDiff / _lib_constants__WEBPACK_IMPORTED_MODULE_0__.MILLISECONDS_PER_DAY);
+    }
+    else {
+        return 367.0 * year - Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) + Math.floor((275 * mon) / 9.0) + day + 1721013.5 + ((sec / 60.0 + minute) / 60.0 + hr) / 24.0;
+    }
+};
+const localToZulu = (date) => {
+    const dateStr = (0,_lib_external_dateFormat__WEBPACK_IMPORTED_MODULE_1__.dateFormat)(date, 'isoDateTime', true);
+    const dateArr = dateStr.split(' ');
+    date = new Date(dateArr[0] + 'T' + dateArr[1] + 'Z');
+    return date;
+};
+const dateFromJday = (year, day) => {
+    const date = new Date(year, 0); // initialize a date in `year-01-01`
+    return new Date(date.setDate(day));
+};
+const dateToLocalInIso = (date) => {
+    const offsetMs = date.getTimezoneOffset() * 60 * 1000;
+    const msLocal = date.getTime() - offsetMs;
+    const dateLocal = new Date(msLocal);
+    let iso = dateLocal.toISOString();
+    iso = iso.replace('T', ' ');
+    const isoLocal = iso.slice(0, 19) + ' ' + dateLocal.toString().slice(25, 31);
+    return isoLocal;
+};
+
+
+/***/ }),
+
+/***/ "./src/js/webworker/positionCalculations.ts":
+/*!**************************************************!*\
+  !*** ./src/js/webworker/positionCalculations.ts ***!
+  \**************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "lookAnglesToEcf": () => (/* binding */ lookAnglesToEcf),
+/* harmony export */   "propTime": () => (/* binding */ propTime),
+/* harmony export */   "checkSunExclusion": () => (/* binding */ checkSunExclusion)
+/* harmony export */ });
+/* harmony import */ var satellite_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! satellite.js */ "./node_modules/satellite.js/dist/satellite.es.js");
+/* harmony import */ var _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../api/SpaceObjectType */ "./src/js/api/SpaceObjectType.ts");
+/* harmony import */ var _lib_constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../lib/constants */ "./src/js/lib/constants.ts");
+/* harmony import */ var _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../lib/external/meuusjs */ "./src/js/lib/external/meuusjs.ts");
+/* harmony import */ var _positionCruncher__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./positionCruncher */ "./src/js/webworker/positionCruncher.ts");
+
+
+
+
+
+// TODO: create a way to determine if observerGd is using old satellite.js naming or lon,lat,alt
+// so that we can import satMath.ts instead
+const lookAnglesToEcf = (azDeg, elDeg, rng, obsLat, obsLong, obsAlt) => {
+    // site ecef in meters
+    const geodeticCoords = {
+        latitude: obsLat,
+        longitude: obsLong,
+        height: obsAlt,
+    };
+    const ecf = satellite_js__WEBPACK_IMPORTED_MODULE_0__.geodeticToEcf(geodeticCoords);
+    // some needed calculations
+    const slat = Math.sin(obsLat);
+    const slon = Math.sin(obsLong);
+    const clat = Math.cos(obsLat);
+    const clon = Math.cos(obsLong);
+    const azRad = _lib_constants__WEBPACK_IMPORTED_MODULE_2__.DEG2RAD * azDeg;
+    const elRad = _lib_constants__WEBPACK_IMPORTED_MODULE_2__.DEG2RAD * elDeg;
+    // az,el,range to sez convertion
+    const south = -rng * Math.cos(elRad) * Math.cos(azRad);
+    const east = rng * Math.cos(elRad) * Math.sin(azRad);
+    const zenith = rng * Math.sin(elRad);
+    const x = slat * clon * south + -slon * east + clat * clon * zenith + ecf.x;
+    const y = slat * slon * south + clon * east + clat * slon * zenith + ecf.y;
+    const z = -clat * south + slat * zenith + ecf.z;
+    return { x, y, z };
+};
+/* Returns Current Propagation Time */
+const propTime = (dynamicOffsetEpoch, staticOffset, propRate) => {
+    const now = new Date();
+    const dynamicPropOffset = now.getTime() - dynamicOffsetEpoch;
+    now.setTime(dynamicOffsetEpoch + staticOffset + dynamicPropOffset * propRate);
+    return now;
+};
+const checkSunExclusion = (sensor, j, gmst, now) => {
+    var jdo = new _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.JulianDay(j); // now
+    var coord = _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.EclCoordfromWgs84(0, 0, 0);
+    var coord2 = _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.EclCoordfromWgs84(sensor.observerGd.latitude * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG, sensor.observerGd.longitude * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG, sensor.observerGd.height);
+    // AZ / EL Calculation
+    var tp = _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.Solar.topocentricPosition(jdo, coord, false);
+    var tpRel = _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.Solar.topocentricPosition(jdo, coord2, false);
+    const sunAz = tp.hz.az * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG + (180 % 360);
+    const sunEl = (tp.hz.alt * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG) % 360;
+    const sunElRel = (tpRel.hz.alt * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG) % 360;
+    // Range Calculation
+    var T = new _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.JulianDay(_lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.JulianDay.dateToJD(now)).jdJ2000Century();
+    let sunG = (_lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.Solar.meanAnomaly(T) * 180) / _lib_constants__WEBPACK_IMPORTED_MODULE_2__.PI;
+    sunG = sunG % 360.0;
+    const sunR = 1.00014 - 0.01671 * Math.cos(sunG) - 0.00014 * Math.cos(2 * sunG);
+    const sunRange = (sunR * 149597870700) / 1000; // au to km conversion
+    // RAE to ECI
+    const sunECI = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(lookAnglesToEcf(sunAz, sunEl, sunRange, 0, 0, 0), gmst);
+    return sensor.observerGd !== _positionCruncher__WEBPACK_IMPORTED_MODULE_4__.defaultGd && (sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.OPTICAL || sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.OBSERVER) && sunElRel > -6 ? [true, sunECI] : [false, sunECI];
+};
+
+
+/***/ }),
+
+/***/ "./src/js/webworker/positionCruncher.ts":
+/*!**********************************************!*\
+  !*** ./src/js/webworker/positionCruncher.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "defaultGd": () => (/* binding */ defaultGd)
+/* harmony export */ });
+/* harmony import */ var _app_js_lib_suncalc_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @app/js/lib/suncalc.js */ "./src/js/lib/suncalc.js");
+/* harmony import */ var satellite_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! satellite.js */ "./node_modules/satellite.js/dist/satellite.es.js");
+/* harmony import */ var _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../api/SpaceObjectType */ "./src/js/api/SpaceObjectType.ts");
+/* harmony import */ var _lib_constants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../lib/constants */ "./src/js/lib/constants.ts");
+/* harmony import */ var _lib_external_numeric__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../lib/external/numeric */ "./src/js/lib/external/numeric.js");
+/* harmony import */ var _timeManager_transforms__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../timeManager/transforms */ "./src/js/timeManager/transforms.ts");
+/* harmony import */ var _positionCalculations__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./positionCalculations */ "./src/js/webworker/positionCalculations.ts");
+/**
+ * /*! /////////////////////////////////////////////////////////////////////////////
+ *
+ * main.js is the primary javascript file for keeptrack.space. It manages all user
+ * interaction with the application.
+ * http://keeptrack.space
+ *
+ * @Copyright (C) 2016-2021 Theodore Kruczek
+ * @Copyright (C) 2020 Heather Kruczek
+ * @Copyright (C) 2015-2016, James Yoder
+ *
+ * Original source code released by James Yoder at https://github.com/jeyoder/ThingsInSpace/
+ * under the MIT License. Please reference http://keeptrack.space/license/thingsinspace.txt
+ *
+ * KeepTrack is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation, either version 3 of the License, or (at your option) any later version.
+ *
+ * KeepTrack is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License along with
+ * KeepTrack. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * /////////////////////////////////////////////////////////////////////////////
+ */
+
+
+
+
+
+
+
+const EMPTY_FLOAT32_ARRAY = new Float32Array(0);
+const EMPTY_INT8_ARRAY = new Int8Array(0);
+/** ARRAYS */
+const satCache = []; // Cache of Satellite Data from TLE.json and Static Data from variable.js
+let satPos = EMPTY_FLOAT32_ARRAY; // Array of current Satellite and Static Positions
+let satVel = EMPTY_FLOAT32_ARRAY; // Array of current Satellite and Static Velocities
+let satInView = EMPTY_INT8_ARRAY; // Array of booleans showing if current Satellite is in view of Sensor
+let satInSun = EMPTY_INT8_ARRAY; // Array of booleans showing if current Satellite is in sunlight
+let sensorMarkerArray = [0]; // Array of Markers used to show sensor fence and FOV
+var satelliteSelected = [-1]; // Array used to determine which satellites are selected
+/** TIME VARIABLES */
+let globalPropagationRate = 1000; // Limits how often the propagation loop runs
+let globalPropagationRateMultiplier = 1; // Used to slow down propagation rate on slow computers
+let propagationRunning = false; // Prevent Propagation From Running Twice
+// let timeSyncRunning = false; // Prevent Time Sync Loop From Running Twice
+var divisor = 1; // When running at high speeds, allow faster propagation
+let dynamicOffsetEpoch = Date.now();
+let staticOffset = 0;
+var propRate = 1; // vars us run time faster (or slower) than normal
+// var propChangeTime = Date.now(); // vars us run time faster (or slower) than normal
+/** Settings */
+var selectedSatFOV = 90; // FOV in Degrees
+var isShowFOVBubble = false; // Flag for if FOV bubble is shown
+var isShowSurvFence = false; // Flag for if fence markers are shown
+var isResetFOVBubble = false;
+var isShowSatOverfly = false;
+var isResetSatOverfly = false;
+var isMultiSensor = false;
+var isIgnoreNonRadar = true;
+var isSunlightView = false;
+var isLowPerf = false;
+var isResetMarker = false;
+var isResetInView = false;
+let fieldOfViewSetLength;
+let len;
+/** OBSERVER VARIABLES */
+var mSensor = [];
+const defaultGd = {
+    latitude: null,
+    longitude: 0,
+    height: 0,
+};
+const emptySensor = {
+    observerGd: {
+        latitude: null,
+        longitude: 0,
+        height: 0,
+    },
+    alt: null,
+    country: '',
+    lat: null,
+    lon: null,
+    name: '',
+    obsmaxaz: 0,
+    obsmaxel: 0,
+    obsmaxrange: 0,
+    obsminaz: 0,
+    obsminel: 0,
+    obsminrange: 0,
+    shortName: '',
+    staticNum: 0,
+    sun: '',
+    volume: false,
+    zoom: '',
+};
+let sensor = emptySensor;
+// Handles Incomming Messages to sat-cruncher from main thread
+onmessage = function (m) {
+    if (m.data.isSunlightView) {
+        isSunlightView = m.data.isSunlightView;
+        // if (isSunlightView == false) isResetSunlight = true;
+    }
+    if (m.data.satelliteSelected) {
+        satelliteSelected = m.data.satelliteSelected;
+        if (satelliteSelected[0] === -1) {
+            isResetSatOverfly = true;
+            if (isResetMarker == false)
+                isResetMarker = true;
+        }
+    }
+    if (m.data.isSlowCPUModeEnabled) {
+        globalPropagationRate = 2000;
+    }
+    if (m.data.isLowPerf) {
+        isLowPerf = true;
+    }
+    // //////////////////////////////
+    // SAT OVERFLY AND FOV BUBBLE
+    // /////////////////////////////
+    if (m.data.fieldOfViewSetLength) {
+        fieldOfViewSetLength = m.data.fieldOfViewSetLength;
+    }
+    if (m.data.isShowSatOverfly === 'enable') {
+        isShowSatOverfly = true;
+        selectedSatFOV = m.data.selectedSatFOV;
+    }
+    if (m.data.isShowSatOverfly === 'reset') {
+        isResetSatOverfly = true;
+        isShowSatOverfly = false;
+        if (isResetMarker == false)
+            isResetMarker = true;
+    }
+    if (m.data.isShowFOVBubble === 'enable') {
+        isShowFOVBubble = true;
+    }
+    if (m.data.isShowFOVBubble === 'reset') {
+        isResetFOVBubble = true;
+        isShowFOVBubble = false;
+        if (isResetMarker == false)
+            isResetMarker = true;
+    }
+    if (m.data.isShowSurvFence === 'enable') {
+        isShowSurvFence = true;
+        if (isResetMarker == false)
+            isResetMarker = true;
+    }
+    if (m.data.isShowSurvFence === 'disable') {
+        isShowSurvFence = false;
+        if (isResetMarker == false)
+            isResetMarker = true;
+    }
+    // ////////////////////////////////
+    if (m.data.multiSensor) {
+        isMultiSensor = true;
+        mSensor = m.data.sensor;
+        sensor = m.data.sensor;
+        globalPropagationRateMultiplier = 2;
+        if (isResetInView == false)
+            isResetInView = true;
+    }
+    else if (m.data.sensor) {
+        sensor = m.data.sensor[0];
+        if (m.data.setlatlong) {
+            if (m.data.resetObserverGd) {
+                globalPropagationRateMultiplier = 1;
+                sensor.observerGd = defaultGd;
+                mSensor = [];
+                if (isResetInView == false)
+                    isResetInView = true;
+            }
+            else {
+                globalPropagationRateMultiplier = 2;
+                // satellite.js requires this format - DONT use lat,lon,alt
+                // and we MUST do it (for now) because main thread is in lat,lon,alt
+                sensor.observerGd = {
+                    longitude: m.data.sensor[0].lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
+                    latitude: m.data.sensor[0].lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
+                    height: parseFloat(m.data.sensor[0].alt),
+                };
+                if (isResetInView == false)
+                    isResetInView = true;
+            }
+        }
+        isMultiSensor = false;
+    }
+    // const oldPropRate = propRate;
+    switch (m.data.typ) {
+        case 'offset':
+            staticOffset = m.data.staticOffset;
+            dynamicOffsetEpoch = m.data.dynamicOffsetEpoch;
+            propRate = m.data.propRate;
+            // Changing this to 0.1 caused issues...
+            divisor = 1;
+            return;
+        case 'satdata':
+            var satData = JSON.parse(m.data.dat);
+            len = satData.length;
+            var i = 0;
+            var extraData = [];
+            var satrec;
+            while (i < len) {
+                const extra = {
+                    lowAlt: null,
+                    inclination: null,
+                    eccentricity: null,
+                    raan: null,
+                    argPe: null,
+                    meanMotion: null,
+                    semiMajorAxis: null,
+                    semiMinorAxis: null,
+                    apogee: null,
+                    perigee: null,
+                    period: null,
+                };
+                satrec = null;
+                if (satData[i].static || satData[i].missile || satData[i].isRadarData) {
+                    satrec = satData[i];
+                    delete satrec['id'];
+                    extraData.push(extra);
+                    satCache.push(satrec);
+                    i++;
+                    continue;
+                }
+                else {
+                    satrec = satellite_js__WEBPACK_IMPORTED_MODULE_1__.twoline2satrec(
+                    // perform and store sat init calcs
+                    satData[i].TLE1, satData[i].TLE2);
+                    extra.lowAlt = satrec.isimp;
+                    extra.inclination = satrec.inclo; // rads
+                    extra.eccentricity = satrec.ecco;
+                    extra.raan = satrec.nodeo; // rads
+                    extra.argPe = satrec.argpo; // rads
+                    extra.meanMotion = (satrec.no * 60 * 24) / _lib_constants__WEBPACK_IMPORTED_MODULE_3__.TAU; // convert rads/minute to rev/day
+                    extra.semiMajorAxis = Math.pow(8681663.653 / extra.meanMotion, 2 / 3);
+                    extra.semiMinorAxis = extra.semiMajorAxis * Math.sqrt(1 - Math.pow(extra.eccentricity, 2));
+                    extra.apogee = extra.semiMajorAxis * (1 + extra.eccentricity) - _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH;
+                    satrec.apogee = extra.apogee;
+                    extra.perigee = extra.semiMajorAxis * (1 - extra.eccentricity) - _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH;
+                    extra.period = 1440.0 / extra.meanMotion;
+                    extraData.push(extra);
+                    delete satrec['id'];
+                    satCache.push(satrec);
+                    i++;
+                }
+            }
+            satPos = new Float32Array(len * 3);
+            satVel = new Float32Array(len * 3);
+            satInView = new Int8Array(len);
+            satInSun = new Int8Array(len);
+            postMessage({
+                extraData: JSON.stringify(extraData),
+            });
+            satData = null;
+            break;
+        case 'satEdit':
+            satrec = satellite_js__WEBPACK_IMPORTED_MODULE_1__.twoline2satrec(
+            // replace old TLEs
+            m.data.TLE1, m.data.TLE2);
+            satCache[m.data.id] = Object.assign(Object.assign({}, satCache[m.data.id]), satrec);
+            extraData = [];
+            // eslint-disable-next-line no-case-declarations
+            const extra = {
+                lowAlt: null,
+                inclination: null,
+                eccentricity: null,
+                raan: null,
+                argPe: null,
+                meanMotion: null,
+                semiMajorAxis: null,
+                semiMinorAxis: null,
+                apogee: null,
+                perigee: null,
+                period: null,
+                TLE1: null,
+                TLE2: null,
+            };
+            // keplerian elements
+            extra.inclination = satrec.inclo; // rads
+            extra.eccentricity = satrec.ecco;
+            extra.raan = satrec.nodeo; // rads
+            extra.argPe = satrec.argpo; // rads
+            extra.meanMotion = (satrec.no * 60 * 24) / (2 * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.PI); // convert rads/minute to rev/day
+            // fun other data
+            extra.semiMajorAxis = Math.pow(8681663.653 / extra.meanMotion, 2 / 3);
+            extra.semiMinorAxis = extra.semiMajorAxis * Math.sqrt(1 - Math.pow(extra.eccentricity, 2));
+            extra.apogee = extra.semiMajorAxis * (1 + extra.eccentricity) - _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH;
+            extra.perigee = extra.semiMajorAxis * (1 - extra.eccentricity) - _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH;
+            extra.period = 1440.0 / extra.meanMotion;
+            extra.TLE1 = m.data.TLE1;
+            extra.TLE2 = m.data.TLE2;
+            extraData.push(extra);
+            postMessage({
+                extraUpdate: true,
+                extraData: JSON.stringify(extraData),
+                satId: m.data.id,
+            });
+            break;
+        case 'newMissile':
+            satCache[m.data.id] = m.data;
+            break;
+        case 'timeSync':
+            // propChangeTime = new Date(m.data.time);
+            break;
+        default:
+            console.warn('Unknown message typ: ' + m.data.typ);
+            break;
+    }
+    // Don't start before getting satData!
+    if (!propagationRunning && m.data.typ === 'satdata') {
+        len = -1; // propagteCruncher needs to start at -1 not 0
+        propagateCruncher();
+        propagationRunning = true;
+    }
+    // if (!timeSyncRunning) {
+    //   timeSyncLoop();
+    // }
+};
+// const timeSyncLoop = () => {
+//   const postMessageArray = {
+//     typ: 'timeSync',
+//     time: propTime().getTime(),
+//     propRate: propRate,
+//     staticOffset: staticOffset,
+//     dynamicOffsetEpoch: dynamicOffsetEpoch,
+//   };
+//   postMessage(postMessageArray);
+//   setTimeout(timeSyncLoop, 250);
+// };
+// Prevent Memory Leak by declaring variables outside of function
+var propagateCruncher = () => {
+    const now = (0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.propTime)(dynamicOffsetEpoch, staticOffset, propRate);
+    const j = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_5__.jday)(now.getUTCFullYear(), now.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+    now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()) +
+        now.getUTCMilliseconds() * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.MILLISECONDS_PER_DAY;
+    const gmst = satellite_js__WEBPACK_IMPORTED_MODULE_1__.gstime(j);
+    let isSunExclusion = false;
+    let sunECI = { x: 0, y: 0, z: 0 };
+    if (isSunlightView && !isMultiSensor) {
+        [isSunExclusion, sunECI] = (0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.checkSunExclusion)(sensor, j, gmst, now);
+    }
+    const j2 = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_5__.jday)(now.getUTCFullYear(), now.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+    now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds() + 1) +
+        now.getUTCMilliseconds() * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.MILLISECONDS_PER_DAY;
+    const gmstNext = satellite_js__WEBPACK_IMPORTED_MODULE_1__.gstime(j2);
+    len = satCache.length - 1;
+    if ((!isResetSatOverfly && !isShowSatOverfly && !isResetFOVBubble && !isShowFOVBubble) || isLowPerf) {
+        len -= fieldOfViewSetLength;
+    }
+    let i = -1;
+    let positionEcf, lookangles, azimuth, elevation, rangeSat;
+    let x, y, z;
+    let cosLat, sinLat, cosLon, sinLon;
+    let curMissivarTime;
+    let s, m, tLen, t;
+    let pv;
+    let sat;
+    let isSensorChecked = false;
+    let az, el, rng, pos;
+    let q, q2;
+    let semiDiamEarth, semiDiamSun, theta;
+    let starPosition;
+    let snum;
+    let lat, long;
+    let satSelPosX, satSelPosY, satSelPosZ, satSelPosEcf, satSelPos, satSelGeodetic, satHeight, satSelPosEarth, deltaLat, deltaLatInt, deltaLon, deltaLonInt;
+    while (i < len) {
+        i++; // At the beginning so i starts at 0
+        sat = satCache[i];
+        if (sat.satnum) {
+            // Skip reentries
+            if (sat.skip)
+                continue;
+            m = (j - sat.jdsatepoch) * 1440.0; // 1440 = minutes_per_day
+            pv = satellite_js__WEBPACK_IMPORTED_MODULE_1__.sgp4(sat, m);
+            try {
+                satPos[i * 3] = pv.position.x;
+                satPos[i * 3 + 1] = pv.position.y;
+                satPos[i * 3 + 2] = pv.position.z;
+                satVel[i * 3] = pv.velocity.x;
+                satVel[i * 3 + 1] = pv.velocity.y;
+                satVel[i * 3 + 2] = pv.velocity.z;
+                // Make sure that objects with an imprecise orbit or an old elset
+                // are not failing to propagate
+                if (sat.isimp || m / 1440 > 30) {
+                    const a = 6378.137;
+                    const b = 6356.7523142;
+                    const R = Math.sqrt(pv.position.x * pv.position.x + pv.position.y * pv.position.y);
+                    const f = (a - b) / a;
+                    const e2 = 2 * f - f * f;
+                    let lon = Math.atan2(pv.position.y, pv.position.x) - gmst;
+                    while (lon < -_lib_constants__WEBPACK_IMPORTED_MODULE_3__.PI) {
+                        lon += _lib_constants__WEBPACK_IMPORTED_MODULE_3__.TAU;
+                    }
+                    while (lon > _lib_constants__WEBPACK_IMPORTED_MODULE_3__.PI) {
+                        lon -= _lib_constants__WEBPACK_IMPORTED_MODULE_3__.TAU;
+                    }
+                    const kmax = 20;
+                    let k = 0;
+                    let lat = Math.atan2(pv.position.z, Math.sqrt(pv.position.x * pv.position.x + pv.position.y * pv.position.y));
+                    let C;
+                    while (k < kmax) {
+                        C = 1 / Math.sqrt(1 - e2 * (Math.sin(lat) * Math.sin(lat)));
+                        lat = Math.atan2(pv.position.z + a * C * e2 * Math.sin(lat), R);
+                        k += 1;
+                    }
+                    const alt = R / Math.cos(lat) - a * C;
+                    if (alt > sat.apogee + 1000) {
+                        throw new Error('Impossible orbit');
+                    }
+                }
+                // Skip Calculating Lookangles if No Sensor is Selected
+                if (!isSensorChecked) {
+                    if (sensor.observerGd !== defaultGd && !isMultiSensor) {
+                        positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToEcf(pv.position, gmst); // pv.position is called positionEci originally
+                        lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(sensor.observerGd, positionEcf);
+                        azimuth = lookangles.azimuth;
+                        elevation = lookangles.elevation;
+                        rangeSat = lookangles.rangeSat;
+                    }
+                    else {
+                        isSensorChecked = true;
+                    }
+                }
+            }
+            catch (e) {
+                // This is probably a reentry and should be skipped from now on.
+                satCache[i].skip = true;
+                satPos[i * 3] = 0;
+                satPos[i * 3 + 1] = 0;
+                satPos[i * 3 + 2] = 0;
+                satVel[i * 3] = 0;
+                satVel[i * 3 + 1] = 0;
+                satVel[i * 3 + 2] = 0;
+                positionEcf = 0;
+                lookangles = 0;
+                azimuth = 0;
+                elevation = 0;
+                rangeSat = 0;
+            }
+            satInView[i] = 0; // 0 = FALSE - Default in case no sensor selected
+            satInSun[i] = 2; // Default in case
+            if (isSunlightView) {
+                semiDiamEarth = Math.asin(_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH / Math.sqrt(Math.pow(-satPos[i * 3], 2) + Math.pow(-satPos[i * 3 + 1], 2) + Math.pow(-satPos[i * 3 + 2], 2))) * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
+                semiDiamSun = Math.asin(_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_SUN / Math.sqrt(Math.pow(-satPos[i * 3] + sunECI.x, 2) + Math.pow(-satPos[i * 3 + 1] + sunECI.y, 2) + Math.pow(-satPos[i * 3 + 2] + sunECI.z, 2))) * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
+                // Angle between earth and sun
+                theta =
+                    Math.acos(_lib_external_numeric__WEBPACK_IMPORTED_MODULE_4__.numeric.dot([-satPos[i * 3], -satPos[i * 3 + 1], -satPos[i * 3 + 2]], [-satPos[i * 3] + sunECI.x, -satPos[i * 3 + 1] + sunECI.y, -satPos[i * 3 + 2] + sunECI.z]) /
+                        (Math.sqrt(Math.pow(-satPos[i * 3], 2) + Math.pow(-satPos[i * 3 + 1], 2) + Math.pow(-satPos[i * 3 + 2], 2)) *
+                            Math.sqrt(Math.pow(-satPos[i * 3] + sunECI.x, 2) + Math.pow(-satPos[i * 3 + 1] + sunECI.y, 2) + Math.pow(-satPos[i * 3 + 2] + sunECI.z, 2)))) * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
+                if (semiDiamEarth > semiDiamSun && theta < semiDiamEarth - semiDiamSun) {
+                    satInSun[i] = 0; // Umbral
+                }
+                // var isPenumbral = false;
+                if (Math.abs(semiDiamEarth - semiDiamSun) < theta && theta < semiDiamEarth + semiDiamSun) {
+                    satInSun[i] = 1; // Penumbral
+                }
+                if (semiDiamSun > semiDiamEarth) {
+                    satInSun[i] = 1; // Penumbral
+                }
+                if (theta < semiDiamSun - semiDiamEarth) {
+                    satInSun[i] = 1; // Penumbral
+                }
+            }
+            if (sensor.observerGd !== defaultGd && !isSunExclusion) {
+                if (isMultiSensor) {
+                    for (s = 0; s < mSensor.length; s++) {
+                        // Skip satellites in the sun if you are an optical sensor
+                        if (!(sensor.type == _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.OPTICAL && satInSun[i] == 0)) {
+                            if (satInView[i])
+                                break;
+                            sensor = mSensor[s];
+                            // satellite.js requires this format - DONT use lon,lat,alt
+                            sensor.observerGd = {
+                                longitude: sensor.lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
+                                latitude: sensor.lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
+                                height: sensor.alt * 1, // Convert from string
+                            };
+                            try {
+                                positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToEcf(pv.position, gmst); // pv.position is called positionEci originally
+                                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(sensor.observerGd, positionEcf);
+                            }
+                            catch (e) {
+                                continue;
+                            }
+                            azimuth = lookangles.azimuth;
+                            elevation = lookangles.elevation;
+                            rangeSat = lookangles.rangeSat;
+                            azimuth *= _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
+                            elevation *= _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
+                            if (sensor.obsminaz > sensor.obsmaxaz) {
+                                if (((azimuth >= sensor.obsminaz || azimuth <= sensor.obsmaxaz) && elevation >= sensor.obsminel && elevation <= sensor.obsmaxel && rangeSat <= sensor.obsmaxrange && rangeSat >= sensor.obsminrange) ||
+                                    ((azimuth >= sensor.obsminaz2 || azimuth <= sensor.obsmaxaz2) && elevation >= sensor.obsminel2 && elevation <= sensor.obsmaxel2 && rangeSat <= sensor.obsmaxrange2 && rangeSat >= sensor.obsminrange2)) {
+                                    satInView[i] = 1; // 1 = TRUE
+                                }
+                            }
+                            else {
+                                if ((azimuth >= sensor.obsminaz && azimuth <= sensor.obsmaxaz && elevation >= sensor.obsminel && elevation <= sensor.obsmaxel && rangeSat <= sensor.obsmaxrange && rangeSat >= sensor.obsminrange) ||
+                                    (azimuth >= sensor.obsminaz2 && azimuth <= sensor.obsmaxaz2 && elevation >= sensor.obsminel2 && elevation <= sensor.obsmaxel2 && rangeSat <= sensor.obsmaxrange2 && rangeSat >= sensor.obsminrange2)) {
+                                    satInView[i] = 1; // 1 = TRUE
+                                }
+                            }
+                        }
+                    }
+                }
+                else {
+                    if (!(sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.OPTICAL && satInSun[i] == 0)) {
+                        azimuth *= _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
+                        elevation *= _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
+                        if (sensor.obsminaz > sensor.obsmaxaz) {
+                            if (((azimuth >= sensor.obsminaz || azimuth <= sensor.obsmaxaz) && elevation >= sensor.obsminel && elevation <= sensor.obsmaxel && rangeSat <= sensor.obsmaxrange && rangeSat >= sensor.obsminrange) ||
+                                ((azimuth >= sensor.obsminaz2 || azimuth <= sensor.obsmaxaz2) && elevation >= sensor.obsminel2 && elevation <= sensor.obsmaxel2 && rangeSat <= sensor.obsmaxrange2 && rangeSat >= sensor.obsminrange2)) {
+                                satInView[i] = 1; // 1 = TRUE
+                            }
+                        }
+                        else {
+                            if ((azimuth >= sensor.obsminaz && azimuth <= sensor.obsmaxaz && elevation >= sensor.obsminel && elevation <= sensor.obsmaxel && rangeSat <= sensor.obsmaxrange && rangeSat >= sensor.obsminrange) ||
+                                (azimuth >= sensor.obsminaz2 && azimuth <= sensor.obsmaxaz2 && elevation >= sensor.obsminel2 && elevation <= sensor.obsmaxel2 && rangeSat <= sensor.obsmaxrange2 && rangeSat >= sensor.obsminrange2)) {
+                                satInView[i] = 1; // 1 = TRUE
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        else if (satCache[i].isRadarData) {
+            if (satCache[i].skip)
+                continue;
+            satCache[i].skip = true;
+            satPos[i * 3] = 0;
+            satPos[i * 3 + 1] = 0;
+            satPos[i * 3 + 2] = 0;
+            satVel[i * 3] = 0;
+            satVel[i * 3 + 1] = 0;
+            satVel[i * 3 + 2] = 0;
+        }
+        else if (satCache[i].static && !satCache[i].marker) {
+            if (satCache[i].type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.STAR) {
+                // INFO: 0 Latitude returns upside down results. Using 180 looks right, but more verification needed.
+                // WARNING: 180 and 0 really matter...unclear why
+                starPosition = _app_js_lib_suncalc_js__WEBPACK_IMPORTED_MODULE_0__.SunCalc.getStarPosition(now, 180, 0, satCache[i]);
+                starPosition = (0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(starPosition.azimuth * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG, starPosition.altitude * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG, _lib_constants__WEBPACK_IMPORTED_MODULE_3__.STAR_DISTANCE, 0, 0, 0);
+                // Reduce Random Jitter by Requiring New Positions to be Similar to Old
+                // THIS MIGHT BE A HORRIBLE
+                if (satPos[i * 3] == 0 || (satPos[i * 3] - starPosition.x < 0.1 && satPos[i * 3] - starPosition.x > -0.1))
+                    satPos[i * 3] = starPosition.x;
+                if (satPos[i * 3 + 1] == 0 || (satPos[i * 3 + 1] - starPosition.y < 0.1 && satPos[i * 3 + 1] - starPosition.y > -0.1))
+                    satPos[i * 3 + 1] = starPosition.y;
+                if (satPos[i * 3 + 2] == 0 || (satPos[i * 3 + 2] - starPosition.z < 0.1 && satPos[i * 3 + 2] - starPosition.z > -0.1))
+                    satPos[i * 3 + 2] = starPosition.z;
+            }
+            else {
+                cosLat = Math.cos(satCache[i].lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
+                sinLat = Math.sin(satCache[i].lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
+                cosLon = Math.cos(satCache[i].lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmst);
+                sinLon = Math.sin(satCache[i].lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmst);
+                satPos[i * 3] = (_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH + _lib_constants__WEBPACK_IMPORTED_MODULE_3__.GROUND_BUFFER_DISTANCE + satCache[i].alt) * cosLat * cosLon; // 6371 is radius of earth
+                satPos[i * 3 + 1] = (_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH + _lib_constants__WEBPACK_IMPORTED_MODULE_3__.GROUND_BUFFER_DISTANCE + satCache[i].alt) * cosLat * sinLon;
+                satPos[i * 3 + 2] = (_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH + _lib_constants__WEBPACK_IMPORTED_MODULE_3__.GROUND_BUFFER_DISTANCE + satCache[i].alt) * sinLat;
+            }
+            satVel[i * 3] = 0;
+            satVel[i * 3 + 1] = 0;
+            satVel[i * 3 + 2] = 0;
+        }
+        else if (satCache[i].missile) {
+            if (!satCache[i].active) {
+                continue;
+            } // Skip inactive missiles
+            tLen = satCache[i].altList.length;
+            for (t = 0; t < tLen; t++) {
+                if (satCache[i].startTime * 1 + t * 1000 >= now.getTime()) {
+                    curMissivarTime = t;
+                    break;
+                }
+            }
+            satCache[i].lastTime = satCache[i].lastTime >= 0 ? satCache[i].lastTime : 0;
+            cosLat = Math.cos(satCache[i].latList[satCache[i].lastTime + 1] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
+            sinLat = Math.sin(satCache[i].latList[satCache[i].lastTime + 1] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
+            cosLon = Math.cos(satCache[i].lonList[satCache[i].lastTime + 1] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmstNext);
+            sinLon = Math.sin(satCache[i].lonList[satCache[i].lastTime + 1] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmstNext);
+            if (satCache[i].lastTime == 0) {
+                satVel[i * 3] = 0;
+                satVel[i * 3 + 1] = 0;
+                satVel[i * 3 + 2] = 0;
+            }
+            else if (satVel[i * 3] == 0 && satVel[i * 3 + 1] == 0 && satVel[i * 3 + 2] == 0) {
+                satVel[i * 3] = (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * cosLon - satPos[i * 3];
+                satVel[i * 3 + 1] = (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * sinLon - satPos[i * 3 + 1];
+                satVel[i * 3 + 2] = (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * sinLat - satPos[i * 3 + 2];
+            }
+            else {
+                satVel[i * 3] += (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * cosLon - satPos[i * 3];
+                satVel[i * 3 + 1] += (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * sinLon - satPos[i * 3 + 1];
+                satVel[i * 3 + 2] += (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * sinLat - satPos[i * 3 + 2];
+                satVel[i * 3] *= 0.5;
+                satVel[i * 3 + 1] *= 0.5;
+                satVel[i * 3 + 2] *= 0.5;
+            }
+            cosLat = Math.cos(satCache[i].latList[curMissivarTime] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
+            sinLat = Math.sin(satCache[i].latList[curMissivarTime] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
+            cosLon = Math.cos(satCache[i].lonList[curMissivarTime] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmst);
+            sinLon = Math.sin(satCache[i].lonList[curMissivarTime] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmst);
+            satPos[i * 3] = (6371 + satCache[i].altList[curMissivarTime]) * cosLat * cosLon;
+            satPos[i * 3 + 1] = (6371 + satCache[i].altList[curMissivarTime]) * cosLat * sinLon;
+            satPos[i * 3 + 2] = (6371 + satCache[i].altList[curMissivarTime]) * sinLat;
+            satCache[i].lastTime = curMissivarTime;
+            x = satPos[i * 3];
+            y = satPos[i * 3 + 1];
+            z = satPos[i * 3 + 2];
+            positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToEcf({ x: x, y: y, z: z }, gmst);
+            if (satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToGeodetic({ x: x, y: y, z: z }, gmst).height <= 150 && satCache[i].missile === false) {
+                console.error(i);
+                satCache[i].skip = true;
+            }
+            lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(sensor.observerGd, positionEcf);
+            azimuth = lookangles.azimuth * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
+            elevation = lookangles.elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
+            rangeSat = lookangles.rangeSat;
+            satInView[i] = 0; // 0 = FALSE - Default in case no sensor selected
+            if (sensor.obsminaz > sensor.obsmaxaz) {
+                if (((azimuth >= sensor.obsminaz || azimuth <= sensor.obsmaxaz) && elevation >= sensor.obsminel && elevation <= sensor.obsmaxel && rangeSat <= sensor.obsmaxrange && rangeSat >= sensor.obsminrange) ||
+                    ((azimuth >= sensor.obsminaz2 || azimuth <= sensor.obsmaxaz2) && elevation >= sensor.obsminel2 && elevation <= sensor.obsmaxel2 && rangeSat <= sensor.obsmaxrange2 && rangeSat >= sensor.obsminrange2)) {
+                    satInView[i] = 1; // 1 = TRUE
+                }
+            }
+            else {
+                if ((azimuth >= sensor.obsminaz && azimuth <= sensor.obsmaxaz && elevation >= sensor.obsminel && elevation <= sensor.obsmaxel && rangeSat <= sensor.obsmaxrange && rangeSat >= sensor.obsminrange) ||
+                    (azimuth >= sensor.obsminaz2 && azimuth <= sensor.obsmaxaz2 && elevation >= sensor.obsminel2 && elevation <= sensor.obsmaxel2 && rangeSat <= sensor.obsmaxrange2 && rangeSat >= sensor.obsminrange2)) {
+                    satInView[i] = 1; // 1 = TRUE
+                }
+            }
+        }
+        else if (isShowFOVBubble || isResetFOVBubble) {
+            // //////////////////////////////////
+            // FOV Bubble Drawing Code - START
+            // //////////////////////////////////
+            if (!isMultiSensor && sensor.observerGd !== defaultGd) {
+                mSensor[0] = sensor;
+                mSensor.length = 1;
+            }
+            sensorMarkerArray = [];
+            for (s = 0; s < mSensor.length + 1; s++) {
+                sensorMarkerArray.push(i);
+                // We intentionally go past the last sensor so we can record the last marker's id
+                if (s == mSensor.length)
+                    break;
+                sensor = mSensor[s];
+                // satellite.js requires this format - DONT use lon,lat,alt
+                sensor.observerGd = {
+                    longitude: sensor.lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
+                    latitude: sensor.lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
+                    height: sensor.alt * 1, // Convert from string
+                };
+                if (satCache[i].marker) {
+                    satPos[i * 3] = 0;
+                    satPos[i * 3 + 1] = 0;
+                    satPos[i * 3 + 2] = 0;
+                    satVel[i * 3] = 0;
+                    satVel[i * 3 + 1] = 0;
+                    satVel[i * 3 + 2] = 0;
+                    if (isResetFOVBubble) {
+                        continue;
+                    }
+                    if (!isShowFOVBubble)
+                        continue;
+                    if (sensor.observerGd === defaultGd)
+                        continue;
+                    // Ignore Optical and Mechanical Sensors When showing Many
+                    if (isIgnoreNonRadar) {
+                        if (mSensor.length > 1 && sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.OPTICAL)
+                            continue;
+                        if (mSensor.length > 1 && sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.OBSERVER)
+                            continue;
+                        if (mSensor.length > 1 && sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.MECHANICAL)
+                            continue;
+                    }
+                    // az, el, rng, pos;
+                    q = Math.abs(sensor.obsmaxaz - sensor.obsminaz) < 30 ? 0.5 : 3;
+                    q2 = sensor.obsmaxrange - sensor.obsminrange < 720 ? 125 : 30;
+                    // Don't show anything but the floor if in surveillance only mode
+                    // Unless it is a volume search radar
+                    if (!isShowSurvFence) {
+                        // Only on non-360 FOV
+                        if (sensor.obsminaz !== 0 && sensor.obsmaxaz !== 360) {
+                            // //////////////////////////////////
+                            // Min AZ FOV
+                            // //////////////////////////////////
+                            for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                                az = sensor.obsminaz;
+                                for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
+                                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                                    try {
+                                        satCache[i].active = true;
+                                        satPos[i * 3] = pos.x;
+                                        satPos[i * 3 + 1] = pos.y;
+                                        satPos[i * 3 + 2] = pos.z;
+                                        satVel[i * 3] = 0;
+                                        satVel[i * 3 + 1] = 0;
+                                        satVel[i * 3 + 2] = 0;
+                                        i++;
+                                    }
+                                    catch (e) {
+                                        console.log(e);
+                                    }
+                                }
+                            }
+                            // //////////////////////////////////
+                            // Max AZ FOV
+                            // //////////////////////////////////
+                            for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                                az = sensor.obsmaxaz;
+                                for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
+                                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                                    satCache[i].active = true;
+                                    satPos[i * 3] = pos.x;
+                                    satPos[i * 3 + 1] = pos.y;
+                                    satPos[i * 3 + 2] = pos.z;
+                                    satVel[i * 3] = 0;
+                                    satVel[i * 3 + 1] = 0;
+                                    satVel[i * 3 + 2] = 0;
+                                    i++;
+                                }
+                            }
+                            if (typeof sensor.obsminaz2 != 'undefined') {
+                                ////////////////////////////////
+                                // Cobra DANE Types
+                                ////////////////////////////////
+                                // //////////////////////////////////
+                                // Min AZ 2 FOV
+                                // //////////////////////////////////
+                                for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                                    az = sensor.obsminaz2;
+                                    for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
+                                        pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                                        satCache[i].active = true;
+                                        satPos[i * 3] = pos.x;
+                                        satPos[i * 3 + 1] = pos.y;
+                                        satPos[i * 3 + 2] = pos.z;
+                                        satVel[i * 3] = 0;
+                                        satVel[i * 3 + 1] = 0;
+                                        satVel[i * 3 + 2] = 0;
+                                        i++;
+                                    }
+                                }
+                                // //////////////////////////////////
+                                // Max AZ 2 FOV
+                                // //////////////////////////////////
+                                for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                                    az = sensor.obsmaxaz2;
+                                    for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
+                                        pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                                        satCache[i].active = true;
+                                        satPos[i * 3] = pos.x;
+                                        satPos[i * 3 + 1] = pos.y;
+                                        satPos[i * 3 + 2] = pos.z;
+                                        satVel[i * 3] = 0;
+                                        satVel[i * 3 + 1] = 0;
+                                        satVel[i * 3 + 2] = 0;
+                                        i++;
+                                    }
+                                }
+                            }
+                            // Only on 360 FOV
+                        }
+                        else {
+                            for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                                el = sensor.obsmaxel;
+                                for (az = sensor.obsminaz; az < sensor.obsmaxaz; az += q) {
+                                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                                    satCache[i].active = true;
+                                    satPos[i * 3] = pos.x;
+                                    satPos[i * 3 + 1] = pos.y;
+                                    satPos[i * 3 + 2] = pos.z;
+                                    satVel[i * 3] = 0;
+                                    satVel[i * 3 + 1] = 0;
+                                    satVel[i * 3 + 2] = 0;
+                                    i++;
+                                }
+                            }
+                        }
+                    }
+                    // //////////////////////////////////
+                    // Top of FOV for Small FOV
+                    // //////////////////////////////////
+                    if (sensor.obsmaxel - sensor.obsminel < 20) {
+                        for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+                                if (sensor.obsminaz > sensor.obsmaxaz) {
+                                    if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
+                                        // Intentional
+                                    }
+                                    else {
+                                        continue;
+                                    }
+                                }
+                                else {
+                                    if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
+                                        // Intentional
+                                    }
+                                    else {
+                                        continue;
+                                    }
+                                }
+                                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsmaxel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                                if (i === len) {
+                                    console.debug('No More Markers');
+                                    break;
+                                }
+                                satCache[i].active = true;
+                                satPos[i * 3] = pos.x;
+                                satPos[i * 3 + 1] = pos.y;
+                                satPos[i * 3 + 2] = pos.z;
+                                satVel[i * 3] = 0;
+                                satVel[i * 3 + 1] = 0;
+                                satVel[i * 3 + 2] = 0;
+                                i++;
+                            }
+                        }
+                    }
+                    if (typeof sensor.obsminaz2 != 'undefined') {
+                        ////////////////////////////////
+                        // Cobra DANE Types
+                        ////////////////////////////////
+                        // //////////////////////////////////
+                        // Floor of FOV
+                        // //////////////////////////////////
+                        q = 2;
+                        for (rng = Math.max(sensor.obsminrange2, 100); rng < Math.min(sensor.obsmaxrange2, 60000); rng += Math.min(sensor.obsmaxrange2, 60000) / q2) {
+                            for (az = 0; az < 360; az += 1 * q) {
+                                if (sensor.obsminaz2 > sensor.obsmaxaz2) {
+                                    if (az >= sensor.obsminaz2 || az <= sensor.obsmaxaz2) {
+                                        // Intentional
+                                    }
+                                    else {
+                                        continue;
+                                    }
+                                }
+                                else {
+                                    if (az >= sensor.obsminaz2 && az <= sensor.obsmaxaz2) {
+                                        // Intentional
+                                    }
+                                    else {
+                                        continue;
+                                    }
+                                }
+                                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel2, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                                if (i === len) {
+                                    console.debug('No More Markers');
+                                    break;
+                                }
+                                satCache[i].active = true;
+                                satPos[i * 3] = pos.x;
+                                satPos[i * 3 + 1] = pos.y;
+                                satPos[i * 3 + 2] = pos.z;
+                                satVel[i * 3] = 0;
+                                satVel[i * 3 + 1] = 0;
+                                satVel[i * 3 + 2] = 0;
+                                i++;
+                            }
+                        }
+                    }
+                    // Don't show anything but the floor if in surveillance only mode
+                    // Unless it is a volume search radar
+                    if (!isShowSurvFence) {
+                        // //////////////////////////////////
+                        // Outside Edge of FOV
+                        // //////////////////////////////////
+                        rng = Math.min(sensor.obsmaxrange, 60000);
+                        for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+                            if (sensor.obsminaz > sensor.obsmaxaz) {
+                                if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
+                                    // Intentional
+                                }
+                                else {
+                                    continue;
+                                }
+                            }
+                            else {
+                                if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
+                                    // Intentional
+                                }
+                                else {
+                                    continue;
+                                }
+                            }
+                            for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
+                                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                                if (i === len) {
+                                    console.debug('No More Markers');
+                                    break;
+                                }
+                                satCache[i].active = true;
+                                satPos[i * 3] = pos.x;
+                                satPos[i * 3 + 1] = pos.y;
+                                satPos[i * 3 + 2] = pos.z;
+                                satVel[i * 3] = 0;
+                                satVel[i * 3 + 1] = 0;
+                                satVel[i * 3 + 2] = 0;
+                                i++;
+                            }
+                        }
+                        if (typeof sensor.obsminaz2 != 'undefined') {
+                            ////////////////////////////////
+                            // Cobra DANE Types
+                            ////////////////////////////////
+                            // //////////////////////////////////
+                            // Outside of FOV
+                            // //////////////////////////////////
+                            rng = Math.min(sensor.obsmaxrange2, 60000);
+                            for (az = 0; az < Math.max(360, sensor.obsmaxaz2); az += q) {
+                                if (sensor.obsminaz2 > sensor.obsmaxaz2) {
+                                    if (az >= sensor.obsminaz2 || az <= sensor.obsmaxaz2) {
+                                        // Intentional
+                                    }
+                                    else {
+                                        continue;
+                                    }
+                                }
+                                else {
+                                    if (az >= sensor.obsminaz2 && az <= sensor.obsmaxaz2) {
+                                        // Intentional
+                                    }
+                                    else {
+                                        continue;
+                                    }
+                                }
+                                for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
+                                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                                    if (i === len) {
+                                        console.debug('No More Markers');
+                                        break;
+                                    }
+                                    satCache[i].active = true;
+                                    satPos[i * 3] = pos.x;
+                                    satPos[i * 3 + 1] = pos.y;
+                                    satPos[i * 3 + 2] = pos.z;
+                                    satVel[i * 3] = 0;
+                                    satVel[i * 3 + 1] = 0;
+                                    satVel[i * 3 + 2] = 0;
+                                    i++;
+                                }
+                            }
+                        }
+                    }
+                    // //////////////////////////////////
+                    // Floor of FOV
+                    // //////////////////////////////////
+                    q = 0.25;
+                    for (rng = sensor.obsmaxrange; rng == sensor.obsmaxrange; rng += 1) {
+                        for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+                            if (sensor.obsminaz > sensor.obsmaxaz) {
+                                if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
+                                    // Intentional
+                                }
+                                else {
+                                    continue;
+                                }
+                            }
+                            else {
+                                if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
+                                    // Intentional
+                                }
+                                else {
+                                    continue;
+                                }
+                            }
+                            pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                            if (i === len) {
+                                console.debug('No More Markers');
+                                break;
+                            }
+                            satCache[i].active = true;
+                            satPos[i * 3] = pos.x;
+                            satPos[i * 3 + 1] = pos.y;
+                            satPos[i * 3 + 2] = pos.z;
+                            satVel[i * 3] = 0;
+                            satVel[i * 3 + 1] = 0;
+                            satVel[i * 3 + 2] = 0;
+                            i++;
+                        }
+                    }
+                    for (rng = sensor.obsminrange; rng == sensor.obsminrange; rng += 1) {
+                        for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+                            if (sensor.obsminaz > sensor.obsmaxaz) {
+                                if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
+                                    // Intentional
+                                }
+                                else {
+                                    continue;
+                                }
+                            }
+                            else {
+                                if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
+                                    // Intentional
+                                }
+                                else {
+                                    continue;
+                                }
+                            }
+                            pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                            if (i === len) {
+                                console.debug('No More Markers');
+                                break;
+                            }
+                            satCache[i].active = true;
+                            satPos[i * 3] = pos.x;
+                            satPos[i * 3 + 1] = pos.y;
+                            satPos[i * 3 + 2] = pos.z;
+                            satVel[i * 3] = 0;
+                            satVel[i * 3 + 1] = 0;
+                            satVel[i * 3 + 2] = 0;
+                            i++;
+                        }
+                    }
+                    if (sensor.obsmaxrange - sensor.obsminrange < 720) {
+                        for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+                                if (sensor.obsminaz > sensor.obsmaxaz) {
+                                    if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
+                                        // Intentional
+                                    }
+                                    else {
+                                        continue;
+                                    }
+                                }
+                                else {
+                                    if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
+                                        // Intentional
+                                    }
+                                    else {
+                                        continue;
+                                    }
+                                }
+                                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                                if (i === len) {
+                                    console.debug('No More Markers');
+                                    break;
+                                }
+                                satCache[i].active = true;
+                                satPos[i * 3] = pos.x;
+                                satPos[i * 3 + 1] = pos.y;
+                                satPos[i * 3 + 2] = pos.z;
+                                satVel[i * 3] = 0;
+                                satVel[i * 3 + 1] = 0;
+                                satVel[i * 3 + 2] = 0;
+                                i++;
+                            }
+                        }
+                    }
+                    if (sensor.obsminaz !== sensor.obsmaxaz && sensor.obsminaz !== sensor.obsmaxaz - 360) {
+                        for (az = sensor.obsmaxaz; az == sensor.obsmaxaz; az += 1) {
+                            for (rng = sensor.obsminrange; rng < sensor.obsmaxrange; rng += q) {
+                                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                                if (i === len) {
+                                    console.debug('No More Markers');
+                                    break;
+                                }
+                                satCache[i].active = true;
+                                satPos[i * 3] = pos.x;
+                                satPos[i * 3 + 1] = pos.y;
+                                satPos[i * 3 + 2] = pos.z;
+                                satVel[i * 3] = 0;
+                                satVel[i * 3 + 1] = 0;
+                                satVel[i * 3 + 2] = 0;
+                                i++;
+                            }
+                        }
+                        for (az = sensor.obsminaz; az == sensor.obsminaz; az += 1) {
+                            for (rng = sensor.obsminrange; rng < sensor.obsmaxrange; rng += q) {
+                                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                                if (i === len) {
+                                    console.debug('No More Markers');
+                                    break;
+                                }
+                                satCache[i].active = true;
+                                satPos[i * 3] = pos.x;
+                                satPos[i * 3 + 1] = pos.y;
+                                satPos[i * 3 + 2] = pos.z;
+                                satVel[i * 3] = 0;
+                                satVel[i * 3 + 1] = 0;
+                                satVel[i * 3 + 2] = 0;
+                                i++;
+                            }
+                        }
+                    }
+                }
+            }
+            // //////////////////////////////////
+            // FOV Bubble Drawing Code - STOP
+            // //////////////////////////////////
+        }
+        else if (isShowSatOverfly || isResetSatOverfly) {
+            // //////////////////////////////////
+            // Satellite Overfly Drawing Code - START
+            // //////////////////////////////////
+            if (satCache[i].marker) {
+                if (isResetSatOverfly && satCache[i].active === true) {
+                    satCache[i].active = false;
+                    satPos[i * 3] = 0;
+                    satPos[i * 3 + 1] = 0;
+                    satPos[i * 3 + 2] = 0;
+                    satVel[i * 3] = 0;
+                    satVel[i * 3 + 1] = 0;
+                    satVel[i * 3 + 2] = 0;
+                    continue;
+                }
+                for (snum = 0; snum < satelliteSelected.length + 1; snum++) {
+                    if (snum === satelliteSelected.length) {
+                        sensorMarkerArray.push(i);
+                        break;
+                    }
+                    if (satelliteSelected[snum] !== -1) {
+                        if (!isShowSatOverfly)
+                            continue;
+                        // Find the ECI position of the Selected Satellite
+                        satSelPosX = satPos[satelliteSelected[snum] * 3];
+                        satSelPosY = satPos[satelliteSelected[snum] * 3 + 1];
+                        satSelPosZ = satPos[satelliteSelected[snum] * 3 + 2];
+                        satSelPosEcf = {
+                            x: satSelPosX,
+                            y: satSelPosY,
+                            z: satSelPosZ,
+                        };
+                        satSelPos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(satSelPosEcf, gmst);
+                        // Find the Lat/Long of the Selected Satellite
+                        satSelGeodetic = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToGeodetic(satSelPos, gmst); // pv.position is called positionEci originally
+                        satHeight = satSelGeodetic.height;
+                        satSelPosEarth = {
+                            longitude: satSelGeodetic.longitude,
+                            latitude: satSelGeodetic.latitude,
+                            height: 1,
+                        };
+                        deltaLatInt = 1;
+                        if (satHeight < 2500 && selectedSatFOV <= 60)
+                            deltaLatInt = 0.5;
+                        if (satHeight > 7000 || selectedSatFOV >= 90)
+                            deltaLatInt = 2;
+                        if (satelliteSelected.length > 1)
+                            deltaLatInt = 2;
+                        for (deltaLat = -60; deltaLat < 60; deltaLat += deltaLatInt) {
+                            lat = Math.max(Math.min(Math.round(satSelGeodetic.latitude * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG) + deltaLat, 90), -90) * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD;
+                            if (lat > 90)
+                                continue;
+                            deltaLonInt = 1; // Math.max((Math.abs(lat)*RAD2DEG/15),1);
+                            if (satHeight < 2500 && selectedSatFOV <= 60)
+                                deltaLonInt = 0.5;
+                            if (satHeight > 7000 || selectedSatFOV >= 90)
+                                deltaLonInt = 2;
+                            if (satelliteSelected.length > 1)
+                                deltaLonInt = 2;
+                            for (deltaLon = 0; deltaLon < 181; deltaLon += deltaLonInt) {
+                                // //////////
+                                // Add Long
+                                // //////////
+                                long = satSelGeodetic.longitude + deltaLon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD;
+                                satSelPosEarth = {
+                                    longitude: long,
+                                    latitude: lat,
+                                    height: 15,
+                                };
+                                // Find the Az/El of the position on the earth
+                                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(satSelPosEarth, satSelPosEcf);
+                                // azimuth = lookangles.azimuth;
+                                elevation = lookangles.elevation;
+                                // rangeSat = lookangles.rangeSat;
+                                if (elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG > 0 && 90 - elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG < selectedSatFOV) {
+                                    satSelPosEarth = satellite_js__WEBPACK_IMPORTED_MODULE_1__.geodeticToEcf(satSelPosEarth);
+                                    if (i === len) {
+                                        console.debug('Ran out of Markers');
+                                        continue; // Only get so many markers.
+                                    }
+                                    satCache[i].active = true;
+                                    satPos[i * 3] = satSelPosEarth.x;
+                                    satPos[i * 3 + 1] = satSelPosEarth.y;
+                                    satPos[i * 3 + 2] = satSelPosEarth.z;
+                                    satVel[i * 3] = 0;
+                                    satVel[i * 3 + 1] = 0;
+                                    satVel[i * 3 + 2] = 0;
+                                    i++;
+                                }
+                                // //////////
+                                // Minus Long
+                                // //////////
+                                if (deltaLon === 0 || deltaLon === 180)
+                                    continue; // Don't Draw Two Dots On the Center Line
+                                long = satSelGeodetic.longitude - deltaLon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD;
+                                satSelPosEarth = {
+                                    longitude: long,
+                                    latitude: lat,
+                                    height: 15,
+                                };
+                                // Find the Az/El of the position on the earth
+                                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(satSelPosEarth, satSelPosEcf);
+                                // azimuth = lookangles.azimuth;
+                                elevation = lookangles.elevation;
+                                // rangeSat = lookangles.rangeSat;
+                                if (elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG > 0 && 90 - elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG < selectedSatFOV) {
+                                    satSelPosEarth = satellite_js__WEBPACK_IMPORTED_MODULE_1__.geodeticToEcf(satSelPosEarth);
+                                    if (i === len) {
+                                        console.debug('Ran out of Markers');
+                                        continue; // Only get so many markers.
+                                    }
+                                    satCache[i].active = true;
+                                    satPos[i * 3] = satSelPosEarth.x;
+                                    satPos[i * 3 + 1] = satSelPosEarth.y;
+                                    satPos[i * 3 + 2] = satSelPosEarth.z;
+                                    satVel[i * 3] = 0;
+                                    satVel[i * 3 + 1] = 0;
+                                    satVel[i * 3 + 2] = 0;
+                                    i++;
+                                }
+                                if (lat === 90 || lat === -90)
+                                    break; // One Dot for the Poles
+                            }
+                        }
+                    }
+                }
+            }
+            // //////////////////////////////////
+            // Satellite Overfly Drawing Code - STOP
+            // //////////////////////////////////
+        }
+        isResetSatOverfly = false;
+        if (satCache[i].marker) {
+            for (; i < len; i++) {
+                if (!satCache[i].active) {
+                    len -= fieldOfViewSetLength;
+                    break;
+                }
+                satPos[i * 3] = 0;
+                satPos[i * 3 + 1] = 0;
+                satPos[i * 3 + 2] = 0;
+                satVel[i * 3] = 0;
+                satVel[i * 3 + 1] = 0;
+                satVel[i * 3 + 2] = 0;
+                satCache[i].active = false;
+            }
+        }
+    }
+    if (isResetFOVBubble) {
+        isResetFOVBubble = false;
+        len -= fieldOfViewSetLength;
+    }
+    sendDataToSatSet();
+    // The longer the delay the more jitter at higher speeds of propagation
+    setTimeout(() => {
+        propagateCruncher();
+    }, (globalPropagationRate * globalPropagationRateMultiplier) / divisor);
+};
+const sendDataToSatSet = () => {
+    let postMessageArray = {
+        satPos: satPos,
+        satVel: satVel,
+    };
+    // Add In View Data if Sensor Selected
+    if (sensor.observerGd !== defaultGd) {
+        postMessageArray.satInView = satInView;
+    }
+    else {
+        postMessageArray.satInView = EMPTY_INT8_ARRAY;
+    }
+    // Add Sun View Data if Enabled
+    if (isSunlightView) {
+        postMessageArray.satInSun = satInSun;
+    }
+    else {
+        postMessageArray.satInSun = EMPTY_INT8_ARRAY;
+    }
+    // If there is at least one sensor showing markers
+    if (sensorMarkerArray.length >= 1) {
+        postMessageArray.sensorMarkerArray = sensorMarkerArray;
+    }
+    else {
+        postMessageArray.sensorMarkerArray = [];
+    }
+    postMessage(postMessageArray);
+};
+
+
 /***/ })
 
 /******/ 	});
@@ -10948,1454 +12681,12 @@ function ecfToLookAngles(observerGeodetic, satelliteEcf) {
 /******/ 	})();
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
-(() => {
-/*!**********************************************!*\
-  !*** ./src/js/webworker/positionCruncher.js ***!
-  \**********************************************/
-__webpack_require__.r(__webpack_exports__);
-/* harmony import */ var satellite_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! satellite.js */ "./node_modules/satellite.js/dist/satellite.es.js");
-/* harmony import */ var _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @app/js/lib/external/meuusjs.js */ "./src/js/lib/external/meuusjs.js");
-/* harmony import */ var _app_js_lib_suncalc_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @app/js/lib/suncalc.js */ "./src/js/lib/suncalc.js");
-/* harmony import */ var _lib_external_numeric__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../lib/external/numeric */ "./src/js/lib/external/numeric.js");
-/* /////////////////////////////////////////////////////////////////////////////
-
-(c) 2016-2020, Theodore Kruczek
-(c) 2015-2016, James Yoder
-
-http://keeptrack.space
-
-Original source code released by James Yoder at https://github.com/jeyoder/ThingsInSpace/
-under the MIT License. Please reference http://keeptrack.space/license/thingsinspace.txt
-
-All additions and modifications of original code is Copyright © 2016-2020 by
-Theodore Kruczek. All rights reserved. No part of this web site may be reproduced,
-published, distributed, displayed, performed, copied or stored for public or private
-use, without written permission of the author.
-
-No part of this code may be modified or changed or exploited in any way used
-for derivative works, or offered for sale, or used to construct any kind of database
-or mirrored at any other location without the express written permission of the author.
-
-///////////////////////////////////////////////////////////////////////////// */
-
-
-
-
-
-
-/** CONSTANTS */
-
-var PI = Math.PI;
-var TAU = 2 * PI; // PI * 2 -- This makes understanding the formulas easier
-
-var DEG2RAD = TAU / 360; // Used to convert degrees to radians
-
-var RAD2DEG = 360 / TAU; // Used to convert radians to degrees
-
-var RADIUS_OF_EARTH = 6371; // Radius of Earth in kilometers
-
-var GROUND_BUFFER_DISTANCE = 1; // Distance objects are placed above earth to avoid z-buffer fighting
-
-var RADIUS_OF_SUN = 695700; // Radius of the Sun in kilometers
-
-var STAR_DISTANCE = 250000; // Artificial Star Distance - Lower numberrReduces webgl depth buffer
-// const MILLISECONDS_PER_DAY = 1000 * 60 * 60 * 24;
-
-/** ARRAYS */
-
-var satCache = []; // Cache of Satellite Data from TLE.json and Static Data from variable.js
-
-var sensorMarkerArray = [0]; // Array of Markers used to show sensor fence and FOV
-
-var satPos, satVel; // Array of current Satellite and Static Positions and Velocities
-
-var satInView; // Array of booleans showing if current Satellite is in view of Sensor
-
-var satInSun; // Array of booleans showing if current Satellite is in sunlight
-
-var satelliteSelected = [-1]; // Array used to determine which satellites are selected
-
-/** TIME VARIABLES */
-
-var globalPropagationRate = 1000; // Limits how often the propagation loop runs
-
-var globalPropagationRateMultiplier = 1; // Used to slow down propagation rate on slow computers
-
-var propagationRunning = false; // Prevent Propagation From Running Twice
-
-var timeSyncRunning = false; // Prevent Time Sync Loop From Running Twice
-
-var divisor = 1; // When running at high speeds, allow faster propagation
-
-var dynamicOffsetEpoch = Date.now();
-var staticOffset = 0;
-var propRate = 1; // vars us run time faster (or slower) than normal
-
-var propChangeTime = Date.now(); // vars us run time faster (or slower) than normal
-
-/** Settings */
-
-var selectedSatFOV = 90; // FOV in Degrees
-
-var isShowFOVBubble = false; // Flag for if FOV bubble is shown
-
-var isShowSurvFence = false; // Flag for if fence markers are shown
-
-var isResetFOVBubble = false;
-var isShowSatOverfly = false;
-var isResetSatOverfly = false;
-var isMultiSensor = false;
-var isIgnoreNonRadar = true;
-var isSunlightView = false;
-var isLowPerf = false;
-var isResetMarker = false;
-var isResetInView = false;
-var fieldOfViewSetLength;
-var len;
-var postMessageArray = {};
-/** OBSERVER VARIABLES */
-
-var sensor = {};
-var mSensor = {};
-var defaultGd = {
-  latitude: null,
-  longitude: 0,
-  height: 0
-};
-sensor.defaultGd = defaultGd;
-sensor.observerGd = defaultGd; // Handles Incomming Messages to sat-cruncher from main thread
-
-onmessage = function onmessage(m) {
-  // Set propChangeTime Once
-  if (typeof propChangeTime == 'undefined') {
-    propChangeTime = Date.now();
-  }
-
-  if (m.data.isSunlightView) {
-    isSunlightView = m.data.isSunlightView; // if (isSunlightView == false) isResetSunlight = true;
-  }
-
-  if (m.data.satelliteSelected) {
-    satelliteSelected = m.data.satelliteSelected;
-
-    if (satelliteSelected[0] === -1) {
-      isResetSatOverfly = true;
-      if (isResetMarker == false) isResetMarker = true;
-    }
-  }
-
-  if (m.data.isSlowCPUModeEnabled) {
-    globalPropagationRateMultiplier *= 2;
-  }
-
-  if (m.data.isLowPerf) {
-    isLowPerf = true;
-  } // //////////////////////////////
-  // SAT OVERFLY AND FOV BUBBLE
-  // /////////////////////////////
-
-
-  if (m.data.fieldOfViewSetLength) {
-    fieldOfViewSetLength = m.data.fieldOfViewSetLength;
-  }
-
-  if (m.data.isShowSatOverfly === 'enable') {
-    isShowSatOverfly = true;
-    selectedSatFOV = m.data.selectedSatFOV;
-  }
-
-  if (m.data.isShowSatOverfly === 'reset') {
-    isResetSatOverfly = true;
-    isShowSatOverfly = false;
-    if (isResetMarker == false) isResetMarker = true;
-  }
-
-  if (m.data.isShowFOVBubble === 'enable') {
-    isShowFOVBubble = true;
-  }
-
-  if (m.data.isShowFOVBubble === 'reset') {
-    isResetFOVBubble = true;
-    isShowFOVBubble = false;
-    if (isResetMarker == false) isResetMarker = true;
-  }
-
-  if (m.data.isShowSurvFence === 'enable') {
-    isShowSurvFence = true;
-    if (isResetMarker == false) isResetMarker = true;
-  }
-
-  if (m.data.isShowSurvFence === 'disable') {
-    isShowSurvFence = false;
-    if (isResetMarker == false) isResetMarker = true;
-  } // ////////////////////////////////
-
-
-  if (m.data.multiSensor) {
-    isMultiSensor = true;
-    mSensor = m.data.sensor;
-    sensor = m.data.sensor;
-    globalPropagationRate = 2000;
-    if (isResetInView == false) isResetInView = true;
-  } else if (m.data.sensor) {
-    sensor = m.data.sensor;
-
-    if (m.data.setlatlong) {
-      if (m.data.resetObserverGd) {
-        globalPropagationRate = 1000;
-        sensor.observerGd = defaultGd;
-        mSensor = {};
-        if (isResetInView == false) isResetInView = true;
-      } else {
-        globalPropagationRate = 2000; // satellite.js requires this format - DONT use lon,lat,alt
-
-        sensor.observerGd = {
-          longitude: m.data.sensor.lon * DEG2RAD,
-          latitude: m.data.sensor.lat * DEG2RAD,
-          height: m.data.sensor.alt * 1 // Convert from string
-
-        };
-        if (isResetInView == false) isResetInView = true;
-      }
-    }
-
-    isMultiSensor = false;
-  } // const oldPropRate = propRate;
-
-
-  switch (m.data.typ) {
-    case 'offset':
-      staticOffset = m.data.staticOffset;
-      dynamicOffsetEpoch = m.data.dynamicOffsetEpoch;
-      propRate = m.data.propRate; // Changing this to 0.1 caused issues...
-
-      divisor = 1;
-      return;
-
-    case 'satdata':
-      var satData = JSON.parse(m.data.dat);
-      len = satData.length;
-      var i = 0;
-      var extraData = [];
-      var extra = {};
-      var satrec;
-
-      while (i < len) {
-        extra = {};
-        satrec = null;
-
-        if (satData[i].static || satData[i].missile || satData[i].isRadarData) {
-          satrec = satData[i];
-          delete satrec['id'];
-          extraData.push(extra);
-          satCache.push(satrec);
-          i++;
-          continue;
-        } else {
-          satrec = satellite_js__WEBPACK_IMPORTED_MODULE_0__.twoline2satrec( // perform and store sat init calcs
-          satData[i].TLE1, satData[i].TLE2);
-          extra.lowAlt = satrec.isimp;
-          extra.inclination = satrec.inclo; // rads
-
-          extra.eccentricity = satrec.ecco;
-          extra.raan = satrec.nodeo; // rads
-
-          extra.argPe = satrec.argpo; // rads
-
-          extra.meanMotion = satrec.no * 60 * 24 / TAU; // convert rads/minute to rev/day
-
-          extra.semiMajorAxis = Math.pow(8681663.653 / extra.meanMotion, 2 / 3);
-          extra.semiMinorAxis = extra.semiMajorAxis * Math.sqrt(1 - Math.pow(extra.eccentricity, 2));
-          extra.apogee = extra.semiMajorAxis * (1 + extra.eccentricity) - RADIUS_OF_EARTH;
-          satrec.apogee = extra.apogee;
-          extra.perigee = extra.semiMajorAxis * (1 - extra.eccentricity) - RADIUS_OF_EARTH;
-          extra.period = 1440.0 / extra.meanMotion;
-          extraData.push(extra);
-          delete satrec['id'];
-          satCache.push(satrec);
-          i++;
-        }
-      }
-
-      satPos = new Float32Array(len * 3);
-      satVel = new Float32Array(len * 3);
-      satInView = new Int8Array(len);
-      satInSun = new Int8Array(len);
-      postMessage({
-        extraData: JSON.stringify(extraData)
-      });
-      satData = null;
-      break;
-
-    case 'satEdit':
-      satCache[m.data.id] = satellite_js__WEBPACK_IMPORTED_MODULE_0__.twoline2satrec( // replace old TLEs
-      m.data.TLE1, m.data.TLE2);
-      satrec = satCache[m.data.id];
-      extraData = [];
-      extra = {}; // keplerian elements
-
-      extra.inclination = satrec.inclo; // rads
-
-      extra.eccentricity = satrec.ecco;
-      extra.raan = satrec.nodeo; // rads
-
-      extra.argPe = satrec.argpo; // rads
-
-      extra.meanMotion = satrec.no * 60 * 24 / (2 * PI); // convert rads/minute to rev/day
-      // fun other data
-
-      extra.semiMajorAxis = Math.pow(8681663.653 / extra.meanMotion, 2 / 3);
-      extra.semiMinorAxis = extra.semiMajorAxis * Math.sqrt(1 - Math.pow(extra.eccentricity, 2));
-      extra.apogee = extra.semiMajorAxis * (1 + extra.eccentricity) - RADIUS_OF_EARTH;
-      extra.perigee = extra.semiMajorAxis * (1 - extra.eccentricity) - RADIUS_OF_EARTH;
-      extra.period = 1440.0 / extra.meanMotion;
-      extra.TLE1 = m.data.TLE1;
-      extra.TLE2 = m.data.TLE2;
-      extraData.push(extra);
-      postMessage({
-        extraUpdate: true,
-        extraData: JSON.stringify(extraData),
-        satId: m.data.id
-      });
-      break;
-
-    case 'newMissile':
-      satCache[m.data.id] = m.data;
-      break;
-
-    case 'timeSync':
-      // propChangeTime = new Date(m.data.time);
-      break;
-
-    default:
-      console.warn('Unknown message typ: ' + m.data.typ);
-      break;
-  } // Don't start before getting satData!
-
-
-  if (!propagationRunning && m.data.typ === 'satdata') {
-    len = -1; // propagteCruncher needs to start at -1 not 0
-
-    propagateCruncher();
-  }
-
-  if (!timeSyncRunning) {
-    timeSyncLoop();
-  }
-};
-
-var timeSyncLoop = () => {
-  var postMessageArray = {
-    typ: 'timeSync',
-    time: propTime().getTime(),
-    propRate: propRate,
-    staticOffset: staticOffset,
-    dynamicOffsetEpoch: dynamicOffsetEpoch
-  };
-  postMessage(postMessageArray);
-  setTimeout(timeSyncLoop, 250);
-}; // Prevent Memory Leak by declaring variables outside of function
-
-
-var geodeticCoords;
-var siteXYZ;
-var sitex, sitey, sitez;
-var slat, slon, clat, clon;
-var azRad, elRad;
-var south, east, zenith;
-var x, y, z;
-var sunAz, sunEl, sunRange, sunElRel, sunR, sunECI, sunG;
-
-var _lookAnglesToEcf = (azimuthDeg, elevationDeg, slantRange, obsLat, obsLong, obsAlt) => {
-  // site ecef in meters
-  geodeticCoords = {};
-  geodeticCoords.latitude = obsLat;
-  geodeticCoords.longitude = obsLong;
-  geodeticCoords.height = obsAlt;
-  siteXYZ = satellite_js__WEBPACK_IMPORTED_MODULE_0__.geodeticToEcf(geodeticCoords);
-  sitex = siteXYZ.x;
-  sitey = siteXYZ.y;
-  sitez = siteXYZ.z; // some needed calculations
-
-  slat = Math.sin(obsLat);
-  slon = Math.sin(obsLong);
-  clat = Math.cos(obsLat);
-  clon = Math.cos(obsLong);
-  azRad = DEG2RAD * azimuthDeg;
-  elRad = DEG2RAD * elevationDeg; // az,el,range to sez convertion
-
-  south = -slantRange * Math.cos(elRad) * Math.cos(azRad);
-  east = slantRange * Math.cos(elRad) * Math.sin(azRad);
-  zenith = slantRange * Math.sin(elRad);
-  x = slat * clon * south + -slon * east + clat * clon * zenith + sitex;
-  y = slat * slon * south + clon * east + clat * slon * zenith + sitey;
-  z = -clat * south + slat * zenith + sitez;
-  return {
-    x: x,
-    y: y,
-    z: z
-  };
-}; // //////////////////////////////////////////////////////////////////////////
-// Benchmarking
-// var averageTimeForCrunchLoop = 0;
-// var totalCrunchTime1 = 0;
-// var averageTimeForPropagate = 0;
-// var totalCrunchTime2 = 0;
-// var numOfCrunches = 0;
-// //////////////////////////////////////////////////////////////////////////
-
-
-var propagateCruncher = () => {
-  // OPTIMIZE: 25.9ms
-  // var startTime1 = performance.now();
-  // numOfCrunches++;
-  propagationRunning = true;
-  var now = propTime();
-  var j = jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
-  now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-  j += now.getUTCMilliseconds() * 1.15741e-8; // days per millisecond
-
-  var gmst = satellite_js__WEBPACK_IMPORTED_MODULE_0__.gstime(j);
-  var isSunExclusion = false;
-
-  if (isSunlightView && !isMultiSensor) {
-    var jdo = new _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.JulianDay(j); // now
-
-    var coord = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.EclCoord.fromWgs84(0, 0, 0);
-    var coord2 = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.EclCoord.fromWgs84(sensor.observerGd.latitude * RAD2DEG, sensor.observerGd.longitude * RAD2DEG, sensor.observerGd.height); // AZ / EL Calculation
-
-    var tp = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.Solar.topocentricPosition(jdo, coord, false);
-    var tpRel = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.Solar.topocentricPosition(jdo, coord2, false);
-    sunAz = tp.hz.az * RAD2DEG + 180 % 360;
-    sunEl = tp.hz.alt * RAD2DEG % 360;
-    sunElRel = tpRel.hz.alt * RAD2DEG % 360; // Range Calculation
-
-    var T = new _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.JulianDay(_app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.JulianDay.dateToJD(now)).jdJ2000Century();
-    sunG = _app_js_lib_external_meuusjs_js__WEBPACK_IMPORTED_MODULE_1__.A.Solar.meanAnomaly(T) * 180 / PI;
-    sunG = sunG % 360.0;
-    sunR = 1.00014 - 0.01671 * Math.cos(sunG) - 0.00014 * Math.cos(2 * sunG);
-    sunRange = sunR * 149597870700 / 1000; // au to km conversion
-    // RAE to ECI
-
-    sunECI = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(sunAz, sunEl, sunRange, 0, 0, 0), gmst);
-
-    if (sensor.observerGd !== defaultGd && (sensor.type === 'Optical' || sensor.type === 'Observer') && sunElRel > -6) {
-      isSunExclusion = true;
-    } else {
-      isSunExclusion = false;
-    }
-  }
-
-  var j2 = j;
-  j2 = jday(now.getUTCFullYear(), now.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
-  now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds() + 1);
-  j2 += now.getUTCMilliseconds() * 1.15741e-8; // days per millisecond
-
-  var gmstNext = satellite_js__WEBPACK_IMPORTED_MODULE_0__.gstime(j2);
-  len = satCache.length - 1;
-
-  if (!isResetSatOverfly && !isShowSatOverfly && !isResetFOVBubble && !isShowFOVBubble || isLowPerf) {
-    len -= fieldOfViewSetLength;
-  }
-
-  var i = -1; // var startTime2 = 0;
-  // var stopTime2 = 0;
-
-  var positionEcf, lookangles, azimuth, elevation, rangeSat;
-  var x, y, z;
-  var cosLat, sinLat, cosLon, sinLon;
-  var curMissivarTime;
-  var s, m, pv, tLen, t;
-  var sat;
-  var isSensorChecked = false;
-  var az, el, rng, pos;
-  var q, q2;
-  var semiDiamEarth, semiDiamSun, theta;
-  var starPosition;
-  var snum;
-  var lat, long;
-  var satSelPosX, satSelPosY, satSelPosZ, satSelPosEcf, satSelPos, satSelGeodetic, satHeight, satSelPosEarth, deltaLat, deltaLatInt, deltaLon, deltaLonInt;
-
-  while (i < len) {
-    i++; // At the beginning so i starts at 0
-    // totalCrunchTime2 += (stopTime2 - startTime2);
-
-    sat = satCache[i];
-
-    if (sat.satnum) {
-      // Skip reentries
-      if (sat.skip) continue;
-      m = (j - sat.jdsatepoch) * 1440.0; // 1440 = minutes_per_day
-      // startTime2 = performance.now();
-
-      pv = satellite_js__WEBPACK_IMPORTED_MODULE_0__.sgp4(sat, m); // stopTime2 = performance.now();
-
-      try {
-        satPos[i * 3] = pv.position.x;
-        satPos[i * 3 + 1] = pv.position.y;
-        satPos[i * 3 + 2] = pv.position.z;
-        satVel[i * 3] = pv.velocity.x;
-        satVel[i * 3 + 1] = pv.velocity.y;
-        satVel[i * 3 + 2] = pv.velocity.z; // Make sure that objects with an imprecise orbit or an old elset
-        // are not failing to propagate
-
-        if (sat.isimp || m / 1440 > 30) {
-          var a = 6378.137;
-          var b = 6356.7523142;
-          var R = Math.sqrt(pv.position.x * pv.position.x + pv.position.y * pv.position.y);
-          var f = (a - b) / a;
-          var e2 = 2 * f - f * f;
-          var lon = Math.atan2(pv.position.y, pv.position.x) - gmst;
-
-          while (lon < -PI) {
-            lon += TAU;
-          }
-
-          while (lon > PI) {
-            lon -= TAU;
-          }
-
-          var kmax = 20;
-          var k = 0;
-
-          var _lat = Math.atan2(pv.position.z, Math.sqrt(pv.position.x * pv.position.x + pv.position.y * pv.position.y));
-
-          var C = void 0;
-
-          while (k < kmax) {
-            C = 1 / Math.sqrt(1 - e2 * (Math.sin(_lat) * Math.sin(_lat)));
-            _lat = Math.atan2(pv.position.z + a * C * e2 * Math.sin(_lat), R);
-            k += 1;
-          }
-
-          var alt = R / Math.cos(_lat) - a * C;
-
-          if (alt > sat.apogee + 1000) {
-            throw new Error('Impossible orbit');
-          }
-        } // Skip Calculating Lookangles if No Sensor is Selected
-
-
-        if (!isSensorChecked) {
-          if (sensor.observerGd !== defaultGd && !isMultiSensor) {
-            positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_0__.eciToEcf(pv.position, gmst); // pv.position is called positionEci originally
-
-            lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToLookAngles(sensor.observerGd, positionEcf);
-            azimuth = lookangles.azimuth;
-            elevation = lookangles.elevation;
-            rangeSat = lookangles.rangeSat;
-          } else {
-            isSensorChecked = true;
-          }
-        }
-      } catch (e) {
-        // This is probably a reentry and should be skipped from now on.
-        satCache[i].skip = true;
-        satPos[i * 3] = 0;
-        satPos[i * 3 + 1] = 0;
-        satPos[i * 3 + 2] = 0;
-        satVel[i * 3] = 0;
-        satVel[i * 3 + 1] = 0;
-        satVel[i * 3 + 2] = 0;
-        positionEcf = 0;
-        lookangles = 0;
-        azimuth = 0;
-        elevation = 0;
-        rangeSat = 0;
-      }
-
-      satInView[i] = false; // Default in case no sensor selected
-
-      satInSun[i] = 2; // Default in case
-
-      if (isSunlightView) {
-        semiDiamEarth = Math.asin(RADIUS_OF_EARTH / Math.sqrt(Math.pow(-satPos[i * 3], 2) + Math.pow(-satPos[i * 3 + 1], 2) + Math.pow(-satPos[i * 3 + 2], 2))) * RAD2DEG;
-        semiDiamSun = Math.asin(RADIUS_OF_SUN / Math.sqrt(Math.pow(-satPos[i * 3] + sunECI.x, 2) + Math.pow(-satPos[i * 3 + 1] + sunECI.y, 2) + Math.pow(-satPos[i * 3 + 2] + sunECI.z, 2))) * RAD2DEG; // Angle between earth and sun
-
-        theta = Math.acos(_lib_external_numeric__WEBPACK_IMPORTED_MODULE_3__.numeric.dot([-satPos[i * 3], -satPos[i * 3 + 1], -satPos[i * 3 + 2]], [-satPos[i * 3] + sunECI.x, -satPos[i * 3 + 1] + sunECI.y, -satPos[i * 3 + 2] + sunECI.z]) / (Math.sqrt(Math.pow(-satPos[i * 3], 2) + Math.pow(-satPos[i * 3 + 1], 2) + Math.pow(-satPos[i * 3 + 2], 2)) * Math.sqrt(Math.pow(-satPos[i * 3] + sunECI.x, 2) + Math.pow(-satPos[i * 3 + 1] + sunECI.y, 2) + Math.pow(-satPos[i * 3 + 2] + sunECI.z, 2)))) * RAD2DEG;
-
-        if (semiDiamEarth > semiDiamSun && theta < semiDiamEarth - semiDiamSun) {
-          satInSun[i] = 0; // Umbral
-        } // var isPenumbral = false;
-
-
-        if (Math.abs(semiDiamEarth - semiDiamSun) < theta && theta < semiDiamEarth + semiDiamSun) {
-          satInSun[i] = 1; // Penumbral
-        }
-
-        if (semiDiamSun > semiDiamEarth) {
-          satInSun[i] = 1; // Penumbral
-        }
-
-        if (theta < semiDiamSun - semiDiamEarth) {
-          satInSun[i] = 1; // Penumbral
-        }
-      }
-
-      if (sensor.observerGd !== defaultGd && !isSunExclusion) {
-        if (isMultiSensor) {
-          for (s = 0; s < mSensor.length; s++) {
-            if (!(sensor.type == 'Optical' && satInSun[i] == 0)) {
-              if (satInView[i]) break;
-              sensor = mSensor[s]; // satellite.js requires this format - DONT use lon,lat,alt
-
-              sensor.observerGd = {
-                longitude: sensor.lon * DEG2RAD,
-                latitude: sensor.lat * DEG2RAD,
-                height: sensor.alt * 1 // Convert from string
-
-              };
-
-              try {
-                positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_0__.eciToEcf(pv.position, gmst); // pv.position is called positionEci originally
-
-                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToLookAngles(sensor.observerGd, positionEcf);
-              } catch (e) {
-                continue;
-              }
-
-              azimuth = lookangles.azimuth;
-              elevation = lookangles.elevation;
-              rangeSat = lookangles.rangeSat;
-              azimuth *= RAD2DEG;
-              elevation *= RAD2DEG;
-
-              if (sensor.obsminaz > sensor.obsmaxaz) {
-                if ((azimuth >= sensor.obsminaz || azimuth <= sensor.obsmaxaz) && elevation >= sensor.obsminel && elevation <= sensor.obsmaxel && rangeSat <= sensor.obsmaxrange && rangeSat >= sensor.obsminrange || (azimuth >= sensor.obsminaz2 || azimuth <= sensor.obsmaxaz2) && elevation >= sensor.obsminel2 && elevation <= sensor.obsmaxel2 && rangeSat <= sensor.obsmaxrange2 && rangeSat >= sensor.obsminrange2) {
-                  satInView[i] = true;
-                }
-              } else {
-                if (azimuth >= sensor.obsminaz && azimuth <= sensor.obsmaxaz && elevation >= sensor.obsminel && elevation <= sensor.obsmaxel && rangeSat <= sensor.obsmaxrange && rangeSat >= sensor.obsminrange || azimuth >= sensor.obsminaz2 && azimuth <= sensor.obsmaxaz2 && elevation >= sensor.obsminel2 && elevation <= sensor.obsmaxel2 && rangeSat <= sensor.obsmaxrange2 && rangeSat >= sensor.obsminrange2) {
-                  satInView[i] = true;
-                }
-              }
-            }
-          }
-        } else {
-          if (!(sensor.type == 'Optical' && satInSun[i] == 0)) {
-            azimuth *= RAD2DEG;
-            elevation *= RAD2DEG;
-
-            if (sensor.obsminaz > sensor.obsmaxaz) {
-              if ((azimuth >= sensor.obsminaz || azimuth <= sensor.obsmaxaz) && elevation >= sensor.obsminel && elevation <= sensor.obsmaxel && rangeSat <= sensor.obsmaxrange && rangeSat >= sensor.obsminrange || (azimuth >= sensor.obsminaz2 || azimuth <= sensor.obsmaxaz2) && elevation >= sensor.obsminel2 && elevation <= sensor.obsmaxel2 && rangeSat <= sensor.obsmaxrange2 && rangeSat >= sensor.obsminrange2) {
-                satInView[i] = true;
-              }
-            } else {
-              if (azimuth >= sensor.obsminaz && azimuth <= sensor.obsmaxaz && elevation >= sensor.obsminel && elevation <= sensor.obsmaxel && rangeSat <= sensor.obsmaxrange && rangeSat >= sensor.obsminrange || azimuth >= sensor.obsminaz2 && azimuth <= sensor.obsmaxaz2 && elevation >= sensor.obsminel2 && elevation <= sensor.obsmaxel2 && rangeSat <= sensor.obsmaxrange2 && rangeSat >= sensor.obsminrange2) {
-                satInView[i] = true;
-              }
-            }
-          }
-        }
-      }
-    } else if (satCache[i].isRadarData) {
-      if (satCache[i].skip) continue;
-      satCache[i].skip = true;
-      satPos[i * 3] = 0;
-      satPos[i * 3 + 1] = 0;
-      satPos[i * 3 + 2] = 0;
-      satVel[i * 3] = 0;
-      satVel[i * 3 + 1] = 0;
-      satVel[i * 3 + 2] = 0;
-    } else if (satCache[i].static && !satCache[i].marker) {
-      if (satCache[i].type == 'Star') {
-        // INFO: 0 Latitude returns upside down results. Using 180 looks right, but more verification needed.
-        // WARNING: 180 and 0 really matter...unclear why
-        starPosition = _app_js_lib_suncalc_js__WEBPACK_IMPORTED_MODULE_2__.SunCalc.getStarPosition(now, 180, 0, satCache[i]);
-        starPosition = _lookAnglesToEcf(starPosition.azimuth * RAD2DEG, starPosition.altitude * RAD2DEG, STAR_DISTANCE, 0, 0, 0); // Reduce Random Jitter by Requiring New Positions to be Similar to Old
-        // THIS MIGHT BE A HORRIBLE
-
-        if (satPos[i * 3] == 0 || satPos[i * 3] - starPosition.x < 0.1 && satPos[i * 3] - starPosition.x > -0.1) satPos[i * 3] = starPosition.x;
-        if (satPos[i * 3 + 1] == 0 || satPos[i * 3 + 1] - starPosition.y < 0.1 && satPos[i * 3 + 1] - starPosition.y > -0.1) satPos[i * 3 + 1] = starPosition.y;
-        if (satPos[i * 3 + 2] == 0 || satPos[i * 3 + 2] - starPosition.z < 0.1 && satPos[i * 3 + 2] - starPosition.z > -0.1) satPos[i * 3 + 2] = starPosition.z;
-      } else {
-        cosLat = Math.cos(satCache[i].lat * DEG2RAD);
-        sinLat = Math.sin(satCache[i].lat * DEG2RAD);
-        cosLon = Math.cos(satCache[i].lon * DEG2RAD + gmst);
-        sinLon = Math.sin(satCache[i].lon * DEG2RAD + gmst);
-        satPos[i * 3] = (RADIUS_OF_EARTH + GROUND_BUFFER_DISTANCE + satCache[i].alt) * cosLat * cosLon; // 6371 is radius of earth
-
-        satPos[i * 3 + 1] = (RADIUS_OF_EARTH + GROUND_BUFFER_DISTANCE + satCache[i].alt) * cosLat * sinLon;
-        satPos[i * 3 + 2] = (RADIUS_OF_EARTH + GROUND_BUFFER_DISTANCE + satCache[i].alt) * sinLat;
-      }
-
-      satVel[i * 3] = 0;
-      satVel[i * 3 + 1] = 0;
-      satVel[i * 3 + 2] = 0;
-    } else if (satCache[i].missile) {
-      if (!satCache[i].active) {
-        continue;
-      } // Skip inactive missiles
-
-
-      tLen = satCache[i].altList.length;
-
-      for (t = 0; t < tLen; t++) {
-        if (satCache[i].startTime * 1 + t * 1000 >= now * 1) {
-          curMissivarTime = t;
-          break;
-        }
-      }
-
-      satCache[i].lastTime = satCache[i].lastTime >= 0 ? satCache[i].lastTime : 0;
-      cosLat = Math.cos(satCache[i].latList[satCache[i].lastTime + 1] * DEG2RAD);
-      sinLat = Math.sin(satCache[i].latList[satCache[i].lastTime + 1] * DEG2RAD);
-      cosLon = Math.cos(satCache[i].lonList[satCache[i].lastTime + 1] * DEG2RAD + gmstNext);
-      sinLon = Math.sin(satCache[i].lonList[satCache[i].lastTime + 1] * DEG2RAD + gmstNext);
-
-      if (satCache[i].lastTime == 0) {
-        satVel[i * 3] = 0;
-        satVel[i * 3 + 1] = 0;
-        satVel[i * 3 + 2] = 0;
-      } else if (satVel[i * 3] == 0 && satVel[i * 3 + 1] == 0 && satVel[i * 3 + 2] == 0) {
-        satVel[i * 3] = (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * cosLon - satPos[i * 3];
-        satVel[i * 3 + 1] = (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * sinLon - satPos[i * 3 + 1];
-        satVel[i * 3 + 2] = (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * sinLat - satPos[i * 3 + 2];
-      } else {
-        satVel[i * 3] += (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * cosLon - satPos[i * 3];
-        satVel[i * 3 + 1] += (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * sinLon - satPos[i * 3 + 1];
-        satVel[i * 3 + 2] += (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * sinLat - satPos[i * 3 + 2];
-        satVel[i * 3] *= 0.5;
-        satVel[i * 3 + 1] *= 0.5;
-        satVel[i * 3 + 2] *= 0.5;
-      }
-
-      cosLat = Math.cos(satCache[i].latList[curMissivarTime] * DEG2RAD);
-      sinLat = Math.sin(satCache[i].latList[curMissivarTime] * DEG2RAD);
-      cosLon = Math.cos(satCache[i].lonList[curMissivarTime] * DEG2RAD + gmst);
-      sinLon = Math.sin(satCache[i].lonList[curMissivarTime] * DEG2RAD + gmst);
-      satPos[i * 3] = (6371 + satCache[i].altList[curMissivarTime]) * cosLat * cosLon;
-      satPos[i * 3 + 1] = (6371 + satCache[i].altList[curMissivarTime]) * cosLat * sinLon;
-      satPos[i * 3 + 2] = (6371 + satCache[i].altList[curMissivarTime]) * sinLat;
-      satCache[i].lastTime = curMissivarTime;
-      x = satPos[i * 3];
-      y = satPos[i * 3 + 1];
-      z = satPos[i * 3 + 2];
-      positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_0__.eciToEcf({
-        x: x,
-        y: y,
-        z: z
-      }, gmst);
-
-      if (satellite_js__WEBPACK_IMPORTED_MODULE_0__.eciToGeodetic({
-        x: x,
-        y: y,
-        z: z
-      }, gmst).height <= 150 && satCache[i].missile === false) {
-        console.error(satCache[i].SCC_NUM);
-        satCache[i].skip = true;
-      }
-
-      lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToLookAngles(sensor.observerGd, positionEcf);
-      azimuth = lookangles.azimuth * RAD2DEG;
-      elevation = lookangles.elevation * RAD2DEG;
-      rangeSat = lookangles.rangeSat;
-      satInView[i] = false; // Default in case no sensor selected
-
-      if (sensor.obsminaz > sensor.obsmaxaz) {
-        if ((azimuth >= sensor.obsminaz || azimuth <= sensor.obsmaxaz) && elevation >= sensor.obsminel && elevation <= sensor.obsmaxel && rangeSat <= sensor.obsmaxrange && rangeSat >= sensor.obsminrange || (azimuth >= sensor.obsminaz2 || azimuth <= sensor.obsmaxaz2) && elevation >= sensor.obsminel2 && elevation <= sensor.obsmaxel2 && rangeSat <= sensor.obsmaxrange2 && rangeSat >= sensor.obsminrange2) {
-          satInView[i] = true;
-        } else {
-          satInView[i] = false;
-        }
-      } else {
-        if (azimuth >= sensor.obsminaz && azimuth <= sensor.obsmaxaz && elevation >= sensor.obsminel && elevation <= sensor.obsmaxel && rangeSat <= sensor.obsmaxrange && rangeSat >= sensor.obsminrange || azimuth >= sensor.obsminaz2 && azimuth <= sensor.obsmaxaz2 && elevation >= sensor.obsminel2 && elevation <= sensor.obsmaxel2 && rangeSat <= sensor.obsmaxrange2 && rangeSat >= sensor.obsminrange2) {
-          satInView[i] = true;
-        } else {
-          satInView[i] = false;
-        }
-      }
-    } else if (isShowFOVBubble || isResetFOVBubble) {
-      // //////////////////////////////////
-      // FOV Bubble Drawing Code - START
-      // //////////////////////////////////
-      if (!isMultiSensor && sensor.observerGd !== defaultGd) {
-        mSensor[0] = sensor;
-        mSensor.length = 1;
-      }
-
-      sensorMarkerArray = [];
-
-      for (s = 0; s < mSensor.length + 1; s++) {
-        sensorMarkerArray.push(i); // We intentionally go past the last sensor so we can record the last marker's id
-
-        if (s == mSensor.length) break;
-        sensor = mSensor[s]; // satellite.js requires this format - DONT use lon,lat,alt
-
-        sensor.observerGd = {
-          longitude: sensor.lon * DEG2RAD,
-          latitude: sensor.lat * DEG2RAD,
-          height: sensor.alt * 1 // Convert from string
-
-        };
-
-        if (satCache[i].marker) {
-          satPos[i * 3] = 0;
-          satPos[i * 3 + 1] = 0;
-          satPos[i * 3 + 2] = 0;
-          satVel[i * 3] = 0;
-          satVel[i * 3 + 1] = 0;
-          satVel[i * 3 + 2] = 0;
-
-          if (isResetFOVBubble) {
-            continue;
-          }
-
-          if (!isShowFOVBubble) continue;
-          if (sensor.observerGd === defaultGd) continue; // Ignore Optical and Mechanical Sensors When showing Many
-
-          if (isIgnoreNonRadar) {
-            if (mSensor.length > 1 && sensor.type === 'Optical') continue;
-            if (mSensor.length > 1 && sensor.type === 'Observer') continue;
-            if (mSensor.length > 1 && sensor.type === 'Mechanical') continue;
-          } // az, el, rng, pos;
-
-
-          q = Math.abs(sensor.obsmaxaz - sensor.obsminaz) < 30 ? 0.5 : 3;
-          q2 = sensor.obsmaxrange - sensor.obsminrange < 720 ? 125 : 30; // Don't show anything but the floor if in surveillance only mode
-          // Unless it is a volume search radar
-
-          if (!isShowSurvFence) {
-            // Only on non-360 FOV
-            if (sensor.obsminaz !== 0 && sensor.obsmaxaz !== 360) {
-              // //////////////////////////////////
-              // Min AZ FOV
-              // //////////////////////////////////
-              for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-                az = sensor.obsminaz;
-
-                for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
-                  pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-
-                  try {
-                    satCache[i].active = true;
-                    satPos[i * 3] = pos.x;
-                    satPos[i * 3 + 1] = pos.y;
-                    satPos[i * 3 + 2] = pos.z;
-                    satVel[i * 3] = 0;
-                    satVel[i * 3 + 1] = 0;
-                    satVel[i * 3 + 2] = 0;
-                    i++;
-                  } catch (e) {
-                    console.log(e);
-                  }
-                }
-              } // //////////////////////////////////
-              // Max AZ FOV
-              // //////////////////////////////////
-
-
-              for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-                az = sensor.obsmaxaz;
-
-                for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
-                  pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                  satCache[i].active = true;
-                  satPos[i * 3] = pos.x;
-                  satPos[i * 3 + 1] = pos.y;
-                  satPos[i * 3 + 2] = pos.z;
-                  satVel[i * 3] = 0;
-                  satVel[i * 3 + 1] = 0;
-                  satVel[i * 3 + 2] = 0;
-                  i++;
-                }
-              }
-
-              if (typeof sensor.obsminaz2 != 'undefined') {
-                ////////////////////////////////
-                // Cobra DANE Types
-                ////////////////////////////////
-                // //////////////////////////////////
-                // Min AZ 2 FOV
-                // //////////////////////////////////
-                for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-                  az = sensor.obsminaz2;
-
-                  for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
-                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                    satCache[i].active = true;
-                    satPos[i * 3] = pos.x;
-                    satPos[i * 3 + 1] = pos.y;
-                    satPos[i * 3 + 2] = pos.z;
-                    satVel[i * 3] = 0;
-                    satVel[i * 3 + 1] = 0;
-                    satVel[i * 3 + 2] = 0;
-                    i++;
-                  }
-                } // //////////////////////////////////
-                // Max AZ 2 FOV
-                // //////////////////////////////////
-
-
-                for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-                  az = sensor.obsmaxaz2;
-
-                  for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
-                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                    satCache[i].active = true;
-                    satPos[i * 3] = pos.x;
-                    satPos[i * 3 + 1] = pos.y;
-                    satPos[i * 3 + 2] = pos.z;
-                    satVel[i * 3] = 0;
-                    satVel[i * 3 + 1] = 0;
-                    satVel[i * 3 + 2] = 0;
-                    i++;
-                  }
-                }
-              } // Only on 360 FOV
-
-            } else {
-              for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-                el = sensor.obsmaxel;
-
-                for (az = sensor.obsminaz; az < sensor.obsmaxaz; az += q) {
-                  pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                  satCache[i].active = true;
-                  satPos[i * 3] = pos.x;
-                  satPos[i * 3 + 1] = pos.y;
-                  satPos[i * 3 + 2] = pos.z;
-                  satVel[i * 3] = 0;
-                  satVel[i * 3 + 1] = 0;
-                  satVel[i * 3 + 2] = 0;
-                  i++;
-                }
-              }
-            }
-          } // //////////////////////////////////
-          // Top of FOV for Small FOV
-          // //////////////////////////////////
-
-
-          if (sensor.obsmaxel - sensor.obsminel < 20) {
-            for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-              for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
-                if (sensor.obsminaz > sensor.obsmaxaz) {
-                  if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {// Intentional
-                  } else {
-                    continue;
-                  }
-                } else {
-                  if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {// Intentional
-                  } else {
-                    continue;
-                  }
-                }
-
-                pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsmaxel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-
-                if (i === len) {
-                  console.debug('No More Markers');
-                  break;
-                }
-
-                satCache[i].active = true;
-                satPos[i * 3] = pos.x;
-                satPos[i * 3 + 1] = pos.y;
-                satPos[i * 3 + 2] = pos.z;
-                satVel[i * 3] = 0;
-                satVel[i * 3 + 1] = 0;
-                satVel[i * 3 + 2] = 0;
-                i++;
-              }
-            }
-          }
-
-          if (typeof sensor.obsminaz2 != 'undefined') {
-            ////////////////////////////////
-            // Cobra DANE Types
-            ////////////////////////////////
-            // //////////////////////////////////
-            // Floor of FOV
-            // //////////////////////////////////
-            q = 2;
-
-            for (rng = Math.max(sensor.obsminrange2, 100); rng < Math.min(sensor.obsmaxrange2, 60000); rng += Math.min(sensor.obsmaxrange2, 60000) / q2) {
-              for (az = 0; az < 360; az += 1 * q) {
-                if (sensor.obsminaz2 > sensor.obsmaxaz2) {
-                  if (az >= sensor.obsminaz2 || az <= sensor.obsmaxaz2) {// Intentional
-                  } else {
-                    continue;
-                  }
-                } else {
-                  if (az >= sensor.obsminaz2 && az <= sensor.obsmaxaz2) {// Intentional
-                  } else {
-                    continue;
-                  }
-                }
-
-                pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel2, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-
-                if (i === len) {
-                  console.debug('No More Markers');
-                  break;
-                }
-
-                satCache[i].active = true;
-                satPos[i * 3] = pos.x;
-                satPos[i * 3 + 1] = pos.y;
-                satPos[i * 3 + 2] = pos.z;
-                satVel[i * 3] = 0;
-                satVel[i * 3 + 1] = 0;
-                satVel[i * 3 + 2] = 0;
-                i++;
-              }
-            }
-          } // Don't show anything but the floor if in surveillance only mode
-          // Unless it is a volume search radar
-
-
-          if (!isShowSurvFence) {
-            // //////////////////////////////////
-            // Outside Edge of FOV
-            // //////////////////////////////////
-            rng = Math.min(sensor.obsmaxrange, 60000);
-
-            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
-              if (sensor.obsminaz > sensor.obsmaxaz) {
-                if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {// Intentional
-                } else {
-                  continue;
-                }
-              } else {
-                if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {// Intentional
-                } else {
-                  continue;
-                }
-              }
-
-              for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
-                pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-
-                if (i === len) {
-                  console.debug('No More Markers');
-                  break;
-                }
-
-                satCache[i].active = true;
-                satPos[i * 3] = pos.x;
-                satPos[i * 3 + 1] = pos.y;
-                satPos[i * 3 + 2] = pos.z;
-                satVel[i * 3] = 0;
-                satVel[i * 3 + 1] = 0;
-                satVel[i * 3 + 2] = 0;
-                i++;
-              }
-            }
-
-            if (typeof sensor.obsminaz2 != 'undefined') {
-              ////////////////////////////////
-              // Cobra DANE Types
-              ////////////////////////////////
-              // //////////////////////////////////
-              // Outside of FOV
-              // //////////////////////////////////
-              rng = Math.min(sensor.obsmaxrange2, 60000);
-
-              for (az = 0; az < Math.max(360, sensor.obsmaxaz2); az += q) {
-                if (sensor.obsminaz2 > sensor.obsmaxaz2) {
-                  if (az >= sensor.obsminaz2 || az <= sensor.obsmaxaz2) {// Intentional
-                  } else {
-                    continue;
-                  }
-                } else {
-                  if (az >= sensor.obsminaz2 && az <= sensor.obsmaxaz2) {// Intentional
-                  } else {
-                    continue;
-                  }
-                }
-
-                for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
-                  pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-
-                  if (i === len) {
-                    console.debug('No More Markers');
-                    break;
-                  }
-
-                  satCache[i].active = true;
-                  satPos[i * 3] = pos.x;
-                  satPos[i * 3 + 1] = pos.y;
-                  satPos[i * 3 + 2] = pos.z;
-                  satVel[i * 3] = 0;
-                  satVel[i * 3 + 1] = 0;
-                  satVel[i * 3 + 2] = 0;
-                  i++;
-                }
-              }
-            }
-          } // //////////////////////////////////
-          // Floor of FOV
-          // //////////////////////////////////
-
-
-          q = 0.25;
-
-          for (rng = sensor.obsmaxrange; rng == sensor.obsmaxrange; rng += 1) {
-            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
-              if (sensor.obsminaz > sensor.obsmaxaz) {
-                if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {// Intentional
-                } else {
-                  continue;
-                }
-              } else {
-                if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {// Intentional
-                } else {
-                  continue;
-                }
-              }
-
-              pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-
-              if (i === len) {
-                console.debug('No More Markers');
-                break;
-              }
-
-              satCache[i].active = true;
-              satPos[i * 3] = pos.x;
-              satPos[i * 3 + 1] = pos.y;
-              satPos[i * 3 + 2] = pos.z;
-              satVel[i * 3] = 0;
-              satVel[i * 3 + 1] = 0;
-              satVel[i * 3 + 2] = 0;
-              i++;
-            }
-          }
-
-          for (rng = sensor.obsminrange; rng == sensor.obsminrange; rng += 1) {
-            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
-              if (sensor.obsminaz > sensor.obsmaxaz) {
-                if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {// Intentional
-                } else {
-                  continue;
-                }
-              } else {
-                if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {// Intentional
-                } else {
-                  continue;
-                }
-              }
-
-              pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-
-              if (i === len) {
-                console.debug('No More Markers');
-                break;
-              }
-
-              satCache[i].active = true;
-              satPos[i * 3] = pos.x;
-              satPos[i * 3 + 1] = pos.y;
-              satPos[i * 3 + 2] = pos.z;
-              satVel[i * 3] = 0;
-              satVel[i * 3 + 1] = 0;
-              satVel[i * 3 + 2] = 0;
-              i++;
-            }
-          }
-
-          if (sensor.obsmaxrange - sensor.obsminrange < 720) {
-            for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-              for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
-                if (sensor.obsminaz > sensor.obsmaxaz) {
-                  if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {// Intentional
-                  } else {
-                    continue;
-                  }
-                } else {
-                  if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {// Intentional
-                  } else {
-                    continue;
-                  }
-                }
-
-                pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-
-                if (i === len) {
-                  console.debug('No More Markers');
-                  break;
-                }
-
-                satCache[i].active = true;
-                satPos[i * 3] = pos.x;
-                satPos[i * 3 + 1] = pos.y;
-                satPos[i * 3 + 2] = pos.z;
-                satVel[i * 3] = 0;
-                satVel[i * 3 + 1] = 0;
-                satVel[i * 3 + 2] = 0;
-                i++;
-              }
-            }
-          }
-
-          if (sensor.obsminaz !== sensor.obsmaxaz && sensor.obsminaz !== sensor.obsmaxaz - 360) {
-            for (az = sensor.obsmaxaz; az == sensor.obsmaxaz; az += 1) {
-              for (rng = sensor.obsminrange; rng < sensor.obsmaxrange; rng += q) {
-                pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-
-                if (i === len) {
-                  console.debug('No More Markers');
-                  break;
-                }
-
-                satCache[i].active = true;
-                satPos[i * 3] = pos.x;
-                satPos[i * 3 + 1] = pos.y;
-                satPos[i * 3 + 2] = pos.z;
-                satVel[i * 3] = 0;
-                satVel[i * 3 + 1] = 0;
-                satVel[i * 3 + 2] = 0;
-                i++;
-              }
-            }
-
-            for (az = sensor.obsminaz; az == sensor.obsminaz; az += 1) {
-              for (rng = sensor.obsminrange; rng < sensor.obsmaxrange; rng += q) {
-                pos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(_lookAnglesToEcf(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-
-                if (i === len) {
-                  console.debug('No More Markers');
-                  break;
-                }
-
-                satCache[i].active = true;
-                satPos[i * 3] = pos.x;
-                satPos[i * 3 + 1] = pos.y;
-                satPos[i * 3 + 2] = pos.z;
-                satVel[i * 3] = 0;
-                satVel[i * 3 + 1] = 0;
-                satVel[i * 3 + 2] = 0;
-                i++;
-              }
-            }
-          }
-        }
-      } // //////////////////////////////////
-      // FOV Bubble Drawing Code - STOP
-      // //////////////////////////////////
-
-    } else if (isShowSatOverfly || isResetSatOverfly) {
-      // //////////////////////////////////
-      // Satellite Overfly Drawing Code - START
-      // //////////////////////////////////
-      if (satCache[i].marker) {
-        if (isResetSatOverfly && satCache[i].active === true) {
-          satCache[i].active = false;
-          satPos[i * 3] = 0;
-          satPos[i * 3 + 1] = 0;
-          satPos[i * 3 + 2] = 0;
-          satVel[i * 3] = 0;
-          satVel[i * 3 + 1] = 0;
-          satVel[i * 3 + 2] = 0;
-          continue;
-        }
-
-        for (snum = 0; snum < satelliteSelected.length + 1; snum++) {
-          if (snum === satelliteSelected.length) {
-            sensorMarkerArray.push(i);
-            break;
-          }
-
-          if (satelliteSelected[snum] !== -1) {
-            if (!isShowSatOverfly) continue; // Find the ECI position of the Selected Satellite
-
-            satSelPosX = satPos[satelliteSelected[snum] * 3];
-            satSelPosY = satPos[satelliteSelected[snum] * 3 + 1];
-            satSelPosZ = satPos[satelliteSelected[snum] * 3 + 2];
-            satSelPosEcf = {
-              x: satSelPosX,
-              y: satSelPosY,
-              z: satSelPosZ
-            };
-            satSelPos = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(satSelPosEcf, gmst); // Find the Lat/Long of the Selected Satellite
-
-            satSelGeodetic = satellite_js__WEBPACK_IMPORTED_MODULE_0__.eciToGeodetic(satSelPos, gmst); // pv.position is called positionEci originally
-
-            satHeight = satSelGeodetic.height;
-            satSelPosEarth = {
-              longitude: satSelGeodetic.longitude,
-              latitude: satSelGeodetic.latitude,
-              height: 1
-            };
-            deltaLatInt = 1;
-            if (satHeight < 2500 && selectedSatFOV <= 60) deltaLatInt = 0.5;
-            if (satHeight > 7000 || selectedSatFOV >= 90) deltaLatInt = 2;
-            if (satelliteSelected.length > 1) deltaLatInt = 2;
-
-            for (deltaLat = -60; deltaLat < 60; deltaLat += deltaLatInt) {
-              lat = Math.max(Math.min(Math.round(satSelGeodetic.latitude * RAD2DEG) + deltaLat, 90), -90) * DEG2RAD;
-              if (lat > 90) continue;
-              deltaLonInt = 1; // Math.max((Math.abs(lat)*RAD2DEG/15),1);
-
-              if (satHeight < 2500 && selectedSatFOV <= 60) deltaLonInt = 0.5;
-              if (satHeight > 7000 || selectedSatFOV >= 90) deltaLonInt = 2;
-              if (satelliteSelected.length > 1) deltaLonInt = 2;
-
-              for (deltaLon = 0; deltaLon < 181; deltaLon += deltaLonInt) {
-                // //////////
-                // Add Long
-                // //////////
-                long = satSelGeodetic.longitude + deltaLon * DEG2RAD;
-                satSelPosEarth = {
-                  longitude: long,
-                  latitude: lat,
-                  height: 15
-                }; // Find the Az/El of the position on the earth
-
-                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToLookAngles(satSelPosEarth, satSelPosEcf); // azimuth = lookangles.azimuth;
-
-                elevation = lookangles.elevation; // rangeSat = lookangles.rangeSat;
-
-                if (elevation * RAD2DEG > 0 && 90 - elevation * RAD2DEG < selectedSatFOV) {
-                  satSelPosEarth = satellite_js__WEBPACK_IMPORTED_MODULE_0__.geodeticToEcf(satSelPosEarth);
-
-                  if (i === len) {
-                    console.debug('Ran out of Markers');
-                    continue; // Only get so many markers.
-                  }
-
-                  satCache[i].active = true;
-                  satPos[i * 3] = satSelPosEarth.x;
-                  satPos[i * 3 + 1] = satSelPosEarth.y;
-                  satPos[i * 3 + 2] = satSelPosEarth.z;
-                  satVel[i * 3] = 0;
-                  satVel[i * 3 + 1] = 0;
-                  satVel[i * 3 + 2] = 0;
-                  i++;
-                } // //////////
-                // Minus Long
-                // //////////
-
-
-                if (deltaLon === 0 || deltaLon === 180) continue; // Don't Draw Two Dots On the Center Line
-
-                long = satSelGeodetic.longitude - deltaLon * DEG2RAD;
-                satSelPosEarth = {
-                  longitude: long,
-                  latitude: lat,
-                  height: 15
-                }; // Find the Az/El of the position on the earth
-
-                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToLookAngles(satSelPosEarth, satSelPosEcf); // azimuth = lookangles.azimuth;
-
-                elevation = lookangles.elevation; // rangeSat = lookangles.rangeSat;
-
-                if (elevation * RAD2DEG > 0 && 90 - elevation * RAD2DEG < selectedSatFOV) {
-                  satSelPosEarth = satellite_js__WEBPACK_IMPORTED_MODULE_0__.geodeticToEcf(satSelPosEarth);
-
-                  if (i === len) {
-                    console.debug('Ran out of Markers');
-                    continue; // Only get so many markers.
-                  }
-
-                  satCache[i].active = true;
-                  satPos[i * 3] = satSelPosEarth.x;
-                  satPos[i * 3 + 1] = satSelPosEarth.y;
-                  satPos[i * 3 + 2] = satSelPosEarth.z;
-                  satVel[i * 3] = 0;
-                  satVel[i * 3 + 1] = 0;
-                  satVel[i * 3 + 2] = 0;
-                  i++;
-                }
-
-                if (lat === 90 || lat === -90) break; // One Dot for the Poles
-              }
-            }
-          }
-        }
-      } // //////////////////////////////////
-      // Satellite Overfly Drawing Code - STOP
-      // //////////////////////////////////
-
-    }
-
-    isResetSatOverfly = false;
-
-    if (satCache[i].marker) {
-      for (; i < len; i++) {
-        if (!satCache[i].active) {
-          len -= fieldOfViewSetLength;
-          break;
-        }
-
-        satPos[i * 3] = 0;
-        satPos[i * 3 + 1] = 0;
-        satPos[i * 3 + 2] = 0;
-        satVel[i * 3] = 0;
-        satVel[i * 3 + 1] = 0;
-        satVel[i * 3 + 2] = 0;
-        satCache[i].active = false;
-      }
-    }
-  }
-
-  if (isResetFOVBubble) {
-    isResetFOVBubble = false;
-    len -= fieldOfViewSetLength;
-  }
-
-  postMessageArray = {
-    satPos: satPos,
-    satVel: satVel
-  }; // Add In View Data if Sensor Selected
-
-  if (sensor.observerGd !== defaultGd) {
-    postMessageArray.satInView = satInView;
-  } else {
-    postMessageArray.satInView = [];
-  } // Add Sun View Data if Enabled
-
-
-  if (isSunlightView) {
-    postMessageArray.satInSun = satInSun;
-  } else {
-    postMessageArray.satInSun = [];
-  } // If there is at least one sensor showing markers
-
-
-  if (sensorMarkerArray.length >= 1) {
-    postMessageArray.sensorMarkerArray = sensorMarkerArray;
-  } else {
-    postMessageArray.sensorMarkerArray = [];
-  }
-
-  postMessage(postMessageArray); // The longer the delay the more jitter at higher speeds of propagation
-
-  setTimeout(() => {
-    propagateCruncher();
-  }, 1 * globalPropagationRate * globalPropagationRateMultiplier / divisor); // //////////////////////////////////////////////////////////////////////////
-  // Benchmarking
-  //
-  // var stopTime1 = performance.now();
-  // if (numOfCrunches > 5) {
-  // totalCrunchTime1 += (stopTime1 - startTime1);
-  // averageTimeForCrunchLoop = totalCrunchTime1 / (numOfCrunches - 5);
-  // averageTimeForPropagate = totalCrunchTime2 / (numOfCrunches - 5);
-  // }
-  // //////////////////////////////////////////////////////////////////////////
-};
-/* Returns Ordinal Day (Commonly Called J Day) */
-
-
-var jday = (year, mon, day, hr, minute, sec) => {
-  'use strict';
-
-  return 367.0 * year - Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) + Math.floor(275 * mon / 9.0) + day + 1721013.5 + ((sec / 60.0 + minute) / 60.0 + hr) / 24.0 //  ut in days
-  ;
-};
-/* Returns Current Propagation Time */
-
-
-var propTime = () => {
-  var now = new Date();
-  var dynamicPropOffset = now.getTime() - dynamicOffsetEpoch;
-  now.setTime(dynamicOffsetEpoch + staticOffset + dynamicPropOffset * propRate);
-  return now;
-};
-})();
-
+/******/ 	
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	// This entry module is referenced by other modules so it can't be inlined
+/******/ 	var __webpack_exports__ = __webpack_require__("./src/js/webworker/positionCruncher.ts");
+/******/ 	
 /******/ })()
 ;
 //# sourceMappingURL=positionCruncher.js.map
