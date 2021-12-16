@@ -40490,7 +40490,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @app/js/lib/helpers */ "./src/js/lib/helpers.ts");
 
 const formatInclination = (inc) => {
-    parseFloat(inc).toPrecision(7);
+    inc = parseFloat(inc).toPrecision(7);
     const incArr = inc.split('.');
     incArr[0] = incArr[0].substr(-3, 3);
     if (incArr[1]) {
@@ -40504,7 +40504,7 @@ const formatInclination = (inc) => {
     return inc;
 };
 const formatMeanMotion = (meanmo) => {
-    parseFloat(meanmo).toPrecision(10);
+    meanmo = parseFloat(meanmo).toPrecision(10);
     const meanmoArr = meanmo.split('.');
     meanmoArr[0] = meanmoArr[0].substr(-2, 2);
     if (meanmoArr[1]) {
@@ -40518,7 +40518,7 @@ const formatMeanMotion = (meanmo) => {
     return meanmo;
 };
 const formatRightAscension = (rasc) => {
-    parseFloat(rasc).toPrecision(7);
+    rasc = parseFloat(rasc).toPrecision(7);
     const rascArr = rasc.split('.');
     rascArr[0] = rascArr[0].substr(-3, 3);
     if (rascArr[1]) {
@@ -40532,7 +40532,7 @@ const formatRightAscension = (rasc) => {
     return rasc;
 };
 const formatArgumentOfPerigee = (argPe) => {
-    parseFloat(argPe).toPrecision(7);
+    argPe = parseFloat(argPe).toPrecision(7);
     const argPeArr = argPe.split('.');
     argPeArr[0] = argPeArr[0].substr(-3, 3);
     if (argPeArr[1]) {
@@ -40546,7 +40546,7 @@ const formatArgumentOfPerigee = (argPe) => {
     return argPe;
 };
 const formatMeanAnomaly = (meana) => {
-    parseFloat(meana).toPrecision(7);
+    meana = parseFloat(meana).toPrecision(7);
     const meanaArr = meana.split('.');
     meanaArr[0] = meanaArr[0].substr(-3, 3);
     if (meanaArr[1]) {
