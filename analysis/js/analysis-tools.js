@@ -40310,7 +40310,8 @@ const calculateSensorPos = (sensors) => {
     };
     return pos;
 };
-const createTle = (sat, inc, meanmo, rasc, argPe, meana, ecen, epochyr, epochday, intl, scc) => {
+const createTle = (tleParams) => {
+    let { sat, inc, meanmo, rasc, argPe, meana, ecen, epochyr, epochday, intl, scc } = tleParams;
     inc = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatInclination)(inc);
     meanmo = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatMeanMotion)(meanmo);
     rasc = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatRightAscension)(rasc);
