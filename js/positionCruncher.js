@@ -11320,7 +11320,9 @@ const checkSunExclusion = (sensor, j, gmst, now) => {
     const sunRange = (sunR * 149597870700) / 1000; // au to km conversion
     // RAE to ECI
     const sunECI = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(lookAnglesToEcf(sunAz, sunEl, sunRange, 0, 0, 0), gmst);
-    return sensor.observerGd !== _positionCruncher__WEBPACK_IMPORTED_MODULE_4__.defaultGd && (sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.OPTICAL || sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.OBSERVER) && sunElRel > -6 ? [true, sunECI] : [false, sunECI];
+    return sensor.observerGd !== _positionCruncher__WEBPACK_IMPORTED_MODULE_4__.defaultGd && (sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.OPTICAL || sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.OBSERVER) && sunElRel > -6
+        ? [true, sunECI]
+        : [false, sunECI];
 };
 
 
