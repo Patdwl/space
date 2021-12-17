@@ -37051,7 +37051,6 @@ const register = (params) => {
     else {
         throw new Error(`Invalid callback "${params.method}"!`);
     }
-    return;
 };
 const unregister = (params) => {
     // If this is a valid callback
@@ -37153,10 +37152,7 @@ const keepTrackApi = {
         uiManagerFinal: () => {
             keepTrackApi.callbacks.uiManagerFinal.forEach((cb) => cb.cb());
         },
-        loadCatalog: () => __awaiter(void 0, void 0, void 0, function* () {
-            const satData = yield keepTrackApi.callbacks.loadCatalog[0].cb();
-            return satData;
-        }),
+        loadCatalog: () => __awaiter(void 0, void 0, void 0, function* () { return keepTrackApi.callbacks.loadCatalog[0].cb(); }),
         resetSensor: () => {
             keepTrackApi.callbacks.resetSensor.forEach((cb) => cb.cb());
         },
@@ -37167,7 +37163,8 @@ const keepTrackApi = {
     programs: {},
 };
 // First time we call this module we should make it available to the rest of the application
-!window.keepTrackApi ? (window.keepTrackApi = keepTrackApi) : null;
+if (!window.keepTrackApi)
+    window.keepTrackApi = keepTrackApi;
 
 
 /***/ }),
@@ -38907,7 +38904,8 @@ const calculateVisMag = (sat, sensor, propTime, sun) => {
     const rae = satellite.getRae(propTime, satrec, sensor);
     const distanceToSatellite = rae.rng; //This is in KM
     const theta = Math.acos(_lib_external_numeric__WEBPACK_IMPORTED_MODULE_7__.numeric.dot([-sat.position.x, -sat.position.y, -sat.position.z], [sat.position.x + sun.eci.x, -sat.position.y + sun.eci.y, -sat.position.z + sun.eci.z]) /
-        (Math.sqrt(Math.pow(-sat.position.x, 2) + Math.pow(-sat.position.y, 2) + Math.pow(-sat.position.z, 2)) * Math.sqrt(Math.pow(-sat.position.x + sun.eci.x, 2) + Math.pow(-sat.position.y + sun.eci.y, 2) + Math.pow(-sat.position.z + sun.eci.z, 2))));
+        (Math.sqrt(Math.pow(-sat.position.x, 2) + Math.pow(-sat.position.y, 2) + Math.pow(-sat.position.z, 2)) *
+            Math.sqrt(Math.pow(-sat.position.x + sun.eci.x, 2) + Math.pow(-sat.position.y + sun.eci.y, 2) + Math.pow(-sat.position.z + sun.eci.z, 2))));
     // Note sometimes -1.3 is used for this calculation.
     //-1.8 is std. mag for iss
     const intrinsicMagnitude = -1.8;
@@ -39824,8 +39822,6 @@ const getEci = (sat, now) => {
 /* istanbul ignore next */
 const findNearbyObjectsByOrbit = (sat) => {
     const { satSet } = _api_keepTrackApi__WEBPACK_IMPORTED_MODULE_4__.keepTrackApi.programs;
-    if (typeof sat == 'undefined' || sat == null)
-        [];
     let catalog = satSet.satData;
     let possibleMatches = [];
     let maxPeriod = sat.period * 1.05;
@@ -40110,7 +40106,12 @@ const calculateDops = (satList) => {
         var el = cursat.el;
         azlist.push(az);
         ellist.push(el);
-        var B = [Math.cos((el * Math.PI) / 180.0) * Math.sin((az * Math.PI) / 180.0), Math.cos((el * Math.PI) / 180.0) * Math.cos((az * Math.PI) / 180.0), Math.sin((el * Math.PI) / 180.0), 1];
+        var B = [
+            Math.cos((el * Math.PI) / 180.0) * Math.sin((az * Math.PI) / 180.0),
+            Math.cos((el * Math.PI) / 180.0) * Math.cos((az * Math.PI) / 180.0),
+            Math.sin((el * Math.PI) / 180.0),
+            1,
+        ];
         _lib_external_numeric__WEBPACK_IMPORTED_MODULE_7__.numeric.setBlock(A, [n - 1, 0], [n - 1, 3], [B]);
     }
     var Q = _lib_external_numeric__WEBPACK_IMPORTED_MODULE_7__.numeric.dot(_lib_external_numeric__WEBPACK_IMPORTED_MODULE_7__.numeric.transpose(A), A);
