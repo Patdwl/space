@@ -11247,23 +11247,76 @@ const dateToLocalInIso = (date) => {
 
 /***/ }),
 
-/***/ "./src/js/webworker/positionCalculations.ts":
-/*!**************************************************!*\
-  !*** ./src/js/webworker/positionCalculations.ts ***!
-  \**************************************************/
+/***/ "./src/js/webworker/constants.ts":
+/*!***************************************!*\
+  !*** ./src/js/webworker/constants.ts ***!
+  \***************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "defaultGd": () => (/* binding */ defaultGd),
+/* harmony export */   "emptySensor": () => (/* binding */ emptySensor)
+/* harmony export */ });
+// //////////////////////////////////////////////////////////////////////////////
+// Code
+// //////////////////////////////////////////////////////////////////////////////
+const defaultGd = {
+    latitude: null,
+    longitude: 0,
+    height: 0,
+};
+const emptySensor = {
+    observerGd: {
+        latitude: null,
+        longitude: 0,
+        height: 0,
+    },
+    alt: null,
+    country: '',
+    lat: null,
+    lon: null,
+    name: '',
+    obsmaxaz: 0,
+    obsmaxel: 0,
+    obsmaxrange: 0,
+    obsminaz: 0,
+    obsminel: 0,
+    obsminrange: 0,
+    shortName: '',
+    staticNum: 0,
+    sun: '',
+    volume: false,
+    zoom: '',
+};
+
+
+/***/ }),
+
+/***/ "./src/js/webworker/positionCruncher/calculations.ts":
+/*!***********************************************************!*\
+  !*** ./src/js/webworker/positionCruncher/calculations.ts ***!
+  \***********************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "lookAnglesToEcf": () => (/* binding */ lookAnglesToEcf),
 /* harmony export */   "propTime": () => (/* binding */ propTime),
-/* harmony export */   "checkSunExclusion": () => (/* binding */ checkSunExclusion)
+/* harmony export */   "checkSunExclusion": () => (/* binding */ checkSunExclusion),
+/* harmony export */   "isInFov": () => (/* binding */ isInFov),
+/* harmony export */   "setupTimeVariables": () => (/* binding */ setupTimeVariables),
+/* harmony export */   "createLatLonHei": () => (/* binding */ createLatLonHei),
+/* harmony export */   "isInValidElevation": () => (/* binding */ isInValidElevation),
+/* harmony export */   "isSensorDeepSpace": () => (/* binding */ isSensorDeepSpace)
 /* harmony export */ });
 /* harmony import */ var satellite_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! satellite.js */ "./node_modules/satellite.js/dist/satellite.es.js");
-/* harmony import */ var _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../api/SpaceObjectType */ "./src/js/api/SpaceObjectType.ts");
-/* harmony import */ var _lib_constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../lib/constants */ "./src/js/lib/constants.ts");
-/* harmony import */ var _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../lib/external/meuusjs */ "./src/js/lib/external/meuusjs.ts");
-/* harmony import */ var _positionCruncher__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./positionCruncher */ "./src/js/webworker/positionCruncher.ts");
+/* harmony import */ var _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../api/SpaceObjectType */ "./src/js/api/SpaceObjectType.ts");
+/* harmony import */ var _lib_constants__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../lib/constants */ "./src/js/lib/constants.ts");
+/* harmony import */ var _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../lib/external/meuusjs */ "./src/js/lib/external/meuusjs.ts");
+/* harmony import */ var _timeManager_transforms__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../timeManager/transforms */ "./src/js/timeManager/transforms.ts");
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../constants */ "./src/js/webworker/constants.ts");
+
 
 
 
@@ -11320,25 +11373,200 @@ const checkSunExclusion = (sensor, j, gmst, now) => {
     const sunRange = (sunR * 149597870700) / 1000; // au to km conversion
     // RAE to ECI
     const sunECI = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(lookAnglesToEcf(sunAz, sunEl, sunRange, 0, 0, 0), gmst);
-    return sensor.observerGd !== _positionCruncher__WEBPACK_IMPORTED_MODULE_4__.defaultGd && (sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.OPTICAL || sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.OBSERVER) && sunElRel > -6
+    return sensor.observerGd !== _constants__WEBPACK_IMPORTED_MODULE_5__.defaultGd && (sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.OPTICAL || sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.OBSERVER) && sunElRel > -6
         ? [true, sunECI]
         : [false, sunECI];
+};
+const isInFov = (lookangles, sensor) => {
+    const azimuth = lookangles.azimuth * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG;
+    const elevation = lookangles.elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG;
+    const rangeSat = lookangles.rangeSat;
+    if (sensor.obsminaz > sensor.obsmaxaz) {
+        if (((azimuth >= sensor.obsminaz || azimuth <= sensor.obsmaxaz) &&
+            elevation >= sensor.obsminel &&
+            elevation <= sensor.obsmaxel &&
+            rangeSat <= sensor.obsmaxrange &&
+            rangeSat >= sensor.obsminrange) ||
+            ((azimuth >= sensor.obsminaz2 || azimuth <= sensor.obsmaxaz2) &&
+                elevation >= sensor.obsminel2 &&
+                elevation <= sensor.obsmaxel2 &&
+                rangeSat <= sensor.obsmaxrange2 &&
+                rangeSat >= sensor.obsminrange2)) {
+            return 1;
+        }
+    }
+    else {
+        if ((azimuth >= sensor.obsminaz &&
+            azimuth <= sensor.obsmaxaz &&
+            elevation >= sensor.obsminel &&
+            elevation <= sensor.obsmaxel &&
+            rangeSat <= sensor.obsmaxrange &&
+            rangeSat >= sensor.obsminrange) ||
+            (azimuth >= sensor.obsminaz2 &&
+                azimuth <= sensor.obsmaxaz2 &&
+                elevation >= sensor.obsminel2 &&
+                elevation <= sensor.obsmaxel2 &&
+                rangeSat <= sensor.obsmaxrange2 &&
+                rangeSat >= sensor.obsminrange2)) {
+            return 1;
+        }
+    }
+    return 0;
+};
+const setupTimeVariables = (dynamicOffsetEpoch, staticOffset, propRate, isSunlightView, isMultiSensor, sensor) => {
+    const now = propTime(dynamicOffsetEpoch, staticOffset, propRate);
+    const j = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_4__.jday)(now.getUTCFullYear(), now.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+    now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()) +
+        now.getUTCMilliseconds() * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.MILLISECONDS_PER_DAY;
+    const gmst = satellite_js__WEBPACK_IMPORTED_MODULE_0__.gstime(j);
+    let isSunExclusion = false;
+    let sunEci = { x: 0, y: 0, z: 0 };
+    if (isSunlightView && !isMultiSensor) {
+        [isSunExclusion, sunEci] = checkSunExclusion(sensor, j, gmst, now);
+    }
+    const j2 = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_4__.jday)(now.getUTCFullYear(), now.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
+    now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds() + 1) +
+        now.getUTCMilliseconds() * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.MILLISECONDS_PER_DAY;
+    const gmstNext = satellite_js__WEBPACK_IMPORTED_MODULE_0__.gstime(j2);
+    return {
+        now,
+        j,
+        gmst,
+        gmstNext,
+        isSunExclusion,
+        sunEci,
+    };
+};
+const createLatLonHei = (lat, lon, hei) => ({
+    longitude: lon,
+    latitude: lat,
+    height: hei,
+});
+const isInValidElevation = (lookangles, selectedSatFOV) => lookangles.elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG > 0 && 90 - lookangles.elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG < selectedSatFOV;
+const isSensorDeepSpace = (mSensor, sensor) => {
+    // TODO: This should use the sensors max range instead of sensor type
+    if (mSensor.length > 1 && sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.OPTICAL)
+        return true;
+    if (mSensor.length > 1 && sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.OBSERVER)
+        return true;
+    if (mSensor.length > 1 && sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_1__.SpaceObjectType.MECHANICAL)
+        return true;
+    return false;
 };
 
 
 /***/ }),
 
-/***/ "./src/js/webworker/positionCruncher.ts":
-/*!**********************************************!*\
-  !*** ./src/js/webworker/positionCruncher.ts ***!
-  \**********************************************/
+/***/ "./src/js/webworker/positionCruncher/satCache.ts":
+/*!*******************************************************!*\
+  !*** ./src/js/webworker/positionCruncher/satCache.ts ***!
+  \*******************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "defaultGd": () => (/* binding */ defaultGd),
-/* harmony export */   "onmessageInject": () => (/* binding */ onmessageInject),
-/* harmony export */   "propagateCruncher": () => (/* binding */ propagateCruncher),
+/* harmony export */   "setPosition": () => (/* binding */ setPosition),
+/* harmony export */   "resetPosition": () => (/* binding */ resetPosition),
+/* harmony export */   "resetVelocity": () => (/* binding */ resetVelocity)
+/* harmony export */ });
+const setPosition = (satPos, i, pos) => {
+    satPos[i * 3] = pos.x;
+    satPos[i * 3 + 1] = pos.y;
+    satPos[i * 3 + 2] = pos.z;
+    return satPos;
+};
+const resetPosition = (satPos, i) => {
+    satPos[i * 3] = 0;
+    satPos[i * 3 + 1] = 0;
+    satPos[i * 3 + 2] = 0;
+    return satPos;
+};
+const resetVelocity = (satVel, i) => {
+    satVel[i * 3] = 0;
+    satVel[i * 3 + 1] = 0;
+    satVel[i * 3 + 2] = 0;
+    return satVel;
+};
+
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
+(() => {
+/*!**********************************************!*\
+  !*** ./src/js/webworker/positionCruncher.ts ***!
+  \**********************************************/
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "onmessageProcessing": () => (/* binding */ onmessageProcessing),
+/* harmony export */   "propagationLoop": () => (/* binding */ propagationLoop),
+/* harmony export */   "updateSatCache": () => (/* binding */ updateSatCache),
+/* harmony export */   "updateRadarData": () => (/* binding */ updateRadarData),
+/* harmony export */   "updateSatOverfly": () => (/* binding */ updateSatOverfly),
+/* harmony export */   "updateStar": () => (/* binding */ updateStar),
+/* harmony export */   "updateMissile": () => (/* binding */ updateMissile),
+/* harmony export */   "updateLandObject": () => (/* binding */ updateLandObject),
+/* harmony export */   "updateSatellite": () => (/* binding */ updateSatellite),
+/* harmony export */   "isMarkersNeeded": () => (/* binding */ isMarkersNeeded),
+/* harmony export */   "resetInactiveMarkers": () => (/* binding */ resetInactiveMarkers),
+/* harmony export */   "updateMarkerFov": () => (/* binding */ updateMarkerFov),
 /* harmony export */   "sendDataToSatSet": () => (/* binding */ sendDataToSatSet)
 /* harmony export */ });
 /* harmony import */ var _app_js_lib_suncalc_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @app/js/lib/suncalc.js */ "./src/js/lib/suncalc.js");
@@ -11346,8 +11574,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../api/SpaceObjectType */ "./src/js/api/SpaceObjectType.ts");
 /* harmony import */ var _lib_constants__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../lib/constants */ "./src/js/lib/constants.ts");
 /* harmony import */ var _lib_external_numeric__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../lib/external/numeric */ "./src/js/lib/external/numeric.js");
-/* harmony import */ var _timeManager_transforms__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../timeManager/transforms */ "./src/js/timeManager/transforms.ts");
-/* harmony import */ var _positionCalculations__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./positionCalculations */ "./src/js/webworker/positionCalculations.ts");
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./constants */ "./src/js/webworker/constants.ts");
+/* harmony import */ var _positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./positionCruncher/calculations */ "./src/js/webworker/positionCruncher/calculations.ts");
+/* harmony import */ var _positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./positionCruncher/satCache */ "./src/js/webworker/positionCruncher/satCache.ts");
 /**
  * /*! /////////////////////////////////////////////////////////////////////////////
  *
@@ -11381,6 +11610,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 const EMPTY_FLOAT32_ARRAY = new Float32Array(0);
 const EMPTY_INT8_ARRAY = new Int8Array(0);
 /** ARRAYS */
@@ -11391,6 +11621,7 @@ let satInView = EMPTY_INT8_ARRAY; // Array of booleans showing if current Satell
 let satInSun = EMPTY_INT8_ARRAY; // Array of booleans showing if current Satellite is in sunlight
 let sensorMarkerArray = [0]; // Array of Markers used to show sensor fence and FOV
 var satelliteSelected = [-1]; // Array used to determine which satellites are selected
+let isInterupted = false; // Boolean used to determine if the worker is interupted
 /** TIME VARIABLES */
 let globalPropagationRate = 1000; // Limits how often the propagation loop runs
 let globalPropagationRateMultiplier = 1; // Used to slow down propagation rate on slow computers
@@ -11418,135 +11649,23 @@ let fieldOfViewSetLength = 0;
 let len;
 /** OBSERVER VARIABLES */
 var mSensor = [];
-const defaultGd = {
-    latitude: null,
-    longitude: 0,
-    height: 0,
-};
-const emptySensor = {
-    observerGd: {
-        latitude: null,
-        longitude: 0,
-        height: 0,
-    },
-    alt: null,
-    country: '',
-    lat: null,
-    lon: null,
-    name: '',
-    obsmaxaz: 0,
-    obsmaxel: 0,
-    obsmaxrange: 0,
-    obsminaz: 0,
-    obsminel: 0,
-    obsminrange: 0,
-    shortName: '',
-    staticNum: 0,
-    sun: '',
-    volume: false,
-    zoom: '',
-};
-let sensor = emptySensor;
+let sensor = _constants__WEBPACK_IMPORTED_MODULE_5__.emptySensor;
 // Handles Incomming Messages to sat-cruncher from main thread
 try {
-    onmessage = (m) => onmessageInject(m);
+    onmessage = (m) => onmessageProcessing(m);
 }
 catch (e) {
+    // If Jest isn't running then throw the error
     if (!process)
         throw e;
 }
-const onmessageInject = function (m) {
-    if (m.data.isSunlightView) {
-        isSunlightView = m.data.isSunlightView;
-    }
-    if (m.data.satelliteSelected) {
-        satelliteSelected = m.data.satelliteSelected;
-        if (satelliteSelected[0] === -1) {
-            isResetSatOverfly = true;
-            if (!isResetMarker)
-                isResetMarker = true;
-        }
-    }
-    if (m.data.isSlowCPUModeEnabled) {
-        globalPropagationRate = 2000;
-    }
-    if (m.data.isLowPerf) {
-        isLowPerf = true;
-    }
-    // //////////////////////////////
-    // SAT OVERFLY AND FOV BUBBLE
-    // /////////////////////////////
-    if (m.data.fieldOfViewSetLength) {
-        fieldOfViewSetLength = m.data.fieldOfViewSetLength;
-    }
-    if (m.data.isShowSatOverfly === 'enable') {
-        isShowSatOverfly = true;
-        selectedSatFOV = m.data.selectedSatFOV;
-    }
-    if (m.data.isShowSatOverfly === 'reset') {
-        isResetSatOverfly = true;
-        isShowSatOverfly = false;
-        if (!isResetMarker)
-            isResetMarker = true;
-    }
-    if (m.data.isShowFOVBubble === 'enable') {
-        isShowFOVBubble = true;
-    }
-    if (m.data.isShowFOVBubble === 'reset') {
-        isResetFOVBubble = true;
-        isShowFOVBubble = false;
-        if (!isResetMarker)
-            isResetMarker = true;
-    }
-    if (m.data.isShowSurvFence === 'enable') {
-        isShowSurvFence = true;
-        if (!isResetMarker)
-            isResetMarker = true;
-    }
-    if (m.data.isShowSurvFence === 'disable') {
-        isShowSurvFence = false;
-        if (!isResetMarker)
-            isResetMarker = true;
-    }
-    // ////////////////////////////////
-    if (m.data.multiSensor) {
-        isMultiSensor = true;
-        mSensor = m.data.sensor;
-        sensor = m.data.sensor;
-        globalPropagationRateMultiplier = 2;
-        if (!isResetInView)
-            isResetInView = true;
-    }
-    else if (m.data.sensor) {
-        sensor = m.data.sensor[0];
-        if (m.data.setlatlong) {
-            if (m.data.resetObserverGd) {
-                globalPropagationRateMultiplier = 1;
-                sensor.observerGd = defaultGd;
-                mSensor = [];
-                if (!isResetInView)
-                    isResetInView = true;
-            }
-            else {
-                globalPropagationRateMultiplier = 2;
-                // satellite.js requires this format - DONT use lat,lon,alt
-                // and we MUST do it (for now) because main thread is in lat,lon,alt
-                sensor.observerGd = {
-                    longitude: m.data.sensor[0].lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
-                    latitude: m.data.sensor[0].lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
-                    height: parseFloat(m.data.sensor[0].alt),
-                };
-                if (!isResetInView)
-                    isResetInView = true;
-            }
-        }
-        isMultiSensor = false;
-    }
+const onmessageProcessing = (m) => {
     switch (m.data.typ) {
         case 'offset':
             staticOffset = m.data.staticOffset;
             dynamicOffsetEpoch = m.data.dynamicOffsetEpoch;
             propRate = m.data.propRate;
+            isInterupted = true;
             // Changing this to 0.1 caused issues...
             divisor = 1;
             return;
@@ -11557,7 +11676,7 @@ const onmessageInject = function (m) {
             var extraData = [];
             var satrec;
             while (i < len) {
-                const extra = {
+                const extraRec = {
                     lowAlt: null,
                     inclination: null,
                     eccentricity: null,
@@ -11574,7 +11693,7 @@ const onmessageInject = function (m) {
                 if (satData[i].static || satData[i].missile || satData[i].isRadarData) {
                     satrec = satData[i];
                     delete satrec['id'];
-                    extraData.push(extra);
+                    extraData.push(extraRec);
                     satCache.push(satrec);
                     i++;
                 }
@@ -11582,19 +11701,19 @@ const onmessageInject = function (m) {
                     satrec = satellite_js__WEBPACK_IMPORTED_MODULE_1__.twoline2satrec(
                     // perform and store sat init calcs
                     satData[i].TLE1, satData[i].TLE2);
-                    extra.lowAlt = satrec.isimp;
-                    extra.inclination = satrec.inclo; // rads
-                    extra.eccentricity = satrec.ecco;
-                    extra.raan = satrec.nodeo; // rads
-                    extra.argPe = satrec.argpo; // rads
-                    extra.meanMotion = (satrec.no * 60 * 24) / _lib_constants__WEBPACK_IMPORTED_MODULE_3__.TAU; // convert rads/minute to rev/day
-                    extra.semiMajorAxis = Math.pow(8681663.653 / extra.meanMotion, 2 / 3);
-                    extra.semiMinorAxis = extra.semiMajorAxis * Math.sqrt(1 - Math.pow(extra.eccentricity, 2));
-                    extra.apogee = extra.semiMajorAxis * (1 + extra.eccentricity) - _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH;
-                    satrec.apogee = extra.apogee;
-                    extra.perigee = extra.semiMajorAxis * (1 - extra.eccentricity) - _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH;
-                    extra.period = 1440.0 / extra.meanMotion;
-                    extraData.push(extra);
+                    extraRec.lowAlt = satrec.isimp;
+                    extraRec.inclination = satrec.inclo; // rads
+                    extraRec.eccentricity = satrec.ecco;
+                    extraRec.raan = satrec.nodeo; // rads
+                    extraRec.argPe = satrec.argpo; // rads
+                    extraRec.meanMotion = (satrec.no * 60 * 24) / _lib_constants__WEBPACK_IMPORTED_MODULE_3__.TAU; // convert rads/minute to rev/day
+                    extraRec.semiMajorAxis = Math.pow(8681663.653 / extraRec.meanMotion, 2 / 3);
+                    extraRec.semiMinorAxis = extraRec.semiMajorAxis * Math.sqrt(1 - Math.pow(extraRec.eccentricity, 2));
+                    extraRec.apogee = extraRec.semiMajorAxis * (1 + extraRec.eccentricity) - _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH;
+                    satrec.apogee = extraRec.apogee;
+                    extraRec.perigee = extraRec.semiMajorAxis * (1 - extraRec.eccentricity) - _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH;
+                    extraRec.period = 1440.0 / extraRec.meanMotion;
+                    extraData.push(extraRec);
                     delete satrec['id'];
                     satCache.push(satrec);
                     i++;
@@ -11662,987 +11781,865 @@ const onmessageInject = function (m) {
             break;
         default:
             console.warn('Unknown message typ: ' + m.data.typ);
+            if (m.data.isSunlightView) {
+                isSunlightView = m.data.isSunlightView;
+            }
+            if (m.data.satelliteSelected) {
+                satelliteSelected = m.data.satelliteSelected;
+                if (satelliteSelected[0] === -1) {
+                    isResetSatOverfly = true;
+                    if (!isResetMarker)
+                        isResetMarker = true;
+                }
+            }
+            if (m.data.isSlowCPUModeEnabled) {
+                globalPropagationRate = 2000;
+            }
+            if (m.data.isLowPerf) {
+                isLowPerf = true;
+            }
+            // //////////////////////////////
+            // SAT OVERFLY AND FOV BUBBLE
+            // /////////////////////////////
+            if (m.data.fieldOfViewSetLength) {
+                fieldOfViewSetLength = m.data.fieldOfViewSetLength;
+            }
+            if (m.data.isShowSatOverfly === 'enable') {
+                isShowSatOverfly = true;
+                selectedSatFOV = m.data.selectedSatFOV;
+            }
+            if (m.data.isShowSatOverfly === 'reset') {
+                isResetSatOverfly = true;
+                isShowSatOverfly = false;
+                if (!isResetMarker)
+                    isResetMarker = true;
+            }
+            if (m.data.isShowFOVBubble === 'enable') {
+                isShowFOVBubble = true;
+            }
+            if (m.data.isShowFOVBubble === 'reset') {
+                isResetFOVBubble = true;
+                isShowFOVBubble = false;
+                if (!isResetMarker)
+                    isResetMarker = true;
+            }
+            if (m.data.isShowSurvFence === 'enable') {
+                isShowSurvFence = true;
+                if (!isResetMarker)
+                    isResetMarker = true;
+            }
+            if (m.data.isShowSurvFence === 'disable') {
+                isShowSurvFence = false;
+                if (!isResetMarker)
+                    isResetMarker = true;
+            }
+            // ////////////////////////////////
+            if (m.data.multiSensor) {
+                isMultiSensor = true;
+                mSensor = m.data.sensor;
+                sensor = m.data.sensor;
+                globalPropagationRateMultiplier = 2;
+                if (!isResetInView)
+                    isResetInView = true;
+            }
+            else if (m.data.sensor) {
+                sensor = m.data.sensor[0];
+                if (m.data.setlatlong) {
+                    if (m.data.resetObserverGd) {
+                        globalPropagationRateMultiplier = 1;
+                        sensor.observerGd = _constants__WEBPACK_IMPORTED_MODULE_5__.defaultGd;
+                        mSensor = [];
+                        if (!isResetInView)
+                            isResetInView = true;
+                    }
+                    else {
+                        globalPropagationRateMultiplier = 2;
+                        // satellite.js requires this format - DONT use lat,lon,alt
+                        // and we MUST do it (for now) because main thread is in lat,lon,alt
+                        sensor.observerGd = {
+                            longitude: m.data.sensor[0].lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
+                            latitude: m.data.sensor[0].lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
+                            height: parseFloat(m.data.sensor[0].alt),
+                        };
+                        if (!isResetInView)
+                            isResetInView = true;
+                    }
+                }
+                isMultiSensor = false;
+            }
             break;
     }
     // Don't start before getting satData!
     if (!propagationRunning && m.data.typ === 'satdata') {
         len = -1; // propagteCruncher needs to start at -1 not 0
-        propagateCruncher();
+        propagationLoop();
         propagationRunning = true;
     }
 };
-// Prevent Memory Leak by declaring variables outside of function
-const propagateCruncher = (mockSatCache) => {
-    if (mockSatCache) {
-        satCache = mockSatCache;
-    }
-    const now = (0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.propTime)(dynamicOffsetEpoch, staticOffset, propRate);
-    const j = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_5__.jday)(now.getUTCFullYear(), now.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
-    now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds()) +
-        now.getUTCMilliseconds() * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.MILLISECONDS_PER_DAY;
-    const gmst = satellite_js__WEBPACK_IMPORTED_MODULE_1__.gstime(j);
-    let isSunExclusion = false;
-    let sunECI = { x: 0, y: 0, z: 0 };
-    if (isSunlightView && !isMultiSensor) {
-        [isSunExclusion, sunECI] = (0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.checkSunExclusion)(sensor, j, gmst, now);
-    }
-    const j2 = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_5__.jday)(now.getUTCFullYear(), now.getUTCMonth() + 1, // Note, this function requires months in range 1-12.
-    now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds() + 1) +
-        now.getUTCMilliseconds() * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.MILLISECONDS_PER_DAY;
-    const gmstNext = satellite_js__WEBPACK_IMPORTED_MODULE_1__.gstime(j2);
-    len = satCache.length - 1;
-    if ((!isResetSatOverfly && !isShowSatOverfly && !isResetFOVBubble && !isShowFOVBubble) || isLowPerf) {
-        len -= fieldOfViewSetLength;
-    }
-    let i = -1;
-    let positionEcf, lookangles, azimuth, elevation, rangeSat;
-    let x, y, z;
-    let cosLat, sinLat, cosLon, sinLon;
-    let curMissivarTime;
-    let s, m, tLen, t;
-    let pv;
-    let sat;
-    let isSensorChecked = false;
-    let az, el, rng, pos;
-    let q, q2;
-    let semiDiamEarth, semiDiamSun, theta;
-    let starPosition;
-    let snum;
-    let lat, long;
-    let satSelPosX, satSelPosY, satSelPosZ, satSelPosEcf, satSelPos, satSelGeodetic, satHeight, satSelPosEarth, deltaLat, deltaLatInt, deltaLon, deltaLonInt;
-    while (i < len) {
-        i++; // At the beginning so i starts at 0
-        sat = satCache[i];
-        if (sat.satnum) {
-            // Skip reentries
-            if (sat.skip)
-                continue;
-            m = (j - sat.jdsatepoch) * 1440.0; // 1440 = minutes_per_day
-            pv = satellite_js__WEBPACK_IMPORTED_MODULE_1__.sgp4(sat, m);
-            try {
-                satPos[i * 3] = pv.position.x;
-                satPos[i * 3 + 1] = pv.position.y;
-                satPos[i * 3 + 2] = pv.position.z;
-                satVel[i * 3] = pv.velocity.x;
-                satVel[i * 3 + 1] = pv.velocity.y;
-                satVel[i * 3 + 2] = pv.velocity.z;
-                // Make sure that objects with an imprecise orbit or an old elset
-                // are not failing to propagate
-                if (sat.isimp || m / 1440 > 30) {
-                    const a = 6378.137;
-                    const b = 6356.7523142;
-                    const R = Math.sqrt(pv.position.x * pv.position.x + pv.position.y * pv.position.y);
-                    const f = (a - b) / a;
-                    const e2 = 2 * f - f * f;
-                    let lon = Math.atan2(pv.position.y, pv.position.x) - gmst;
-                    while (lon < -_lib_constants__WEBPACK_IMPORTED_MODULE_3__.PI) {
-                        lon += _lib_constants__WEBPACK_IMPORTED_MODULE_3__.TAU;
-                    }
-                    while (lon > _lib_constants__WEBPACK_IMPORTED_MODULE_3__.PI) {
-                        lon -= _lib_constants__WEBPACK_IMPORTED_MODULE_3__.TAU;
-                    }
-                    const kmax = 20;
-                    let k = 0;
-                    lat = Math.atan2(pv.position.z, Math.sqrt(pv.position.x * pv.position.x + pv.position.y * pv.position.y));
-                    let C;
-                    while (k < kmax) {
-                        C = 1 / Math.sqrt(1 - e2 * (Math.sin(lat) * Math.sin(lat)));
-                        lat = Math.atan2(pv.position.z + a * C * e2 * Math.sin(lat), R);
-                        k += 1;
-                    }
-                    const alt = R / Math.cos(lat) - a * C;
-                    if (alt > sat.apogee + 1000) {
-                        throw new Error('Impossible orbit');
-                    }
-                }
-                // Skip Calculating Lookangles if No Sensor is Selected
-                if (!isSensorChecked) {
-                    if (sensor.observerGd !== defaultGd && !isMultiSensor) {
-                        positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToEcf(pv.position, gmst); // pv.position is called positionEci originally
-                        lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(sensor.observerGd, positionEcf);
-                        azimuth = lookangles.azimuth;
-                        elevation = lookangles.elevation;
-                        rangeSat = lookangles.rangeSat;
-                    }
-                    else {
-                        isSensorChecked = true;
-                    }
-                }
-            }
-            catch (e) {
-                // This is probably a reentry and should be skipped from now on.
-                satCache[i].skip = true;
-                satPos[i * 3] = 0;
-                satPos[i * 3 + 1] = 0;
-                satPos[i * 3 + 2] = 0;
-                satVel[i * 3] = 0;
-                satVel[i * 3 + 1] = 0;
-                satVel[i * 3 + 2] = 0;
-                positionEcf = 0;
-                lookangles = 0;
-                azimuth = 0;
-                elevation = 0;
-                rangeSat = 0;
-            }
-            satInView[i] = 0; // 0 = FALSE - Default in case no sensor selected
-            satInSun[i] = 2; // Default in case
-            if (isSunlightView) {
-                semiDiamEarth = Math.asin(_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH / Math.sqrt(Math.pow(-satPos[i * 3], 2) + Math.pow(-satPos[i * 3 + 1], 2) + Math.pow(-satPos[i * 3 + 2], 2))) * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
-                semiDiamSun =
-                    Math.asin(_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_SUN / Math.sqrt(Math.pow(-satPos[i * 3] + sunECI.x, 2) + Math.pow(-satPos[i * 3 + 1] + sunECI.y, 2) + Math.pow(-satPos[i * 3 + 2] + sunECI.z, 2))) *
-                        _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
-                // Angle between earth and sun
-                theta =
-                    Math.acos(_lib_external_numeric__WEBPACK_IMPORTED_MODULE_4__.numeric.dot([-satPos[i * 3], -satPos[i * 3 + 1], -satPos[i * 3 + 2]], [-satPos[i * 3] + sunECI.x, -satPos[i * 3 + 1] + sunECI.y, -satPos[i * 3 + 2] + sunECI.z]) /
-                        (Math.sqrt(Math.pow(-satPos[i * 3], 2) + Math.pow(-satPos[i * 3 + 1], 2) + Math.pow(-satPos[i * 3 + 2], 2)) *
-                            Math.sqrt(Math.pow(-satPos[i * 3] + sunECI.x, 2) + Math.pow(-satPos[i * 3 + 1] + sunECI.y, 2) + Math.pow(-satPos[i * 3 + 2] + sunECI.z, 2)))) * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
-                if (semiDiamEarth > semiDiamSun && theta < semiDiamEarth - semiDiamSun) {
-                    satInSun[i] = 0; // Umbral
-                }
-                if (Math.abs(semiDiamEarth - semiDiamSun) < theta && theta < semiDiamEarth + semiDiamSun) {
-                    satInSun[i] = 1; // Penumbral
-                }
-                if (semiDiamSun > semiDiamEarth) {
-                    satInSun[i] = 1; // Penumbral
-                }
-                if (theta < semiDiamSun - semiDiamEarth) {
-                    satInSun[i] = 1; // Penumbral
-                }
-            }
-            if (sensor.observerGd !== defaultGd && !isSunExclusion) {
-                if (isMultiSensor) {
-                    for (s = 0; s < mSensor.length; s++) {
-                        // Skip satellites in the sun if you are an optical sensor
-                        if (!(sensor.type == _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.OPTICAL && satInSun[i] == 0)) {
-                            if (satInView[i])
-                                break;
-                            sensor = mSensor[s];
-                            // satellite.js requires this format - DONT use lon,lat,alt
-                            sensor.observerGd = {
-                                longitude: sensor.lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
-                                latitude: sensor.lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
-                                height: sensor.alt * 1, // Convert from string
-                            };
-                            try {
-                                positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToEcf(pv.position, gmst); // pv.position is called positionEci originally
-                                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(sensor.observerGd, positionEcf);
-                            }
-                            catch (e) {
-                                continue;
-                            }
-                            azimuth = lookangles.azimuth;
-                            elevation = lookangles.elevation;
-                            rangeSat = lookangles.rangeSat;
-                            azimuth *= _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
-                            elevation *= _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
-                            if (sensor.obsminaz > sensor.obsmaxaz) {
-                                if (((azimuth >= sensor.obsminaz || azimuth <= sensor.obsmaxaz) &&
-                                    elevation >= sensor.obsminel &&
-                                    elevation <= sensor.obsmaxel &&
-                                    rangeSat <= sensor.obsmaxrange &&
-                                    rangeSat >= sensor.obsminrange) ||
-                                    ((azimuth >= sensor.obsminaz2 || azimuth <= sensor.obsmaxaz2) &&
-                                        elevation >= sensor.obsminel2 &&
-                                        elevation <= sensor.obsmaxel2 &&
-                                        rangeSat <= sensor.obsmaxrange2 &&
-                                        rangeSat >= sensor.obsminrange2)) {
-                                    satInView[i] = 1; // 1 = TRUE
-                                }
-                            }
-                            else {
-                                if ((azimuth >= sensor.obsminaz &&
-                                    azimuth <= sensor.obsmaxaz &&
-                                    elevation >= sensor.obsminel &&
-                                    elevation <= sensor.obsmaxel &&
-                                    rangeSat <= sensor.obsmaxrange &&
-                                    rangeSat >= sensor.obsminrange) ||
-                                    (azimuth >= sensor.obsminaz2 &&
-                                        azimuth <= sensor.obsmaxaz2 &&
-                                        elevation >= sensor.obsminel2 &&
-                                        elevation <= sensor.obsmaxel2 &&
-                                        rangeSat <= sensor.obsmaxrange2 &&
-                                        rangeSat >= sensor.obsminrange2)) {
-                                    satInView[i] = 1; // 1 = TRUE
-                                }
-                            }
-                        }
-                    }
-                }
-                else {
-                    if (!(sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.OPTICAL && satInSun[i] == 0)) {
-                        azimuth *= _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
-                        elevation *= _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
-                        if (sensor.obsminaz > sensor.obsmaxaz) {
-                            if (((azimuth >= sensor.obsminaz || azimuth <= sensor.obsmaxaz) &&
-                                elevation >= sensor.obsminel &&
-                                elevation <= sensor.obsmaxel &&
-                                rangeSat <= sensor.obsmaxrange &&
-                                rangeSat >= sensor.obsminrange) ||
-                                ((azimuth >= sensor.obsminaz2 || azimuth <= sensor.obsmaxaz2) &&
-                                    elevation >= sensor.obsminel2 &&
-                                    elevation <= sensor.obsmaxel2 &&
-                                    rangeSat <= sensor.obsmaxrange2 &&
-                                    rangeSat >= sensor.obsminrange2)) {
-                                satInView[i] = 1; // 1 = TRUE
-                            }
-                        }
-                        else {
-                            if ((azimuth >= sensor.obsminaz &&
-                                azimuth <= sensor.obsmaxaz &&
-                                elevation >= sensor.obsminel &&
-                                elevation <= sensor.obsmaxel &&
-                                rangeSat <= sensor.obsmaxrange &&
-                                rangeSat >= sensor.obsminrange) ||
-                                (azimuth >= sensor.obsminaz2 &&
-                                    azimuth <= sensor.obsmaxaz2 &&
-                                    elevation >= sensor.obsminel2 &&
-                                    elevation <= sensor.obsmaxel2 &&
-                                    rangeSat <= sensor.obsmaxrange2 &&
-                                    rangeSat >= sensor.obsminrange2)) {
-                                satInView[i] = 1; // 1 = TRUE
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        else if (satCache[i].isRadarData) {
-            if (satCache[i].skip)
-                continue;
-            satCache[i].skip = true;
-            satPos[i * 3] = 0;
-            satPos[i * 3 + 1] = 0;
-            satPos[i * 3 + 2] = 0;
-            satVel[i * 3] = 0;
-            satVel[i * 3 + 1] = 0;
-            satVel[i * 3 + 2] = 0;
-        }
-        else if (satCache[i].static && !satCache[i].marker) {
-            if (satCache[i].type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.STAR) {
-                // INFO: 0 Latitude returns upside down results. Using 180 looks right, but more verification needed.
-                // WARNING: 180 and 0 really matter...unclear why
-                starPosition = _app_js_lib_suncalc_js__WEBPACK_IMPORTED_MODULE_0__.SunCalc.getStarPosition(now, 180, 0, satCache[i]);
-                starPosition = (0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(starPosition.azimuth * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG, starPosition.altitude * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG, _lib_constants__WEBPACK_IMPORTED_MODULE_3__.STAR_DISTANCE, 0, 0, 0);
-                // Reduce Random Jitter by Requiring New Positions to be Similar to Old
-                // THIS MIGHT BE A HORRIBLE
-                if (satPos[i * 3] == 0 || (satPos[i * 3] - starPosition.x < 0.1 && satPos[i * 3] - starPosition.x > -0.1))
-                    satPos[i * 3] = starPosition.x;
-                if (satPos[i * 3 + 1] == 0 || (satPos[i * 3 + 1] - starPosition.y < 0.1 && satPos[i * 3 + 1] - starPosition.y > -0.1))
-                    satPos[i * 3 + 1] = starPosition.y;
-                if (satPos[i * 3 + 2] == 0 || (satPos[i * 3 + 2] - starPosition.z < 0.1 && satPos[i * 3 + 2] - starPosition.z > -0.1))
-                    satPos[i * 3 + 2] = starPosition.z;
-            }
-            else {
-                cosLat = Math.cos(satCache[i].lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
-                sinLat = Math.sin(satCache[i].lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
-                cosLon = Math.cos(satCache[i].lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmst);
-                sinLon = Math.sin(satCache[i].lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmst);
-                satPos[i * 3] = (_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH + _lib_constants__WEBPACK_IMPORTED_MODULE_3__.GROUND_BUFFER_DISTANCE + satCache[i].alt) * cosLat * cosLon; // 6371 is radius of earth
-                satPos[i * 3 + 1] = (_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH + _lib_constants__WEBPACK_IMPORTED_MODULE_3__.GROUND_BUFFER_DISTANCE + satCache[i].alt) * cosLat * sinLon;
-                satPos[i * 3 + 2] = (_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH + _lib_constants__WEBPACK_IMPORTED_MODULE_3__.GROUND_BUFFER_DISTANCE + satCache[i].alt) * sinLat;
-            }
-            satVel[i * 3] = 0;
-            satVel[i * 3 + 1] = 0;
-            satVel[i * 3 + 2] = 0;
-        }
-        else if (satCache[i].missile) {
-            if (!satCache[i].active) {
-                continue;
-            } // Skip inactive missiles
-            tLen = satCache[i].altList.length;
-            for (t = 0; t < tLen; t++) {
-                if (satCache[i].startTime * 1 + t * 1000 >= now.getTime()) {
-                    curMissivarTime = t;
-                    break;
-                }
-            }
-            satCache[i].lastTime = satCache[i].lastTime >= 0 ? satCache[i].lastTime : 0;
-            cosLat = Math.cos(satCache[i].latList[satCache[i].lastTime + 1] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
-            sinLat = Math.sin(satCache[i].latList[satCache[i].lastTime + 1] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
-            cosLon = Math.cos(satCache[i].lonList[satCache[i].lastTime + 1] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmstNext);
-            sinLon = Math.sin(satCache[i].lonList[satCache[i].lastTime + 1] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmstNext);
-            if (satCache[i].lastTime == 0) {
-                satVel[i * 3] = 0;
-                satVel[i * 3 + 1] = 0;
-                satVel[i * 3 + 2] = 0;
-            }
-            else if (satVel[i * 3] == 0 && satVel[i * 3 + 1] == 0 && satVel[i * 3 + 2] == 0) {
-                satVel[i * 3] = (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * cosLon - satPos[i * 3];
-                satVel[i * 3 + 1] = (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * sinLon - satPos[i * 3 + 1];
-                satVel[i * 3 + 2] = (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * sinLat - satPos[i * 3 + 2];
-            }
-            else {
-                satVel[i * 3] += (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * cosLon - satPos[i * 3];
-                satVel[i * 3 + 1] += (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * sinLon - satPos[i * 3 + 1];
-                satVel[i * 3 + 2] += (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * sinLat - satPos[i * 3 + 2];
-                satVel[i * 3] *= 0.5;
-                satVel[i * 3 + 1] *= 0.5;
-                satVel[i * 3 + 2] *= 0.5;
-            }
-            cosLat = Math.cos(satCache[i].latList[curMissivarTime] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
-            sinLat = Math.sin(satCache[i].latList[curMissivarTime] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
-            cosLon = Math.cos(satCache[i].lonList[curMissivarTime] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmst);
-            sinLon = Math.sin(satCache[i].lonList[curMissivarTime] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmst);
-            satPos[i * 3] = (6371 + satCache[i].altList[curMissivarTime]) * cosLat * cosLon;
-            satPos[i * 3 + 1] = (6371 + satCache[i].altList[curMissivarTime]) * cosLat * sinLon;
-            satPos[i * 3 + 2] = (6371 + satCache[i].altList[curMissivarTime]) * sinLat;
-            satCache[i].lastTime = curMissivarTime;
-            x = satPos[i * 3];
-            y = satPos[i * 3 + 1];
-            z = satPos[i * 3 + 2];
-            positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToEcf({ x: x, y: y, z: z }, gmst);
-            if (satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToGeodetic({ x: x, y: y, z: z }, gmst).height <= 150 && satCache[i].missile === false) {
-                console.error(i);
-                satCache[i].skip = true;
-            }
-            lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(sensor.observerGd, positionEcf);
-            azimuth = lookangles.azimuth * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
-            elevation = lookangles.elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
-            rangeSat = lookangles.rangeSat;
-            satInView[i] = 0; // 0 = FALSE - Default in case no sensor selected
-            if (sensor.obsminaz > sensor.obsmaxaz) {
-                if (((azimuth >= sensor.obsminaz || azimuth <= sensor.obsmaxaz) &&
-                    elevation >= sensor.obsminel &&
-                    elevation <= sensor.obsmaxel &&
-                    rangeSat <= sensor.obsmaxrange &&
-                    rangeSat >= sensor.obsminrange) ||
-                    ((azimuth >= sensor.obsminaz2 || azimuth <= sensor.obsmaxaz2) &&
-                        elevation >= sensor.obsminel2 &&
-                        elevation <= sensor.obsmaxel2 &&
-                        rangeSat <= sensor.obsmaxrange2 &&
-                        rangeSat >= sensor.obsminrange2)) {
-                    satInView[i] = 1; // 1 = TRUE
-                }
-            }
-            else {
-                if ((azimuth >= sensor.obsminaz &&
-                    azimuth <= sensor.obsmaxaz &&
-                    elevation >= sensor.obsminel &&
-                    elevation <= sensor.obsmaxel &&
-                    rangeSat <= sensor.obsmaxrange &&
-                    rangeSat >= sensor.obsminrange) ||
-                    (azimuth >= sensor.obsminaz2 &&
-                        azimuth <= sensor.obsmaxaz2 &&
-                        elevation >= sensor.obsminel2 &&
-                        elevation <= sensor.obsmaxel2 &&
-                        rangeSat <= sensor.obsmaxrange2 &&
-                        rangeSat >= sensor.obsminrange2)) {
-                    satInView[i] = 1; // 1 = TRUE
-                }
-            }
-        }
-        else if (isShowFOVBubble || isResetFOVBubble) {
-            // //////////////////////////////////
-            // FOV Bubble Drawing Code - START
-            // //////////////////////////////////
-            if (!isMultiSensor && sensor.observerGd !== defaultGd) {
-                mSensor[0] = sensor;
-                mSensor.length = 1;
-            }
-            sensorMarkerArray = [];
-            for (s = 0; s < mSensor.length + 1; s++) {
-                sensorMarkerArray.push(i);
-                // We intentionally go past the last sensor so we can record the last marker's id
-                if (s == mSensor.length)
-                    break;
-                sensor = mSensor[s];
-                // satellite.js requires this format - DONT use lon,lat,alt
-                sensor.observerGd = {
-                    longitude: sensor.lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
-                    latitude: sensor.lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
-                    height: sensor.alt * 1, // Convert from string
-                };
-                if (satCache[i].marker) {
-                    satPos[i * 3] = 0;
-                    satPos[i * 3 + 1] = 0;
-                    satPos[i * 3 + 2] = 0;
-                    satVel[i * 3] = 0;
-                    satVel[i * 3 + 1] = 0;
-                    satVel[i * 3 + 2] = 0;
-                    if (isResetFOVBubble) {
-                        continue;
-                    }
-                    if (!isShowFOVBubble)
-                        continue;
-                    if (sensor.observerGd === defaultGd)
-                        continue;
-                    // Ignore Optical and Mechanical Sensors When showing Many
-                    if (isIgnoreNonRadar) {
-                        if (mSensor.length > 1 && sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.OPTICAL)
-                            continue;
-                        if (mSensor.length > 1 && sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.OBSERVER)
-                            continue;
-                        if (mSensor.length > 1 && sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.MECHANICAL)
-                            continue;
-                    }
-                    // az, el, rng, pos;
-                    q = Math.abs(sensor.obsmaxaz - sensor.obsminaz) < 30 ? 0.5 : 3;
-                    q2 = sensor.obsmaxrange - sensor.obsminrange < 720 ? 125 : 30;
-                    // Don't show anything but the floor if in surveillance only mode
-                    // Unless it is a volume search radar
-                    if (!isShowSurvFence) {
-                        // Only on non-360 FOV
-                        if (sensor.obsminaz !== 0 && sensor.obsmaxaz !== 360) {
-                            // //////////////////////////////////
-                            // Min AZ FOV
-                            // //////////////////////////////////
-                            for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-                                az = sensor.obsminaz;
-                                for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
-                                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                                    try {
-                                        satCache[i].active = true;
-                                        satPos[i * 3] = pos.x;
-                                        satPos[i * 3 + 1] = pos.y;
-                                        satPos[i * 3 + 2] = pos.z;
-                                        satVel[i * 3] = 0;
-                                        satVel[i * 3 + 1] = 0;
-                                        satVel[i * 3 + 2] = 0;
-                                        i++;
-                                    }
-                                    catch (e) {
-                                        console.log(e);
-                                    }
-                                }
-                            }
-                            // //////////////////////////////////
-                            // Max AZ FOV
-                            // //////////////////////////////////
-                            for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-                                az = sensor.obsmaxaz;
-                                for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
-                                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                                    satCache[i].active = true;
-                                    satPos[i * 3] = pos.x;
-                                    satPos[i * 3 + 1] = pos.y;
-                                    satPos[i * 3 + 2] = pos.z;
-                                    satVel[i * 3] = 0;
-                                    satVel[i * 3 + 1] = 0;
-                                    satVel[i * 3 + 2] = 0;
-                                    i++;
-                                }
-                            }
-                            if (typeof sensor.obsminaz2 != 'undefined') {
-                                ////////////////////////////////
-                                // Cobra DANE Types
-                                ////////////////////////////////
-                                // //////////////////////////////////
-                                // Min AZ 2 FOV
-                                // //////////////////////////////////
-                                for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-                                    az = sensor.obsminaz2;
-                                    for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
-                                        pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                                        satCache[i].active = true;
-                                        satPos[i * 3] = pos.x;
-                                        satPos[i * 3 + 1] = pos.y;
-                                        satPos[i * 3 + 2] = pos.z;
-                                        satVel[i * 3] = 0;
-                                        satVel[i * 3 + 1] = 0;
-                                        satVel[i * 3 + 2] = 0;
-                                        i++;
-                                    }
-                                }
-                                // //////////////////////////////////
-                                // Max AZ 2 FOV
-                                // //////////////////////////////////
-                                for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-                                    az = sensor.obsmaxaz2;
-                                    for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
-                                        pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                                        satCache[i].active = true;
-                                        satPos[i * 3] = pos.x;
-                                        satPos[i * 3 + 1] = pos.y;
-                                        satPos[i * 3 + 2] = pos.z;
-                                        satVel[i * 3] = 0;
-                                        satVel[i * 3 + 1] = 0;
-                                        satVel[i * 3 + 2] = 0;
-                                        i++;
-                                    }
-                                }
-                            }
-                            // Only on 360 FOV
-                        }
-                        else {
-                            for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-                                el = sensor.obsmaxel;
-                                for (az = sensor.obsminaz; az < sensor.obsmaxaz; az += q) {
-                                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                                    satCache[i].active = true;
-                                    satPos[i * 3] = pos.x;
-                                    satPos[i * 3 + 1] = pos.y;
-                                    satPos[i * 3 + 2] = pos.z;
-                                    satVel[i * 3] = 0;
-                                    satVel[i * 3 + 1] = 0;
-                                    satVel[i * 3 + 2] = 0;
-                                    i++;
-                                }
-                            }
-                        }
-                    }
-                    // //////////////////////////////////
-                    // Top of FOV for Small FOV
-                    // //////////////////////////////////
-                    if (sensor.obsmaxel - sensor.obsminel < 20) {
-                        for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-                            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
-                                if (sensor.obsminaz > sensor.obsmaxaz) {
-                                    if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
-                                        // Intentional
-                                    }
-                                    else {
-                                        continue;
-                                    }
-                                }
-                                else {
-                                    if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
-                                        // Intentional
-                                    }
-                                    else {
-                                        continue;
-                                    }
-                                }
-                                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsmaxel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                                if (i === len) {
-                                    console.debug('No More Markers');
-                                    break;
-                                }
-                                satCache[i].active = true;
-                                satPos[i * 3] = pos.x;
-                                satPos[i * 3 + 1] = pos.y;
-                                satPos[i * 3 + 2] = pos.z;
-                                satVel[i * 3] = 0;
-                                satVel[i * 3 + 1] = 0;
-                                satVel[i * 3 + 2] = 0;
-                                i++;
-                            }
-                        }
-                    }
-                    if (typeof sensor.obsminaz2 != 'undefined') {
-                        ////////////////////////////////
-                        // Cobra DANE Types
-                        ////////////////////////////////
-                        // //////////////////////////////////
-                        // Floor of FOV
-                        // //////////////////////////////////
-                        q = 2;
-                        for (rng = Math.max(sensor.obsminrange2, 100); rng < Math.min(sensor.obsmaxrange2, 60000); rng += Math.min(sensor.obsmaxrange2, 60000) / q2) {
-                            for (az = 0; az < 360; az += 1 * q) {
-                                if (sensor.obsminaz2 > sensor.obsmaxaz2) {
-                                    if (az >= sensor.obsminaz2 || az <= sensor.obsmaxaz2) {
-                                        // Intentional
-                                    }
-                                    else {
-                                        continue;
-                                    }
-                                }
-                                else {
-                                    if (az >= sensor.obsminaz2 && az <= sensor.obsmaxaz2) {
-                                        // Intentional
-                                    }
-                                    else {
-                                        continue;
-                                    }
-                                }
-                                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel2, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                                if (i === len) {
-                                    console.debug('No More Markers');
-                                    break;
-                                }
-                                satCache[i].active = true;
-                                satPos[i * 3] = pos.x;
-                                satPos[i * 3 + 1] = pos.y;
-                                satPos[i * 3 + 2] = pos.z;
-                                satVel[i * 3] = 0;
-                                satVel[i * 3 + 1] = 0;
-                                satVel[i * 3 + 2] = 0;
-                                i++;
-                            }
-                        }
-                    }
-                    // Don't show anything but the floor if in surveillance only mode
-                    // Unless it is a volume search radar
-                    if (!isShowSurvFence) {
-                        // //////////////////////////////////
-                        // Outside Edge of FOV
-                        // //////////////////////////////////
-                        rng = Math.min(sensor.obsmaxrange, 60000);
-                        for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
-                            if (sensor.obsminaz > sensor.obsmaxaz) {
-                                if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
-                                    // Intentional
-                                }
-                                else {
-                                    continue;
-                                }
-                            }
-                            else {
-                                if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
-                                    // Intentional
-                                }
-                                else {
-                                    continue;
-                                }
-                            }
-                            for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
-                                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                                if (i === len) {
-                                    console.debug('No More Markers');
-                                    break;
-                                }
-                                satCache[i].active = true;
-                                satPos[i * 3] = pos.x;
-                                satPos[i * 3 + 1] = pos.y;
-                                satPos[i * 3 + 2] = pos.z;
-                                satVel[i * 3] = 0;
-                                satVel[i * 3 + 1] = 0;
-                                satVel[i * 3 + 2] = 0;
-                                i++;
-                            }
-                        }
-                        if (typeof sensor.obsminaz2 != 'undefined') {
-                            ////////////////////////////////
-                            // Cobra DANE Types
-                            ////////////////////////////////
-                            // //////////////////////////////////
-                            // Outside of FOV
-                            // //////////////////////////////////
-                            rng = Math.min(sensor.obsmaxrange2, 60000);
-                            for (az = 0; az < Math.max(360, sensor.obsmaxaz2); az += q) {
-                                if (sensor.obsminaz2 > sensor.obsmaxaz2) {
-                                    if (az >= sensor.obsminaz2 || az <= sensor.obsmaxaz2) {
-                                        // Intentional
-                                    }
-                                    else {
-                                        continue;
-                                    }
-                                }
-                                else {
-                                    if (az >= sensor.obsminaz2 && az <= sensor.obsmaxaz2) {
-                                        // Intentional
-                                    }
-                                    else {
-                                        continue;
-                                    }
-                                }
-                                for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
-                                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                                    if (i === len) {
-                                        console.debug('No More Markers');
-                                        break;
-                                    }
-                                    satCache[i].active = true;
-                                    satPos[i * 3] = pos.x;
-                                    satPos[i * 3 + 1] = pos.y;
-                                    satPos[i * 3 + 2] = pos.z;
-                                    satVel[i * 3] = 0;
-                                    satVel[i * 3 + 1] = 0;
-                                    satVel[i * 3 + 2] = 0;
-                                    i++;
-                                }
-                            }
-                        }
-                    }
-                    // //////////////////////////////////
-                    // Floor of FOV
-                    // //////////////////////////////////
-                    q = 0.25;
-                    for (rng = sensor.obsmaxrange; rng === sensor.obsmaxrange; rng += 1) {
-                        for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
-                            if (sensor.obsminaz > sensor.obsmaxaz) {
-                                if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
-                                    // Intentional
-                                }
-                                else {
-                                    continue;
-                                }
-                            }
-                            else {
-                                if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
-                                    // Intentional
-                                }
-                                else {
-                                    continue;
-                                }
-                            }
-                            pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                            if (i === len) {
-                                console.debug('No More Markers');
-                                break;
-                            }
-                            satCache[i].active = true;
-                            satPos[i * 3] = pos.x;
-                            satPos[i * 3 + 1] = pos.y;
-                            satPos[i * 3 + 2] = pos.z;
-                            satVel[i * 3] = 0;
-                            satVel[i * 3 + 1] = 0;
-                            satVel[i * 3 + 2] = 0;
-                            i++;
-                        }
-                    }
-                    for (rng = sensor.obsminrange; rng === sensor.obsminrange; rng += 1) {
-                        for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
-                            if (sensor.obsminaz > sensor.obsmaxaz) {
-                                if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
-                                    // Intentional
-                                }
-                                else {
-                                    continue;
-                                }
-                            }
-                            else {
-                                if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
-                                    // Intentional
-                                }
-                                else {
-                                    continue;
-                                }
-                            }
-                            pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                            if (i === len) {
-                                console.debug('No More Markers');
-                                break;
-                            }
-                            satCache[i].active = true;
-                            satPos[i * 3] = pos.x;
-                            satPos[i * 3 + 1] = pos.y;
-                            satPos[i * 3 + 2] = pos.z;
-                            satVel[i * 3] = 0;
-                            satVel[i * 3 + 1] = 0;
-                            satVel[i * 3 + 2] = 0;
-                            i++;
-                        }
-                    }
-                    if (sensor.obsmaxrange - sensor.obsminrange < 720) {
-                        for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
-                            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
-                                if (sensor.obsminaz > sensor.obsmaxaz) {
-                                    if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
-                                        // Intentional
-                                    }
-                                    else {
-                                        continue;
-                                    }
-                                }
-                                else {
-                                    if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
-                                        // Intentional
-                                    }
-                                    else {
-                                        continue;
-                                    }
-                                }
-                                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                                if (i === len) {
-                                    console.debug('No More Markers');
-                                    break;
-                                }
-                                satCache[i].active = true;
-                                satPos[i * 3] = pos.x;
-                                satPos[i * 3 + 1] = pos.y;
-                                satPos[i * 3 + 2] = pos.z;
-                                satVel[i * 3] = 0;
-                                satVel[i * 3 + 1] = 0;
-                                satVel[i * 3 + 2] = 0;
-                                i++;
-                            }
-                        }
-                    }
-                    if (sensor.obsminaz !== sensor.obsmaxaz && sensor.obsminaz !== sensor.obsmaxaz - 360) {
-                        for (az = sensor.obsmaxaz; az === sensor.obsmaxaz; az += 1) {
-                            for (rng = sensor.obsminrange; rng < sensor.obsmaxrange; rng += q) {
-                                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                                if (i === len) {
-                                    console.debug('No More Markers');
-                                    break;
-                                }
-                                satCache[i].active = true;
-                                satPos[i * 3] = pos.x;
-                                satPos[i * 3 + 1] = pos.y;
-                                satPos[i * 3 + 2] = pos.z;
-                                satVel[i * 3] = 0;
-                                satVel[i * 3 + 1] = 0;
-                                satVel[i * 3 + 2] = 0;
-                                i++;
-                            }
-                        }
-                        for (az = sensor.obsminaz; az === sensor.obsminaz; az += 1) {
-                            for (rng = sensor.obsminrange; rng < sensor.obsmaxrange; rng += q) {
-                                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCalculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
-                                if (i === len) {
-                                    console.debug('No More Markers');
-                                    break;
-                                }
-                                satCache[i].active = true;
-                                satPos[i * 3] = pos.x;
-                                satPos[i * 3 + 1] = pos.y;
-                                satPos[i * 3 + 2] = pos.z;
-                                satVel[i * 3] = 0;
-                                satVel[i * 3 + 1] = 0;
-                                satVel[i * 3 + 2] = 0;
-                                i++;
-                            }
-                        }
-                    }
-                }
-            }
-            // //////////////////////////////////
-            // FOV Bubble Drawing Code - STOP
-            // //////////////////////////////////
-        }
-        else if (isShowSatOverfly || isResetSatOverfly) {
-            // //////////////////////////////////
-            // Satellite Overfly Drawing Code - START
-            // //////////////////////////////////
-            if (satCache[i].marker) {
-                if (isResetSatOverfly && satCache[i].active === true) {
-                    satCache[i].active = false;
-                    satPos[i * 3] = 0;
-                    satPos[i * 3 + 1] = 0;
-                    satPos[i * 3 + 2] = 0;
-                    satVel[i * 3] = 0;
-                    satVel[i * 3 + 1] = 0;
-                    satVel[i * 3 + 2] = 0;
-                    continue;
-                }
-                for (snum = 0; snum < satelliteSelected.length + 1; snum++) {
-                    if (snum === satelliteSelected.length) {
-                        sensorMarkerArray.push(i);
-                        break;
-                    }
-                    if (satelliteSelected[snum] !== -1) {
-                        if (!isShowSatOverfly)
-                            continue;
-                        // Find the ECI position of the Selected Satellite
-                        satSelPosX = satPos[satelliteSelected[snum] * 3];
-                        satSelPosY = satPos[satelliteSelected[snum] * 3 + 1];
-                        satSelPosZ = satPos[satelliteSelected[snum] * 3 + 2];
-                        satSelPosEcf = {
-                            x: satSelPosX,
-                            y: satSelPosY,
-                            z: satSelPosZ,
-                        };
-                        satSelPos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(satSelPosEcf, gmst);
-                        // Find the Lat/Long of the Selected Satellite
-                        satSelGeodetic = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToGeodetic(satSelPos, gmst); // pv.position is called positionEci originally
-                        satHeight = satSelGeodetic.height;
-                        satSelPosEarth = {
-                            longitude: satSelGeodetic.longitude,
-                            latitude: satSelGeodetic.latitude,
-                            height: 1,
-                        };
-                        deltaLatInt = 1;
-                        if (satHeight < 2500 && selectedSatFOV <= 60)
-                            deltaLatInt = 0.5;
-                        if (satHeight > 7000 || selectedSatFOV >= 90)
-                            deltaLatInt = 2;
-                        if (satelliteSelected.length > 1)
-                            deltaLatInt = 2;
-                        for (deltaLat = -60; deltaLat < 60; deltaLat += deltaLatInt) {
-                            lat = Math.max(Math.min(Math.round(satSelGeodetic.latitude * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG) + deltaLat, 90), -90) * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD;
-                            if (lat > 90)
-                                continue;
-                            deltaLonInt = 1; // Math.max((Math.abs(lat)*RAD2DEG/15),1);
-                            if (satHeight < 2500 && selectedSatFOV <= 60)
-                                deltaLonInt = 0.5;
-                            if (satHeight > 7000 || selectedSatFOV >= 90)
-                                deltaLonInt = 2;
-                            if (satelliteSelected.length > 1)
-                                deltaLonInt = 2;
-                            for (deltaLon = 0; deltaLon < 181; deltaLon += deltaLonInt) {
-                                // //////////
-                                // Add Long
-                                // //////////
-                                long = satSelGeodetic.longitude + deltaLon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD;
-                                satSelPosEarth = {
-                                    longitude: long,
-                                    latitude: lat,
-                                    height: 15,
-                                };
-                                // Find the Az/El of the position on the earth
-                                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(satSelPosEarth, satSelPosEcf);
-                                elevation = lookangles.elevation;
-                                if (elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG > 0 && 90 - elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG < selectedSatFOV) {
-                                    satSelPosEarth = satellite_js__WEBPACK_IMPORTED_MODULE_1__.geodeticToEcf(satSelPosEarth);
-                                    if (i === len) {
-                                        console.debug('Ran out of Markers');
-                                        continue; // Only get so many markers.
-                                    }
-                                    satCache[i].active = true;
-                                    satPos[i * 3] = satSelPosEarth.x;
-                                    satPos[i * 3 + 1] = satSelPosEarth.y;
-                                    satPos[i * 3 + 2] = satSelPosEarth.z;
-                                    satVel[i * 3] = 0;
-                                    satVel[i * 3 + 1] = 0;
-                                    satVel[i * 3 + 2] = 0;
-                                    i++;
-                                }
-                                // //////////
-                                // Minus Long
-                                // //////////
-                                if (deltaLon === 0 || deltaLon === 180)
-                                    continue; // Don't Draw Two Dots On the Center Line
-                                long = satSelGeodetic.longitude - deltaLon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD;
-                                satSelPosEarth = {
-                                    longitude: long,
-                                    latitude: lat,
-                                    height: 15,
-                                };
-                                // Find the Az/El of the position on the earth
-                                lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(satSelPosEarth, satSelPosEcf);
-                                elevation = lookangles.elevation;
-                                if (elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG > 0 && 90 - elevation * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG < selectedSatFOV) {
-                                    satSelPosEarth = satellite_js__WEBPACK_IMPORTED_MODULE_1__.geodeticToEcf(satSelPosEarth);
-                                    if (i === len) {
-                                        console.debug('Ran out of Markers');
-                                        continue; // Only get so many markers.
-                                    }
-                                    satCache[i].active = true;
-                                    satPos[i * 3] = satSelPosEarth.x;
-                                    satPos[i * 3 + 1] = satSelPosEarth.y;
-                                    satPos[i * 3 + 2] = satSelPosEarth.z;
-                                    satVel[i * 3] = 0;
-                                    satVel[i * 3 + 1] = 0;
-                                    satVel[i * 3 + 2] = 0;
-                                    i++;
-                                }
-                                if (lat === 90 || lat === -90)
-                                    break; // One Dot for the Poles
-                            }
-                        }
-                    }
-                }
-            }
-            // //////////////////////////////////
-            // Satellite Overfly Drawing Code - STOP
-            // //////////////////////////////////
-        }
-        isResetSatOverfly = false;
-        if (satCache[i].marker) {
-            for (; i < len; i++) {
-                if (!satCache[i].active) {
-                    len -= fieldOfViewSetLength;
-                    break;
-                }
-                satPos[i * 3] = 0;
-                satPos[i * 3 + 1] = 0;
-                satPos[i * 3 + 2] = 0;
-                satVel[i * 3] = 0;
-                satVel[i * 3 + 1] = 0;
-                satVel[i * 3 + 2] = 0;
-                satCache[i].active = false;
-            }
-        }
-    }
+const propagationLoop = (mockSatCache) => {
+    // Use mock satCache if we have one
+    satCache = mockSatCache || satCache;
+    const { now, j, gmst, gmstNext, isSunExclusion, sunEci } = (0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.setupTimeVariables)(dynamicOffsetEpoch, staticOffset, propRate, isSunlightView, isMultiSensor, sensor);
+    len = isMarkersNeeded() ? satCache.length - 1 - fieldOfViewSetLength : satCache.length - 1;
+    updateSatCache(now, j, gmst, gmstNext, isSunExclusion, sunEci);
     if (isResetFOVBubble) {
         isResetFOVBubble = false;
         len -= fieldOfViewSetLength;
     }
-    sendDataToSatSet();
+    if (!isInterupted)
+        sendDataToSatSet();
+    isInterupted = false;
     // The longer the delay the more jitter at higher speeds of propagation
     setTimeout(() => {
-        propagateCruncher();
+        propagationLoop();
     }, (globalPropagationRate * globalPropagationRateMultiplier) / divisor);
+};
+const updateSatCache = (now, j, gmst, gmstNext, isSunExclusion, sunEci) => {
+    // TODO: When this was created chrome was faster doing a reverse while loop - that may not be true anymore
+    let i = -1;
+    while (i < len) {
+        if (isInterupted)
+            break;
+        i++; // At the beginning so i starts at 0
+        let isContinue = false;
+        if (satCache[i].satnum) {
+            isContinue = !updateSatellite(i, gmst, sunEci, j, isSunExclusion);
+        }
+        else if (satCache[i].isRadarData) {
+            isContinue = !updateRadarData(i);
+        }
+        else if (satCache[i].static && !satCache[i].marker && satCache[i].type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.STAR) {
+            updateStar(i, now);
+            (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+        }
+        else if (satCache[i].static && !satCache[i].marker) {
+            updateLandObject(i, gmst);
+            (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+        }
+        else if (satCache[i].missile) {
+            isContinue = !updateMissile(i, now, gmstNext, gmst);
+        }
+        else if (satCache[i].marker && (isShowFOVBubble || isResetFOVBubble)) {
+            i = updateMarkerFov(i, gmst);
+        }
+        else if (satCache[i].marker && (isShowSatOverfly || isResetSatOverfly)) {
+            i = updateSatOverfly(i, gmst);
+        }
+        if (isContinue)
+            continue;
+        isResetSatOverfly = false;
+        // Markers always come last, if we are at this part of the code
+        // then it is time to reset every non-active marker back to 0,0,0
+        // if this isnt a marker then they must be turned off
+        if (satCache[i].marker) {
+            resetInactiveMarkers(i);
+            break;
+        }
+    }
+};
+const updateRadarData = (i) => {
+    if (satCache[i].skip)
+        return false;
+    satCache[i].skip = true;
+    (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetPosition)(satPos, i);
+    (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+    return true;
+};
+const updateSatOverfly = (i, gmst) => {
+    if (isResetSatOverfly && satCache[i].active === true) {
+        // Let the main loop know what i we ended on
+        return i;
+    }
+    let lookangles;
+    let lat, long;
+    let pos;
+    let satSelPosEcf, satSelPos, satSelGeodetic, satHeight, satSelPosEarth, deltaLat, deltaLatInt, deltaLon, deltaLonInt;
+    for (let snum = 0; snum < satelliteSelected.length + 1; snum++) {
+        if (snum === satelliteSelected.length) {
+            sensorMarkerArray.push(i);
+            break;
+        }
+        if (satelliteSelected[snum] !== -1) {
+            if (!isShowSatOverfly)
+                continue;
+            // Find the ECI position of the Selected Satellite
+            satSelPosEcf = {
+                x: satPos[satelliteSelected[snum] * 3],
+                y: satPos[satelliteSelected[snum] * 3 + 1],
+                z: satPos[satelliteSelected[snum] * 3 + 2],
+            };
+            satSelPos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci(satSelPosEcf, gmst);
+            // Find the Lat/Long of the Selected Satellite
+            satSelGeodetic = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToGeodetic(satSelPos, gmst); // pv.position is called positionEci originally
+            satHeight = satSelGeodetic.height;
+            satSelPosEarth = (0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.createLatLonHei)(satSelGeodetic.latitude, satSelGeodetic.longitude, 1);
+            deltaLatInt = 1;
+            if (satHeight < 2500 && selectedSatFOV <= 60)
+                deltaLatInt = 0.5;
+            if (satHeight > 7000 || selectedSatFOV >= 90)
+                deltaLatInt = 2;
+            if (satelliteSelected.length > 1)
+                deltaLatInt = 2;
+            for (deltaLat = -60; deltaLat < 60; deltaLat += deltaLatInt) {
+                lat = Math.max(Math.min(Math.round(satSelGeodetic.latitude * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG) + deltaLat, 90), -90) * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD;
+                if (lat > 90)
+                    continue;
+                if (satHeight < 2500 && selectedSatFOV <= 60) {
+                    deltaLonInt = 0.5;
+                }
+                else if (satHeight > 7000 || selectedSatFOV >= 90) {
+                    deltaLonInt = 2;
+                }
+                else {
+                    deltaLonInt = 1;
+                }
+                if (satelliteSelected.length > 1)
+                    deltaLonInt = 2;
+                for (deltaLon = 0; deltaLon < 181; deltaLon += deltaLonInt) {
+                    // //////////
+                    // Add Long
+                    // //////////
+                    long = satSelGeodetic.longitude + deltaLon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD;
+                    satSelPosEarth = (0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.createLatLonHei)(lat, long, 15);
+                    // Find the Az/El of the position on the earth
+                    lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(satSelPosEarth, satSelPosEcf);
+                    if ((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.isInValidElevation)(lookangles, selectedSatFOV)) {
+                        pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.geodeticToEcf(satSelPosEarth);
+                        if (i === len) {
+                            console.debug('Ran out of Markers');
+                            continue; // Only get so many markers.
+                        }
+                        satCache[i].active = true;
+                        satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                        (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                        i++;
+                    }
+                    // //////////
+                    // Minus Long
+                    // //////////
+                    if (deltaLon === 0 || deltaLon === 180)
+                        continue; // Don't Draw Two Dots On the Center Line
+                    long = satSelGeodetic.longitude - deltaLon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD;
+                    satSelPosEarth = (0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.createLatLonHei)(lat, long, 15);
+                    // Find the Az/El of the position on the earth
+                    lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(satSelPosEarth, satSelPosEcf);
+                    if ((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.isInValidElevation)(lookangles, selectedSatFOV)) {
+                        pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.geodeticToEcf(satSelPosEarth);
+                        if (i === len) {
+                            console.debug('Ran out of Markers');
+                            continue; // Only get so many markers.
+                        }
+                        satCache[i].active = true;
+                        satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                        (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                        i++;
+                    }
+                    if (lat === 90 || lat === -90)
+                        break; // One Dot for the Poles
+                }
+            }
+        }
+    }
+    // Let the main loop know what i we ended on
+    return i;
+};
+const updateStar = (i, now) => {
+    // INFO: 0 Latitude returns upside down results. Using 180 looks right, but more verification needed.
+    // WARNING: 180 and 0 really matter...unclear why
+    let starPosition = _app_js_lib_suncalc_js__WEBPACK_IMPORTED_MODULE_0__.SunCalc.getStarPosition(now, 180, 0, satCache[i]);
+    let pos = (0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(starPosition.azimuth * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG, starPosition.altitude * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG, _lib_constants__WEBPACK_IMPORTED_MODULE_3__.STAR_DISTANCE, 0, 0, 0);
+    // Reduce Random Jitter by Requiring New Positions to be Similar to Old
+    // THIS MIGHT BE A HORRIBLE
+    if (satPos[i * 3] == 0 || (satPos[i * 3] - pos.x < 0.1 && satPos[i * 3] - pos.x > -0.1))
+        satPos[i * 3] = pos.x;
+    if (satPos[i * 3 + 1] == 0 || (satPos[i * 3 + 1] - pos.y < 0.1 && satPos[i * 3 + 1] - pos.y > -0.1))
+        satPos[i * 3 + 1] = pos.y;
+    if (satPos[i * 3 + 2] == 0 || (satPos[i * 3 + 2] - pos.z < 0.1 && satPos[i * 3 + 2] - pos.z > -0.1))
+        satPos[i * 3 + 2] = pos.z;
+};
+const updateMissile = (i, now, gmstNext, gmst) => {
+    if (!satCache[i].active)
+        return false; // Skip inactive missiles
+    let x, y, z;
+    let cosLat, sinLat, cosLon, sinLon;
+    let curMissivarTime, positionEcf;
+    let tLen, t;
+    tLen = satCache[i].altList.length;
+    for (t = 0; t < tLen; t++) {
+        if (satCache[i].startTime * 1 + t * 1000 >= now.getTime()) {
+            curMissivarTime = t;
+            break;
+        }
+    }
+    satCache[i].lastTime = satCache[i].lastTime >= 0 ? satCache[i].lastTime : 0;
+    cosLat = Math.cos(satCache[i].latList[satCache[i].lastTime + 1] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
+    sinLat = Math.sin(satCache[i].latList[satCache[i].lastTime + 1] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
+    cosLon = Math.cos(satCache[i].lonList[satCache[i].lastTime + 1] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmstNext);
+    sinLon = Math.sin(satCache[i].lonList[satCache[i].lastTime + 1] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmstNext);
+    if (satCache[i].lastTime == 0) {
+        (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+    }
+    else if (satVel[i * 3] == 0 && satVel[i * 3 + 1] == 0 && satVel[i * 3 + 2] == 0) {
+        satVel[i * 3] = (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * cosLon - satPos[i * 3];
+        satVel[i * 3 + 1] = (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * sinLon - satPos[i * 3 + 1];
+        satVel[i * 3 + 2] = (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * sinLat - satPos[i * 3 + 2];
+    }
+    else {
+        satVel[i * 3] += (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * cosLon - satPos[i * 3];
+        satVel[i * 3 + 1] += (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * cosLat * sinLon - satPos[i * 3 + 1];
+        satVel[i * 3 + 2] += (6371 + satCache[i].altList[satCache[i].lastTime + 1]) * sinLat - satPos[i * 3 + 2];
+        satVel[i * 3] *= 0.5;
+        satVel[i * 3 + 1] *= 0.5;
+        satVel[i * 3 + 2] *= 0.5;
+    }
+    cosLat = Math.cos(satCache[i].latList[curMissivarTime] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
+    sinLat = Math.sin(satCache[i].latList[curMissivarTime] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
+    cosLon = Math.cos(satCache[i].lonList[curMissivarTime] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmst);
+    sinLon = Math.sin(satCache[i].lonList[curMissivarTime] * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmst);
+    satPos[i * 3] = (6371 + satCache[i].altList[curMissivarTime]) * cosLat * cosLon;
+    satPos[i * 3 + 1] = (6371 + satCache[i].altList[curMissivarTime]) * cosLat * sinLon;
+    satPos[i * 3 + 2] = (6371 + satCache[i].altList[curMissivarTime]) * sinLat;
+    satCache[i].lastTime = curMissivarTime;
+    x = satPos[i * 3];
+    y = satPos[i * 3 + 1];
+    z = satPos[i * 3 + 2];
+    positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToEcf({ x: x, y: y, z: z }, gmst);
+    if (satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToGeodetic({ x: x, y: y, z: z }, gmst).height <= 150 && satCache[i].missile === false) {
+        console.error(i);
+        satCache[i].skip = true;
+    }
+    satInView[i] = (0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.isInFov)(satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(sensor.observerGd, positionEcf), sensor);
+    return true;
+};
+const updateLandObject = (i, gmst) => {
+    const cosLat = Math.cos(satCache[i].lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
+    const sinLat = Math.sin(satCache[i].lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD);
+    const cosLon = Math.cos(satCache[i].lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmst);
+    const sinLon = Math.sin(satCache[i].lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD + gmst);
+    satPos[i * 3] = (_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH + _lib_constants__WEBPACK_IMPORTED_MODULE_3__.GROUND_BUFFER_DISTANCE + satCache[i].alt) * cosLat * cosLon; // 6371 is radius of earth
+    satPos[i * 3 + 1] = (_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH + _lib_constants__WEBPACK_IMPORTED_MODULE_3__.GROUND_BUFFER_DISTANCE + satCache[i].alt) * cosLat * sinLon;
+    satPos[i * 3 + 2] = (_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH + _lib_constants__WEBPACK_IMPORTED_MODULE_3__.GROUND_BUFFER_DISTANCE + satCache[i].alt) * sinLat;
+};
+const updateSatellite = (i, gmst, sunEci, j, isSunExclusion) => {
+    let pv;
+    let semiDiamEarth, semiDiamSun, theta;
+    let positionEcf, lookangles;
+    // Skip reentries
+    if (satCache[i].skip)
+        return false;
+    const m = (j - satCache[i].jdsatepoch) * 1440.0; // 1440 = minutes_per_day
+    pv = satellite_js__WEBPACK_IMPORTED_MODULE_1__.sgp4(satCache[i], m);
+    try {
+        satPos[i * 3] = pv.position.x;
+        satPos[i * 3 + 1] = pv.position.y;
+        satPos[i * 3 + 2] = pv.position.z;
+        satVel[i * 3] = pv.velocity.x;
+        satVel[i * 3 + 1] = pv.velocity.y;
+        satVel[i * 3 + 2] = pv.velocity.z;
+        // Make sure that objects with an imprecise orbit or an old elset
+        // are not failing to propagate
+        if (satCache[i].isimp || m / 1440 > 30) {
+            const a = 6378.137;
+            const b = 6356.7523142;
+            const R = Math.sqrt(pv.position.x * pv.position.x + pv.position.y * pv.position.y);
+            const f = (a - b) / a;
+            const e2 = 2 * f - f * f;
+            let lon = Math.atan2(pv.position.y, pv.position.x) - gmst;
+            while (lon < -_lib_constants__WEBPACK_IMPORTED_MODULE_3__.PI) {
+                lon += _lib_constants__WEBPACK_IMPORTED_MODULE_3__.TAU;
+            }
+            while (lon > _lib_constants__WEBPACK_IMPORTED_MODULE_3__.PI) {
+                lon -= _lib_constants__WEBPACK_IMPORTED_MODULE_3__.TAU;
+            }
+            const kmax = 20;
+            let k = 0;
+            let lat = Math.atan2(pv.position.z, Math.sqrt(pv.position.x * pv.position.x + pv.position.y * pv.position.y));
+            let C;
+            while (k < kmax) {
+                C = 1 / Math.sqrt(1 - e2 * (Math.sin(lat) * Math.sin(lat)));
+                lat = Math.atan2(pv.position.z + a * C * e2 * Math.sin(lat), R);
+                k += 1;
+            }
+            const alt = R / Math.cos(lat) - a * C;
+            if (alt > satCache[i].apogee + 1000) {
+                throw new Error('Impossible orbit');
+            }
+        }
+        // Skip Calculating Lookangles if No Sensor is Selected
+        if (sensor.observerGd !== _constants__WEBPACK_IMPORTED_MODULE_5__.defaultGd && !isMultiSensor) {
+            lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(sensor.observerGd, satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToEcf(pv.position, gmst));
+        }
+    }
+    catch (e) {
+        // This is probably a reentry and should be skipped from now on.
+        satCache[i].skip = true;
+        satPos[i * 3] = 0;
+        satPos[i * 3 + 1] = 0;
+        satPos[i * 3 + 2] = 0;
+        satVel[i * 3] = 0;
+        satVel[i * 3 + 1] = 0;
+        satVel[i * 3 + 2] = 0;
+        positionEcf = 0;
+        lookangles = 0;
+    }
+    satInView[i] = 0; // 0 = FALSE - Default in case no sensor selected
+    satInSun[i] = 2; // Default in case
+    if (isSunlightView) {
+        semiDiamEarth = Math.asin(_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_EARTH / Math.sqrt(Math.pow(-satPos[i * 3], 2) + Math.pow(-satPos[i * 3 + 1], 2) + Math.pow(-satPos[i * 3 + 2], 2))) * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
+        semiDiamSun =
+            Math.asin(_lib_constants__WEBPACK_IMPORTED_MODULE_3__.RADIUS_OF_SUN / Math.sqrt(Math.pow(-satPos[i * 3] + sunEci.x, 2) + Math.pow(-satPos[i * 3 + 1] + sunEci.y, 2) + Math.pow(-satPos[i * 3 + 2] + sunEci.z, 2))) *
+                _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
+        // Angle between earth and sun
+        theta =
+            Math.acos(_lib_external_numeric__WEBPACK_IMPORTED_MODULE_4__.numeric.dot([-satPos[i * 3], -satPos[i * 3 + 1], -satPos[i * 3 + 2]], [-satPos[i * 3] + sunEci.x, -satPos[i * 3 + 1] + sunEci.y, -satPos[i * 3 + 2] + sunEci.z]) /
+                (Math.sqrt(Math.pow(-satPos[i * 3], 2) + Math.pow(-satPos[i * 3 + 1], 2) + Math.pow(-satPos[i * 3 + 2], 2)) *
+                    Math.sqrt(Math.pow(-satPos[i * 3] + sunEci.x, 2) + Math.pow(-satPos[i * 3 + 1] + sunEci.y, 2) + Math.pow(-satPos[i * 3 + 2] + sunEci.z, 2)))) * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.RAD2DEG;
+        if (semiDiamEarth > semiDiamSun && theta < semiDiamEarth - semiDiamSun) {
+            satInSun[i] = 0; // Umbral
+        }
+        if (Math.abs(semiDiamEarth - semiDiamSun) < theta && theta < semiDiamEarth + semiDiamSun) {
+            satInSun[i] = 1; // Penumbral
+        }
+        if (semiDiamSun > semiDiamEarth) {
+            satInSun[i] = 1; // Penumbral
+        }
+        if (theta < semiDiamSun - semiDiamEarth) {
+            satInSun[i] = 1; // Penumbral
+        }
+    }
+    if (sensor.observerGd !== _constants__WEBPACK_IMPORTED_MODULE_5__.defaultGd && !isSunExclusion) {
+        if (isMultiSensor) {
+            for (let s = 0; s < mSensor.length; s++) {
+                // Skip satellites in the sun if you are an optical sensor
+                if (!(sensor.type == _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.OPTICAL && satInSun[i] == 0)) {
+                    if (satInView[i])
+                        break;
+                    sensor = mSensor[s];
+                    // satellite.js requires this format - DONT use lon,lat,alt
+                    sensor.observerGd = {
+                        longitude: sensor.lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
+                        latitude: sensor.lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD,
+                        height: sensor.alt * 1, // Convert from string
+                    };
+                    try {
+                        positionEcf = satellite_js__WEBPACK_IMPORTED_MODULE_1__.eciToEcf(pv.position, gmst); // pv.position is called positionEci originally
+                        lookangles = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToLookAngles(sensor.observerGd, positionEcf);
+                    }
+                    catch (e) {
+                        continue;
+                    }
+                    satInView[i] = (0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.isInFov)(lookangles, sensor);
+                }
+            }
+        }
+        else {
+            if (!(sensor.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_2__.SpaceObjectType.OPTICAL && satInSun[i] == 0)) {
+                satInView[i] = (0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.isInFov)(lookangles, sensor);
+            }
+        }
+    }
+    return true;
+};
+const isMarkersNeeded = () => (!isResetSatOverfly && !isShowSatOverfly && !isResetFOVBubble && !isShowFOVBubble) || isLowPerf;
+const resetInactiveMarkers = (i) => {
+    for (; i < len; i++) {
+        if (!satCache[i].active) {
+            len -= fieldOfViewSetLength;
+            break;
+        }
+        (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetPosition)(satPos, i);
+        (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+        satCache[i].active = false;
+    }
+};
+const updateMarkerFov = (i, gmst) => {
+    let az, el, rng;
+    let pos;
+    let q, q2;
+    if (!isMultiSensor && sensor.observerGd !== _constants__WEBPACK_IMPORTED_MODULE_5__.defaultGd) {
+        mSensor[0] = sensor;
+        mSensor.length = 1;
+    }
+    sensorMarkerArray = [];
+    for (let s = 0; s < mSensor.length + 1; s++) {
+        sensorMarkerArray.push(i);
+        // We intentionally go past the last sensor so we can record the last marker's id
+        if (s == mSensor.length)
+            break;
+        sensor = mSensor[s];
+        // satellite.js requires this format - DONT use lon,lat,alt
+        sensor.observerGd = (0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.createLatLonHei)(sensor.lat * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD, sensor.lon * _lib_constants__WEBPACK_IMPORTED_MODULE_3__.DEG2RAD, sensor.alt);
+        (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetPosition)(satPos, i);
+        (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+        if (isResetFOVBubble)
+            continue;
+        if (!isShowFOVBubble)
+            continue;
+        if (sensor.observerGd === _constants__WEBPACK_IMPORTED_MODULE_5__.defaultGd)
+            continue;
+        // Ignore Optical and Mechanical Sensors When showing Many
+        if (isIgnoreNonRadar && (0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.isSensorDeepSpace)(mSensor, sensor))
+            continue;
+        q = Math.abs(sensor.obsmaxaz - sensor.obsminaz) < 30 ? 0.5 : 3;
+        q2 = sensor.obsmaxrange - sensor.obsminrange < 720 ? 125 : 30;
+        // Don't show anything but the floor if in surveillance only mode
+        // Unless it is a volume search radar
+        if (!isShowSurvFence) {
+            // Only on non-360 FOV
+            if (sensor.obsminaz !== 0 && sensor.obsmaxaz !== 360) {
+                // //////////////////////////////////
+                // Min AZ FOV
+                // //////////////////////////////////
+                for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                    az = sensor.obsminaz;
+                    for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
+                        pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                        try {
+                            satCache[i].active = true;
+                            satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                            (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                            i++;
+                        }
+                        catch (e) {
+                            console.log(e);
+                        }
+                    }
+                }
+                // //////////////////////////////////
+                // Max AZ FOV
+                // //////////////////////////////////
+                for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                    az = sensor.obsmaxaz;
+                    for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
+                        pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                        try {
+                            satCache[i].active = true;
+                        }
+                        catch (e) {
+                            console.log(e);
+                        }
+                        satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                        (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                        i++;
+                    }
+                }
+                if (typeof sensor.obsminaz2 != 'undefined') {
+                    ////////////////////////////////
+                    // Cobra DANE Types
+                    ////////////////////////////////
+                    // //////////////////////////////////
+                    // Min AZ 2 FOV
+                    // //////////////////////////////////
+                    for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                        az = sensor.obsminaz2;
+                        for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
+                            pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                            satCache[i].active = true;
+                            satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                            (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                            i++;
+                        }
+                    }
+                    // //////////////////////////////////
+                    // Max AZ 2 FOV
+                    // //////////////////////////////////
+                    for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                        az = sensor.obsmaxaz2;
+                        for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
+                            pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                            satCache[i].active = true;
+                            satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                            (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                            i++;
+                        }
+                    }
+                }
+                // Only on 360 FOV
+            }
+            else {
+                for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                    el = sensor.obsmaxel;
+                    for (az = sensor.obsminaz; az < sensor.obsmaxaz; az += q) {
+                        pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                        satCache[i].active = true;
+                        satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                        (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                        i++;
+                    }
+                }
+            }
+        }
+        // //////////////////////////////////
+        // Top of FOV for Small FOV
+        // //////////////////////////////////
+        if (sensor.obsmaxel - sensor.obsminel < 20) {
+            for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+                    if (sensor.obsminaz > sensor.obsmaxaz) {
+                        if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
+                            // Intentional
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                    else {
+                        if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
+                            // Intentional
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsmaxel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                    if (i === len) {
+                        console.debug('No More Markers');
+                        break;
+                    }
+                    satCache[i].active = true;
+                    satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                    (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                    i++;
+                }
+            }
+        }
+        if (typeof sensor.obsminaz2 != 'undefined') {
+            ////////////////////////////////
+            // Cobra DANE Types
+            ////////////////////////////////
+            // //////////////////////////////////
+            // Floor of FOV
+            // //////////////////////////////////
+            q = 2;
+            for (rng = Math.max(sensor.obsminrange2, 100); rng < Math.min(sensor.obsmaxrange2, 60000); rng += Math.min(sensor.obsmaxrange2, 60000) / q2) {
+                for (az = 0; az < 360; az += 1 * q) {
+                    if (sensor.obsminaz2 > sensor.obsmaxaz2) {
+                        if (az >= sensor.obsminaz2 || az <= sensor.obsmaxaz2) {
+                            // Intentional
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                    else {
+                        if (az >= sensor.obsminaz2 && az <= sensor.obsmaxaz2) {
+                            // Intentional
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel2, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                    if (i === len) {
+                        console.debug('No More Markers');
+                        break;
+                    }
+                    satCache[i].active = true;
+                    satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                    (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                    i++;
+                }
+            }
+        }
+        // Don't show anything but the floor if in surveillance only mode
+        // Unless it is a volume search radar
+        if (!isShowSurvFence) {
+            // //////////////////////////////////
+            // Outside Edge of FOV
+            // //////////////////////////////////
+            rng = Math.min(sensor.obsmaxrange, 60000);
+            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+                if (sensor.obsminaz > sensor.obsmaxaz) {
+                    if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
+                        // Intentional
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                else {
+                    if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
+                        // Intentional
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                for (el = sensor.obsminel; el < sensor.obsmaxel; el += q) {
+                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                    if (i === len) {
+                        console.debug('No More Markers');
+                        break;
+                    }
+                    satCache[i].active = true;
+                    satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                    (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                    i++;
+                }
+            }
+            if (typeof sensor.obsminaz2 != 'undefined') {
+                ////////////////////////////////
+                // Cobra DANE Types
+                ////////////////////////////////
+                // //////////////////////////////////
+                // Outside of FOV
+                // //////////////////////////////////
+                rng = Math.min(sensor.obsmaxrange2, 60000);
+                for (az = 0; az < Math.max(360, sensor.obsmaxaz2); az += q) {
+                    if (sensor.obsminaz2 > sensor.obsmaxaz2) {
+                        if (az >= sensor.obsminaz2 || az <= sensor.obsmaxaz2) {
+                            // Intentional
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                    else {
+                        if (az >= sensor.obsminaz2 && az <= sensor.obsmaxaz2) {
+                            // Intentional
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                    for (el = sensor.obsminel2; el < sensor.obsmaxel2; el += q) {
+                        pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, el, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                        if (i === len) {
+                            console.debug('No More Markers');
+                            break;
+                        }
+                        satCache[i].active = true;
+                        satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                        (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                        i++;
+                    }
+                }
+            }
+        }
+        // //////////////////////////////////
+        // Floor of FOV
+        // //////////////////////////////////
+        q = 0.25;
+        for (rng = sensor.obsmaxrange; rng === sensor.obsmaxrange; rng += 1) {
+            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+                if (sensor.obsminaz > sensor.obsmaxaz) {
+                    if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
+                        // Intentional
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                else {
+                    if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
+                        // Intentional
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                if (i === len) {
+                    console.debug('No More Markers');
+                    break;
+                }
+                satCache[i].active = true;
+                satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                i++;
+            }
+        }
+        for (rng = sensor.obsminrange; rng === sensor.obsminrange; rng += 1) {
+            for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+                if (sensor.obsminaz > sensor.obsmaxaz) {
+                    if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
+                        // Intentional
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                else {
+                    if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
+                        // Intentional
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                if (i === len) {
+                    console.debug('No More Markers');
+                    break;
+                }
+                satCache[i].active = true;
+                satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                i++;
+            }
+        }
+        if (sensor.obsmaxrange - sensor.obsminrange < 720) {
+            for (rng = Math.max(sensor.obsminrange, 100); rng < Math.min(sensor.obsmaxrange, 60000); rng += Math.min(sensor.obsmaxrange, 60000) / q2) {
+                for (az = 0; az < Math.max(360, sensor.obsmaxaz); az += q) {
+                    if (sensor.obsminaz > sensor.obsmaxaz) {
+                        if (az >= sensor.obsminaz || az <= sensor.obsmaxaz) {
+                            // Intentional
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                    else {
+                        if (az >= sensor.obsminaz && az <= sensor.obsmaxaz) {
+                            // Intentional
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                    if (i === len) {
+                        console.debug('No More Markers');
+                        break;
+                    }
+                    satCache[i].active = true;
+                    satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                    (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                    i++;
+                }
+            }
+        }
+        if (sensor.obsminaz !== sensor.obsmaxaz && sensor.obsminaz !== sensor.obsmaxaz - 360) {
+            for (az = sensor.obsmaxaz; az === sensor.obsmaxaz; az += 1) {
+                for (rng = sensor.obsminrange; rng < sensor.obsmaxrange; rng += q) {
+                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                    if (i === len) {
+                        console.debug('No More Markers');
+                        break;
+                    }
+                    satCache[i].active = true;
+                    satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                    (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                    i++;
+                }
+            }
+            for (az = sensor.obsminaz; az === sensor.obsminaz; az += 1) {
+                for (rng = sensor.obsminrange; rng < sensor.obsmaxrange; rng += q) {
+                    pos = satellite_js__WEBPACK_IMPORTED_MODULE_1__.ecfToEci((0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_6__.lookAnglesToEcf)(az, sensor.obsminel, rng, sensor.observerGd.latitude, sensor.observerGd.longitude, sensor.observerGd.height), gmst);
+                    if (i === len) {
+                        console.debug('No More Markers');
+                        break;
+                    }
+                    satCache[i].active = true;
+                    satPos = (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.setPosition)(satPos, i, pos);
+                    (0,_positionCruncher_satCache__WEBPACK_IMPORTED_MODULE_7__.resetVelocity)(satVel, i);
+                    i++;
+                }
+            }
+        }
+    }
+    // Let the main loop know what i we ended on
+    return i;
 };
 const sendDataToSatSet = () => {
     let postMessageArray = {
@@ -12650,7 +12647,7 @@ const sendDataToSatSet = () => {
         satVel: satVel,
     };
     // Add In View Data if Sensor Selected
-    if (sensor.observerGd !== defaultGd) {
+    if (sensor.observerGd !== _constants__WEBPACK_IMPORTED_MODULE_5__.defaultGd) {
         postMessageArray.satInView = satInView;
     }
     else {
@@ -12679,71 +12676,8 @@ const sendDataToSatSet = () => {
     }
 };
 
+})();
 
-/***/ })
-
-/******/ 	});
-/************************************************************************/
-/******/ 	// The module cache
-/******/ 	var __webpack_module_cache__ = {};
-/******/ 	
-/******/ 	// The require function
-/******/ 	function __webpack_require__(moduleId) {
-/******/ 		// Check if module is in cache
-/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
-/******/ 		if (cachedModule !== undefined) {
-/******/ 			return cachedModule.exports;
-/******/ 		}
-/******/ 		// Create a new module (and put it into the cache)
-/******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
-/******/ 			exports: {}
-/******/ 		};
-/******/ 	
-/******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
-/******/ 	
-/******/ 		// Return the exports of the module
-/******/ 		return module.exports;
-/******/ 	}
-/******/ 	
-/************************************************************************/
-/******/ 	/* webpack/runtime/define property getters */
-/******/ 	(() => {
-/******/ 		// define getter functions for harmony exports
-/******/ 		__webpack_require__.d = (exports, definition) => {
-/******/ 			for(var key in definition) {
-/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
-/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
-/******/ 				}
-/******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
-/******/ 	(() => {
-/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/make namespace object */
-/******/ 	(() => {
-/******/ 		// define __esModule on exports
-/******/ 		__webpack_require__.r = (exports) => {
-/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
-/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-/******/ 			}
-/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __webpack_require__("./src/js/webworker/positionCruncher.ts");
-/******/ 	
 /******/ })()
 ;
 //# sourceMappingURL=positionCruncher.js.map
