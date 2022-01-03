@@ -6984,7 +6984,6 @@ var SunCalc = {
       altitude: SunCalc.h,
       vmag: c.vmag,
       name: c.name,
-      pname: c.pname,
       dist: c.dist
     };
   },
@@ -11770,6 +11769,9 @@ const onmessageProcessing = (m) => {
             extra.TLE1 = m.data.TLE1;
             extra.TLE2 = m.data.TLE2;
             extraData.push(extra);
+            if (process)
+                return;
+            // istanbul ignore next
             postMessage({
                 extraUpdate: true,
                 extraData: JSON.stringify(extraData),
@@ -11779,61 +11781,15 @@ const onmessageProcessing = (m) => {
         case 'newMissile':
             satCache[m.data.id] = m.data;
             break;
-        default:
-            console.warn('Unknown message typ: ' + m.data.typ);
-            if (m.data.isSunlightView) {
-                isSunlightView = m.data.isSunlightView;
-            }
-            if (m.data.satelliteSelected) {
-                satelliteSelected = m.data.satelliteSelected;
-                if (satelliteSelected[0] === -1) {
-                    isResetSatOverfly = true;
-                    if (!isResetMarker)
-                        isResetMarker = true;
-                }
-            }
-            if (m.data.isSlowCPUModeEnabled) {
-                globalPropagationRate = 2000;
-            }
-            if (m.data.isLowPerf) {
-                isLowPerf = true;
-            }
-            // //////////////////////////////
-            // SAT OVERFLY AND FOV BUBBLE
-            // /////////////////////////////
-            if (m.data.fieldOfViewSetLength) {
-                fieldOfViewSetLength = m.data.fieldOfViewSetLength;
-            }
-            if (m.data.isShowSatOverfly === 'enable') {
-                isShowSatOverfly = true;
-                selectedSatFOV = m.data.selectedSatFOV;
-            }
-            if (m.data.isShowSatOverfly === 'reset') {
+        case 'satelliteSelected':
+            satelliteSelected = m.data.satelliteSelected;
+            if (satelliteSelected[0] === -1) {
                 isResetSatOverfly = true;
-                isShowSatOverfly = false;
                 if (!isResetMarker)
                     isResetMarker = true;
             }
-            if (m.data.isShowFOVBubble === 'enable') {
-                isShowFOVBubble = true;
-            }
-            if (m.data.isShowFOVBubble === 'reset') {
-                isResetFOVBubble = true;
-                isShowFOVBubble = false;
-                if (!isResetMarker)
-                    isResetMarker = true;
-            }
-            if (m.data.isShowSurvFence === 'enable') {
-                isShowSurvFence = true;
-                if (!isResetMarker)
-                    isResetMarker = true;
-            }
-            if (m.data.isShowSurvFence === 'disable') {
-                isShowSurvFence = false;
-                if (!isResetMarker)
-                    isResetMarker = true;
-            }
-            // ////////////////////////////////
+            break;
+        case 'sensor':
             if (m.data.multiSensor) {
                 isMultiSensor = true;
                 mSensor = m.data.sensor;
@@ -11866,6 +11822,55 @@ const onmessageProcessing = (m) => {
                     }
                 }
                 isMultiSensor = false;
+            }
+            break;
+        case 'isShowSatOverfly':
+            selectedSatFOV = m.data.selectedSatFOV ? m.data.selectedSatFOV : selectedSatFOV;
+            if (m.data.isShowSatOverfly === 'enable') {
+                isShowSatOverfly = true;
+            }
+            if (m.data.isShowSatOverfly === 'reset') {
+                isResetSatOverfly = true;
+                isShowSatOverfly = false;
+                if (!isResetMarker)
+                    isResetMarker = true;
+            }
+            break;
+        default:
+            console.warn('Unknown message typ: ' + m.data.typ);
+            if (m.data.isSunlightView) {
+                isSunlightView = m.data.isSunlightView;
+            }
+            if (m.data.isSlowCPUModeEnabled) {
+                globalPropagationRate = 2000;
+            }
+            if (m.data.isLowPerf) {
+                isLowPerf = true;
+            }
+            // //////////////////////////////
+            // SAT OVERFLY AND FOV BUBBLE
+            // /////////////////////////////
+            if (m.data.fieldOfViewSetLength) {
+                fieldOfViewSetLength = m.data.fieldOfViewSetLength;
+            }
+            if (m.data.isShowFOVBubble === 'enable') {
+                isShowFOVBubble = true;
+            }
+            if (m.data.isShowFOVBubble === 'reset') {
+                isResetFOVBubble = true;
+                isShowFOVBubble = false;
+                if (!isResetMarker)
+                    isResetMarker = true;
+            }
+            if (m.data.isShowSurvFence === 'enable') {
+                isShowSurvFence = true;
+                if (!isResetMarker)
+                    isResetMarker = true;
+            }
+            if (m.data.isShowSurvFence === 'disable') {
+                isShowSurvFence = false;
+                if (!isResetMarker)
+                    isResetMarker = true;
             }
             break;
     }

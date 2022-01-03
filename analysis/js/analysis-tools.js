@@ -37096,6 +37096,7 @@ const keepTrackApi = {
         loadCatalog: [],
         resetSensor: [],
         setSensor: [],
+        onDrawLoopComplete: [],
     },
     methods: {
         selectSatData: (sat, satId) => {
@@ -37158,6 +37159,9 @@ const keepTrackApi = {
         },
         setSensor: (sensor, id) => {
             keepTrackApi.callbacks.setSensor.forEach((cb) => cb.cb(sensor, id));
+        },
+        onDrawLoopComplete: () => {
+            keepTrackApi.callbacks.onDrawLoopComplete.forEach((cb) => cb.cb());
         },
     },
     programs: {},
@@ -37260,6 +37264,7 @@ const DISTANCE_TO_SUN = 149597870; // Distance from Earth to the Sun in kilomete
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "saveAs": () => (/* reexport safe */ _external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__.saveAs),
+/* harmony export */   "getUnique": () => (/* binding */ getUnique),
 /* harmony export */   "stringPad": () => (/* binding */ stringPad),
 /* harmony export */   "saveVariable": () => (/* binding */ saveVariable),
 /* harmony export */   "saveCsv": () => (/* binding */ saveCsv),
@@ -37271,6 +37276,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _external_file_saver_min_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./external/file-saver.min.js */ "./src/js/lib/external/file-saver.min.js");
 
 
+const getUnique = (arr) => [...new Set(arr)];
 const stringPad = {
     pad: (val, len) => {
         val = String(val);
@@ -37363,6 +37369,8 @@ const truncateString = (str, num) => {
     // Return str truncated with '...' concatenated to the end of str.
     return str.slice(0, num) + '...';
 };
+window.getUnique = getUnique;
+window.saveCsv = saveCsv;
 
 
 /***/ }),
@@ -38594,8 +38602,7 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
         }
     }
     if (meanACalcResults !== PropagationResults.Success) {
-        console.log('Failed to find a solution for Mean Anomaly');
-        return ['Error', ''];
+        return ['Error', 'Failed to find a solution for Mean Anomaly'];
     }
     // ===== Argument of Perigee Loop =====
     // Applies to eccentric orbits
@@ -38626,7 +38633,7 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
                 i += 5 * 10; // Change ArgPer faster
             }
             if (argPerCalcResults === PropagationResults.Error) {
-                return ['Error', ''];
+                return ['Error', 'Failed to find a solution for Argument of Perigee'];
             }
             // ===== Mean Anomaly Loop =====
             for (let j = 0; j < 520 * 10; j += 1) {
@@ -38648,8 +38655,7 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
             }
         }
         if (argPerCalcResults !== PropagationResults.Success) {
-            console.log('Failed to find a solution for Arg Per');
-            return ['Error', ''];
+            return ['Error', 'Failed to find a solution for Argument of Perigee'];
         }
     }
     // ===== Right Ascension Loop =====
@@ -38664,8 +38670,7 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
         }
     }
     if (raanCalcResults !== PropagationResults.Success) {
-        console.log('Failed to find a solution for Right Ascension');
-        return ['Error', ''];
+        return ['Error', 'Failed to find a solution for Right Ascension of Ascending Node'];
     }
     return [sat.TLE1, sat.TLE2];
 };
@@ -40312,14 +40317,14 @@ const calculateSensorPos = (sensors) => {
 };
 const createTle = (tleParams) => {
     let { sat, inc, meanmo, rasc, argPe, meana, ecen, epochyr, epochday, intl, scc } = tleParams;
-    inc = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatInclination)(inc);
-    meanmo = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatMeanMotion)(meanmo);
-    rasc = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatRightAscension)(rasc);
-    argPe = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatArgumentOfPerigee)(argPe);
-    meana = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatMeanAnomaly)(meana);
+    const incStr = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatInclination)(inc);
+    const meanmoStr = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatMeanMotion)(meanmo);
+    const rascStr = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatRightAscension)(rasc);
+    const argPeStr = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatArgumentOfPerigee)(argPe);
+    const meanaStr = (0,_tleFormater__WEBPACK_IMPORTED_MODULE_10__.formatMeanAnomaly)(meana);
     const TLE1Ending = sat.TLE1.substr(32, 39);
     const TLE1 = '1 ' + scc + 'U ' + intl + ' ' + epochyr + epochday + TLE1Ending; // M' and M'' are both set to 0 to put the object in a perfect stable orbit
-    const TLE2 = '2 ' + scc + ' ' + inc + ' ' + rasc + ' ' + ecen + ' ' + argPe + ' ' + meana + ' ' + meanmo + '    10';
+    const TLE2 = '2 ' + scc + ' ' + incStr + ' ' + rascStr + ' ' + ecen + ' ' + argPeStr + ' ' + meanaStr + ' ' + meanmoStr + '    10';
     return { TLE1, TLE2 };
 };
 const verifySensors = (sensors, sensorManager) => {
@@ -40492,8 +40497,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @app/js/lib/helpers */ "./src/js/lib/helpers.ts");
 
 const formatInclination = (inc) => {
-    inc = parseFloat(inc).toPrecision(7);
-    const incArr = inc.split('.');
+    let incStr = parseFloat(inc).toPrecision(7);
+    const incArr = incStr.split('.');
     incArr[0] = incArr[0].substr(-3, 3);
     if (incArr[1]) {
         incArr[1] = incArr[1].substr(0, 4);
@@ -40501,27 +40506,27 @@ const formatInclination = (inc) => {
     else {
         incArr[1] = '0000';
     }
-    inc = (incArr[0] + '.' + incArr[1]).toString();
-    inc = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__.stringPad.pad0(inc, 8);
-    return inc;
+    incStr = (incArr[0] + '.' + incArr[1]).toString();
+    incStr = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__.stringPad.pad0(incStr, 8);
+    return incStr;
 };
 const formatMeanMotion = (meanmo) => {
-    meanmo = parseFloat(meanmo).toPrecision(10);
-    const meanmoArr = meanmo.split('.');
-    meanmoArr[0] = meanmoArr[0].substr(-2, 2);
+    let meanmoStr = parseFloat(meanmo).toPrecision(10);
+    const meanmoArr = meanmoStr.split('.');
+    meanmoArr[0] = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__.stringPad.pad0(meanmoArr[0].substr(-2, 2), 2);
     if (meanmoArr[1]) {
         meanmoArr[1] = meanmoArr[1].substr(0, 8);
     }
     else {
         meanmoArr[1] = '00000000';
     }
-    meanmo = (meanmoArr[0] + '.' + meanmoArr[1]).toString();
-    meanmo = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__.stringPad.pad0(meanmo, 8);
-    return meanmo;
+    meanmoStr = (meanmoArr[0] + '.' + meanmoArr[1]).toString();
+    meanmoStr = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__.stringPad.pad0(meanmoStr, 8);
+    return meanmoStr;
 };
 const formatRightAscension = (rasc) => {
-    rasc = parseFloat(rasc).toPrecision(7);
-    const rascArr = rasc.split('.');
+    let rascStr = parseFloat(rasc).toPrecision(7);
+    const rascArr = rascStr.split('.');
     rascArr[0] = rascArr[0].substr(-3, 3);
     if (rascArr[1]) {
         rascArr[1] = rascArr[1].substr(0, 4);
@@ -40529,13 +40534,13 @@ const formatRightAscension = (rasc) => {
     else {
         rascArr[1] = '0000';
     }
-    rasc = (rasc[0] + '.' + rasc[1]).toString();
-    rasc = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__.stringPad.pad0(rasc, 8);
-    return rasc;
+    rascStr = (rascArr[0] + '.' + rascArr[1]).toString();
+    rascStr = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__.stringPad.pad0(rascStr, 8);
+    return rascStr;
 };
 const formatArgumentOfPerigee = (argPe) => {
-    argPe = parseFloat(argPe).toPrecision(7);
-    const argPeArr = argPe.split('.');
+    let argPeStr = parseFloat(argPe).toPrecision(7);
+    const argPeArr = argPeStr.split('.');
     argPeArr[0] = argPeArr[0].substr(-3, 3);
     if (argPeArr[1]) {
         argPeArr[1] = argPeArr[1].substr(0, 4);
@@ -40543,13 +40548,13 @@ const formatArgumentOfPerigee = (argPe) => {
     else {
         argPeArr[1] = '0000';
     }
-    argPe = (argPeArr[0] + '.' + argPeArr[1]).toString();
-    argPe = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__.stringPad.pad0(argPe, 8);
-    return argPe;
+    argPeStr = (argPeArr[0] + '.' + argPeArr[1]).toString();
+    argPeStr = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__.stringPad.pad0(argPeStr, 8);
+    return argPeStr;
 };
 const formatMeanAnomaly = (meana) => {
-    meana = parseFloat(meana).toPrecision(7);
-    const meanaArr = meana.split('.');
+    let meanaStr = parseFloat(meana).toPrecision(7);
+    const meanaArr = meanaStr.split('.');
     meanaArr[0] = meanaArr[0].substr(-3, 3);
     if (meanaArr[1]) {
         meanaArr[1] = meanaArr[1].substr(0, 4);
@@ -40557,9 +40562,9 @@ const formatMeanAnomaly = (meana) => {
     else {
         meanaArr[1] = '0000';
     }
-    meana = (meanaArr[0] + '.' + meanaArr[1]).toString();
-    meana = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__.stringPad.pad0(meana, 8);
-    return meana;
+    meanaStr = (meanaArr[0] + '.' + meanaArr[1]).toString();
+    meanaStr = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_0__.stringPad.pad0(meanaStr, 8);
+    return meanaStr;
 };
 
 
