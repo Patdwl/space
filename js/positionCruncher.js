@@ -9551,7 +9551,7 @@ const onmessageProcessing = (m) => {
             extra.TLE1 = m.data.TLE1;
             extra.TLE2 = m.data.TLE2;
             extraData.push(extra);
-            if (process)
+            if (typeof process !== 'undefined')
                 return;
             // istanbul ignore next
             postMessage({
