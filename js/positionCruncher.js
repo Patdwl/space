@@ -370,7 +370,10 @@ var SunCalc = {
     };
   },
   // calculations for moon rise/set times are based on http://www.stargazing.net/kepler/moonrise.html article
+  // This is intentionally complex to reduce object creation and GC
+  // Splitting it into subfunctions would not be optimal
   getMoonTimes: (date, lat, lng, inUTC) => {
+    // NOSONAR
     var t = new Date(date);
     if (inUTC) t.setUTCHours(0, 0, 0, 0);else t.setHours(0, 0, 0, 0);
     var hc = 0.133 * _constants__WEBPACK_IMPORTED_MODULE_0__.TAU / 360,

@@ -41789,7 +41789,7 @@ const getUnique = (arr) => [...new Set(arr)];
 const stringPad = {
     pad: (val, len) => {
         val = String(val);
-        len = len || 2;
+        len !== null && len !== void 0 ? len : (len = 2);
         while (val.length < len)
             val = '0' + val;
         return val;
@@ -41802,7 +41802,7 @@ const stringPad = {
 };
 const saveVariable = (variable, filename) => {
     try {
-        filename = typeof filename == 'undefined' ? 'variable.txt' : filename;
+        filename !== null && filename !== void 0 ? filename : (filename = 'variable.txt');
         variable = JSON.stringify(variable);
         const blob = new Blob([variable], { type: 'text/plain;charset=utf-8' });
         if (!file_saver__WEBPACK_IMPORTED_MODULE_0__.saveAs)
@@ -41823,6 +41823,7 @@ const saveCsv = (items, name) => {
         const blob = new Blob([csv], { type: 'text/plain;charset=utf-8' });
         if (!file_saver__WEBPACK_IMPORTED_MODULE_0__.saveAs)
             throw new Error('saveAs is unavailable!');
+        name !== null && name !== void 0 ? name : (name = 'data');
         (0,file_saver__WEBPACK_IMPORTED_MODULE_0__.saveAs)(blob, `${name}.csv`);
     }
     catch (error) {
@@ -41916,7 +41917,7 @@ const sensorList = {
         linkAehf: true,
         linkWgs: true,
         zoom: 'leo',
-        url: 'http://www.radartutorial.eu/19.kartei/01.oth/karte004.en.html',
+        url: 'https://www.radartutorial.eu/19.kartei/01.oth/karte004.en.html',
         country: 'United States',
         sun: 'No Impact',
         volume: false,
@@ -41981,7 +41982,7 @@ const sensorList = {
         changeObjectInterval: 1000,
         zoom: 'geo',
         beamwidth: 1.4,
-        url: 'http://www.radartutorial.eu/19.kartei/01.oth/karte002.en.html',
+        url: 'https://www.radartutorial.eu/19.kartei/01.oth/karte002.en.html',
         country: 'United States',
         sun: 'No Impact',
         volume: false,
@@ -42048,7 +42049,7 @@ const sensorList = {
         linkAehf: true,
         linkWgs: true,
         zoom: 'leo',
-        url: 'http://www.radartutorial.eu/19.kartei/01.oth/karte004.en.html',
+        url: 'https://www.radartutorial.eu/19.kartei/01.oth/karte004.en.html',
         country: 'United States',
         sun: 'No Impact',
         volume: false,
@@ -42075,7 +42076,7 @@ const sensorList = {
         changeObjectInterval: 1000,
         linkWgs: true,
         zoom: 'leo',
-        url: 'http://www.radartutorial.eu/19.kartei/01.oth/karte004.en.html',
+        url: 'https://www.radartutorial.eu/19.kartei/01.oth/karte004.en.html',
         country: 'United States',
         sun: 'No Impact',
         volume: true,
@@ -42097,7 +42098,7 @@ const sensorList = {
         linkAehf: true,
         linkWgs: true,
         zoom: 'geo',
-        url: 'http://www.radartutorial.eu/19.kartei/01.oth/karte005.en.html',
+        url: 'https://www.radartutorial.eu/19.kartei/01.oth/karte005.en.html',
         country: 'United States',
         sun: 'No Impact',
         volume: false,
@@ -43100,14 +43101,14 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
             if (currentDirection !== goalDirection) {
                 // Move 2 Degrees ahead in the orbit to prevent being close on the next lattiude check
                 // This happens when the goal latitude is near the poles
-                i += 20;
+                i += 20; // NOSONAR
             }
             else {
                 break; // Stop changing the Mean Anomaly
             }
         }
         if (meanACalcResults === PropagationResults.Far) {
-            i += 100;
+            i += 100; // NOSONAR
         }
     }
     if (meanACalcResults !== PropagationResults.Success) {
@@ -43139,7 +43140,8 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
                 // console.log('Failed Arg of Per Calc');
             }
             if (argPerCalcResults === PropagationResults.Far) {
-                i += 5 * 10; // Change ArgPer faster
+                // Change ArgPer faster
+                i += 5 * 10; // NOSONAR
             }
             if (argPerCalcResults === PropagationResults.Error) {
                 return ['Error', 'Failed to find a solution for Argument of Perigee'];
@@ -43151,13 +43153,14 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
                 if (meanACalcResults === PropagationResults.Success) {
                     if (currentDirection !== goalDirection) {
                         // If Object is moving opposite of the goal direction (upOrDown)
-                        j = j + 20; // Move 2 Degrees ahead in the orbit to prevent being close on the next lattiude check
+                        // Move 2 Degrees ahead in the orbit to prevent being close on the next lattiude check
+                        j = j + 20; // NOSONAR
                     }
                     else {
                         break; // Stop changing the Mean Anomaly
                     }
                 }
-                j = meanACalcResults === PropagationResults.Far ? j + 100 : j;
+                j = meanACalcResults === PropagationResults.Far ? j + 100 : j; // NOSONAR
                 if (meanACalcResults === PropagationResults.Error) {
                     return ['Error', ''];
                 }
@@ -43175,7 +43178,7 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
             break;
         }
         if (raanCalcResults === PropagationResults.Far) {
-            i += 10 * 100;
+            i += 10 * 100; // NOSONAR
         }
     }
     if (raanCalcResults !== PropagationResults.Success) {
@@ -45068,6 +45071,7 @@ var raeType = 1;
 _js_satMath_satMath__WEBPACK_IMPORTED_MODULE_4__.satellite.lookanglesInterval = 60;
 
 _js_satMath_satMath__WEBPACK_IMPORTED_MODULE_4__.satellite.calculateLookAngles = function (sat, sensor, tableType) {
+  // NOSONAR
   var propOffset;
 
   (function _inputValidation() {
@@ -45366,6 +45370,7 @@ var drawChart = data => {
   })();
 
   (function setupDataInfo() {
+    // NOSONAR
     if (typeof sensor == 'undefined' || isDrawInc || isDrawApogee || isDrawEcc || isDrawInc || isDrawPerigee || isDrawPeriod || isDrawRAAN) {
       for (var _i = 0; _i < satData.length; _i++) {
         labelInfo.push("".concat(satData[_i].year, " ").concat(satData[_i].jday));
@@ -45639,6 +45644,7 @@ var loadJSON = () => {
 };
 
 (function initParseFromGETVariables() {
+  // NOSONAR
   // This is an initial parse of the GET variables
   // A satSet focused one happens later.
   var queryStr = window.location.search.substring(1);
