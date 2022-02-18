@@ -8118,9 +8118,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _chunks_helpers_segment_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./chunks/helpers.segment.js */ "./node_modules/chart.js/dist/chunks/helpers.segment.js");
 /*!
- * Chart.js v3.7.0
+ * Chart.js v3.7.1
  * https://www.chartjs.org
- * (c) 2021 Chart.js Contributors
+ * (c) 2022 Chart.js Contributors
  * Released under the MIT License
  */
 
@@ -13402,7 +13402,7 @@ function needContext(proxy, names) {
   return false;
 }
 
-var version = "3.7.0";
+var version = "3.7.1";
 
 const KNOWN_POSITIONS = ['top', 'bottom', 'left', 'right', 'chartArea'];
 function positionIsHorizontal(position, axis) {
@@ -15502,9 +15502,28 @@ function resolveTarget(sources, index, propagate) {
   return false;
 }
 function _clip(ctx, target, clipY) {
+  const {segments, points} = target;
+  let first = true;
+  let lineLoop = false;
   ctx.beginPath();
-  target.path(ctx);
-  ctx.lineTo(target.last().x, clipY);
+  for (const segment of segments) {
+    const {start, end} = segment;
+    const firstPoint = points[start];
+    const lastPoint = points[findSegmentEnd(start, end, points)];
+    if (first) {
+      ctx.moveTo(firstPoint.x, firstPoint.y);
+      first = false;
+    } else {
+      ctx.lineTo(firstPoint.x, clipY);
+      ctx.lineTo(firstPoint.x, firstPoint.y);
+    }
+    lineLoop = !!target.pathSegment(ctx, segment, {move: lineLoop});
+    if (lineLoop) {
+      ctx.closePath();
+    } else {
+      ctx.lineTo(lastPoint.x, clipY);
+    }
+  }
   ctx.lineTo(target.first().x, clipY);
   ctx.closePath();
   ctx.clip();
@@ -18858,9 +18877,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "z": () => (/* binding */ _isPointInArea)
 /* harmony export */ });
 /*!
- * Chart.js v3.7.0
+ * Chart.js v3.7.1
  * https://www.chartjs.org
- * (c) 2021 Chart.js Contributors
+ * (c) 2022 Chart.js Contributors
  * Released under the MIT License
  */
 function fontString(pixelSize, fontStyle, fontFamily) {
@@ -42981,8 +43000,8 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
         const meanaStr = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_1__.stringPad.pad0(meana.toPrecision(7), 8);
         const raan = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_1__.stringPad.pad0((sat.raan * _app_js_lib_constants__WEBPACK_IMPORTED_MODULE_0__.RAD2DEG).toPrecision(7), 8);
         const argPe = newArgPer ? _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_1__.stringPad.pad0((parseFloat(newArgPer) / 10).toPrecision(7), 8) : _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_1__.stringPad.pad0((sat.argPe * _app_js_lib_constants__WEBPACK_IMPORTED_MODULE_0__.RAD2DEG).toPrecision(7), 8);
-        const TLE1Ending = sat.TLE1.substr(32, 39);
-        const TLE1 = '1 ' + sat.sccNum + 'U ' + intl + ' ' + epochyr + epochday + TLE1Ending; // M' and M'' are both set to 0 to put the object in a perfect stable orbit
+        const _TLE1Ending = sat.TLE1.substr(32, 39);
+        const TLE1 = '1 ' + sat.sccNum + 'U ' + intl + ' ' + epochyr + epochday + _TLE1Ending; // M' and M'' are both set to 0 to put the object in a perfect stable orbit
         const TLE2 = '2 ' + sat.sccNum + ' ' + inc + ' ' + raan + ' ' + ecen + ' ' + argPe + ' ' + meanaStr + ' ' + meanmo + '    10';
         satrec = _satMath__WEBPACK_IMPORTED_MODULE_2__.satellite.twoline2satrec(TLE1, TLE2);
         const results = getOrbitByLatLonPropagate(now, satrec, PropagationOptions.MeanAnomaly);
@@ -43019,10 +43038,10 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
     /**
      * Rotating the mean anomaly adjusts the latitude (and longitude) of the satellite.
      * @param {number} raan - This is the right ascension of the ascending node (where it rises above the equator relative to a specific star)
-     * @param {number} raanOffset - This allows the main thread to send a guess of the raan
+     * @param {number} raanOffsetIn - This allows the main thread to send a guess of the raan
      * @returns {PropagationResults} This number tells the main loop what to do next
      */
-    const raanCalc = (raan, raanOffset) => {
+    const raanCalc = (raan, raanOffsetIn) => {
         const origRaan = raan;
         raan = raan / 100;
         raan = raan > 360 ? raan - 360 : raan;
@@ -43035,18 +43054,18 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
         const results = getOrbitByLatLonPropagate(now, satrec, PropagationOptions.RightAscensionOfAscendingNode);
         // If we have a good guess of the raan, we can use it, but need to apply the offset to the original raan
         if (results === PropagationResults.Success) {
-            raan = origRaan / 100 + raanOffset;
+            raan = origRaan / 100 + raanOffsetIn;
             raan = raan > 360 ? raan - 360 : raan;
             raan = raan < 0 ? raan + 360 : raan;
-            const raanStr = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_1__.stringPad.pad0(raan.toPrecision(7), 8);
-            const TLE2 = '2 ' + sat.sccNum + ' ' + inc + ' ' + raanStr + ' ' + ecen + ' ' + argPe + ' ' + newMeana + ' ' + meanmo + '    10';
+            const _raanStr = _app_js_lib_helpers__WEBPACK_IMPORTED_MODULE_1__.stringPad.pad0(raan.toPrecision(7), 8);
+            const _TLE2 = '2 ' + sat.sccNum + ' ' + inc + ' ' + _raanStr + ' ' + ecen + ' ' + argPe + ' ' + newMeana + ' ' + meanmo + '    10';
             sat.TLE1 = TLE1;
-            sat.TLE2 = TLE2;
+            sat.TLE2 = _TLE2;
         }
         return results;
     };
-    const getOrbitByLatLonPropagate = (now, satrec, type) => {
-        const { m, gmst } = (0,_satMath__WEBPACK_IMPORTED_MODULE_2__.calculateTimeVariables)(now, satrec);
+    const getOrbitByLatLonPropagate = (nowIn, satrec, type) => {
+        const { m, gmst } = (0,_satMath__WEBPACK_IMPORTED_MODULE_2__.calculateTimeVariables)(nowIn, satrec);
         const positionEci = _satMath__WEBPACK_IMPORTED_MODULE_2__.satellite.sgp4(satrec, m);
         const gpos = _satMath__WEBPACK_IMPORTED_MODULE_2__.satellite.eciToGeodetic(positionEci.position, gmst);
         let { lat, lon, alt } = gpos;
@@ -43123,9 +43142,12 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
             /** Rotate ArgPer 0.1 Degree at a Time for Up To 400 Degrees */
             argPerCalcResults = argPerCalc(i.toString());
             if (argPerCalcResults === PropagationResults.Success) {
+                // DEBUG:
                 // console.log('Found Correct Alt');
                 if (meanACalcResults === PropagationResults.Success) {
+                    // DEBUG:
                     // console.log('Found Correct Lat');
+                    // DEBUG:
                     // console.log('Up Or Down: ' + upOrDown);
                     if (currentDirection === goalDirection) {
                         // If Object is moving in the goal direction (upOrDown)
@@ -43133,10 +43155,12 @@ const getOrbitByLatLon = (sat, goalLat, goalLon, goalDirection, now, goalAlt, ra
                     }
                 }
                 else {
+                    // DEBUG:
                     // console.log('Found Wrong Lat');
                 }
             }
             else {
+                // DEBUG:
                 // console.log('Failed Arg of Per Calc');
             }
             if (argPerCalcResults === PropagationResults.Far) {
@@ -43234,6 +43258,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "map": () => (/* binding */ map),
 /* harmony export */   "calculateSensorPos": () => (/* binding */ calculateSensorPos),
 /* harmony export */   "createTle": () => (/* binding */ createTle),
+/* harmony export */   "populateMultiSiteTable": () => (/* binding */ populateMultiSiteTable),
 /* harmony export */   "satellite": () => (/* binding */ satellite)
 /* harmony export */ });
 /* harmony import */ var _app_js_lib_constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @app/js/lib/constants */ "./src/js/lib/constants.ts");
@@ -43260,7 +43285,7 @@ __webpack_require__.r(__webpack_exports__);
  * providing tailored functions for calculating orbital data.
  * http://keeptrack.space
  *
- * @Copyright (C) 2016-2021 Theodore Kruczek
+ * @Copyright (C) 2016-2022 Theodore Kruczek
  * @Copyright (C) 2020 Heather Kruczek
  *
  * KeepTrack is free software: you can redistribute it and/or modify it under
@@ -43297,7 +43322,7 @@ const getTearData = (now, satrec, sensors, isInFOV) => {
     if (isInFOV) {
         if (satellite.isRiseSetLookangles) {
             // Previous Pass to Calculate first line of coverage
-            var now1 = new Date();
+            const now1 = new Date();
             now1.setTime(Number(now) - 1000);
             let aer1 = satellite.getRae(now1, satrec, sensor);
             let isInFOV1 = satellite.checkIsInView(sensor, aer1);
@@ -43580,7 +43605,7 @@ const getlookangles = (sat) => {
     for (let i = 0; i < satellite.lookanglesLength * 24 * 60 * 60; i += lookanglesInterval) {
         offset = i * 1000; // Offset in seconds (msec * 1000)
         let now = timeManager.getOffsetTimeObj(offset, simulationTime);
-        let looksPass = getTearData(now, satrec, sensor);
+        let looksPass = satellite.getTearData(now, satrec, sensor);
         if (looksPass.time !== '') {
             looksArray.push(looksPass); // Update the table with looks for this 5 second chunk and then increase table counter by 1
         }
@@ -43975,13 +44000,13 @@ const findBestPass = (sat, sensors) => {
     let start3 = false;
     let stop3 = false;
     let orbitalPeriod = _app_js_lib_constants__WEBPACK_IMPORTED_MODULE_0__.MINUTES_PER_DAY / ((satrec.no * _app_js_lib_constants__WEBPACK_IMPORTED_MODULE_0__.MINUTES_PER_DAY) / _app_js_lib_constants__WEBPACK_IMPORTED_MODULE_0__.TAU); // Seconds in a day divided by mean motion
-    let _propagateBestPass = (now, satrec) => {
-        let aer = satellite.getRae(now, satrec, sensor);
+    let _propagateBestPass = (now, satrecIn) => {
+        let aer = satellite.getRae(now, satrecIn, sensor);
         let isInFOV = satellite.checkIsInView(sensor, aer);
         if (isInFOV) {
             // Previous Pass to Calculate first line of coverage
             let now1 = timeManager.getOffsetTimeObj(offset - looksInterval * 1000, simulationTime);
-            let aer1 = satellite.getRae(now1, satrec, sensor);
+            let aer1 = satellite.getRae(now1, satrecIn, sensor);
             let isInFOV1 = satellite.checkIsInView(sensor, aer1);
             if (!isInFOV1) {
                 // if it starts around 3
@@ -43996,8 +44021,8 @@ const findBestPass = (sat, sensors) => {
             }
             else {
                 // Next Pass to Calculate Last line of coverage
-                let now1 = timeManager.getOffsetTimeObj(offset + looksInterval * 1000, simulationTime);
-                aer1 = satellite.getRae(now1, satrec, sensor);
+                let _now1 = timeManager.getOffsetTimeObj(offset + looksInterval * 1000, simulationTime);
+                aer1 = satellite.getRae(_now1, satrecIn, sensor);
                 isInFOV1 = satellite.checkIsInView(sensor, aer1);
                 if (!isInFOV1) {
                     // if it stops around 3
@@ -44022,7 +44047,7 @@ const findBestPass = (sat, sensors) => {
                     // Last Line of Coverage
                     return {
                         sortTime: sTime,
-                        scc: satrec.satnum,
+                        scc: satrecIn.satnum,
                         score: score,
                         startDate: sTime,
                         startTime: sTime,
@@ -44165,6 +44190,8 @@ const findClosestApproachTime = (sat1, sat2, propLength) => {
     _api_keepTrackApi__WEBPACK_IMPORTED_MODULE_5__.keepTrackApi.programs.timeManager.changeStaticOffset(result.offset);
     return result;
 };
+// TODO: Future Idea
+/*
 // satellite.createManeuverAnalyst = (satId, incVariation, meanmoVariation, rascVariation) => {
 //   const { timeManager, satSet } = keepTrackApi.programs;
 //   // TODO This needs rewrote from scratch to bypass the satcruncher
@@ -44274,11 +44301,13 @@ const findClosestApproachTime = (sat1, sat2, propLength) => {
 //       }
 //     }
 //   }
+
 //   console.log(`${sat.inclination + closestInc}`);
 //   console.log(`${sat.raan + closestRaan}`);
 //   console.log(`${sat.meanMotion * closestMeanMo}`);
 //   satellite.createManeuverAnalyst(sat.id, closestInc, closestMeanMo, closestRaan);
 // };
+*/
 const checkIsInView = (sensor, rae) => {
     const { az, el, rng } = rae;
     if (sensor.obsminaz > sensor.obsmaxaz) {
@@ -44305,7 +44334,6 @@ const updateDopsTable = (lat, lon, alt) => {
     try {
         let tbl = document.getElementById('dops'); // Identify the table to update
         tbl.innerHTML = ''; // Clear the table from old object data
-        // let tblLength = 0;
         const simulationTime = timeManager.calculateSimulationTime();
         let offset = 0;
         let tr = tbl.insertRow();
@@ -44370,19 +44398,14 @@ const calculateDops = (satList) => {
         dops.gdop = 50;
         dops.vdop = 50;
         dops.tdop = 50;
-        // console.debug("Need More Satellites");
         return dops;
     }
     var A = numeric__WEBPACK_IMPORTED_MODULE_3___default().rep([nsat, 4], 0);
-    var azlist = [];
-    var ellist = [];
     for (var n = 1; n <= nsat; n++) {
         var cursat = satList[n - 1];
         var az = cursat.az;
         var el = cursat.el;
-        azlist.push(az);
-        ellist.push(el);
-        var B = [
+        const B = [
             Math.cos((el * Math.PI) / 180.0) * Math.sin((az * Math.PI) / 180.0),
             Math.cos((el * Math.PI) / 180.0) * Math.cos((az * Math.PI) / 180.0),
             Math.sin((el * Math.PI) / 180.0),
@@ -44404,6 +44427,7 @@ const calculateDops = (satList) => {
     dops.tdop = (Math.round(tdop * 100) / 100).toFixed(2);
     return dops;
 };
+// TODO: Future features
 // satellite.radarMaxrng = (pW: number, aG: number, rcs: number, minSdB: number, fMhz: number): number => {
 //   // let powerInWatts = 325 * 1792;
 //   // let antennaGain = 2613000000;
@@ -44487,7 +44511,6 @@ const getSunTimes = (sat, sensors, searchLength, interval) => {
                 ((az >= sensor.obsminaz2 || az <= sensor.obsmaxaz2) && el >= sensor.obsminel2 && el <= sensor.obsmaxel2 && rng <= sensor.obsmaxrange2 && rng >= sensor.obsminrange2)) {
                 if (dist < minDistanceApart) {
                     minDistanceApart = dist;
-                    // minDistTime = now;
                 }
             }
         }
@@ -44496,7 +44519,6 @@ const getSunTimes = (sat, sensors, searchLength, interval) => {
                 (az >= sensor.obsminaz2 && az <= sensor.obsmaxaz2 && el >= sensor.obsminel2 && el <= sensor.obsmaxel2 && rng <= sensor.obsmaxrange2 && rng >= sensor.obsminrange2)) {
                 if (dist < minDistanceApart) {
                     minDistanceApart = dist;
-                    // minDistTime = now;
                 }
             }
         }
@@ -44644,70 +44666,7 @@ const verifySensors = (sensors, sensorManager) => {
     }
     return sensors;
 };
-const satellite = {
-    // Legacy API
-    sgp4: ootk__WEBPACK_IMPORTED_MODULE_4__.Sgp4.propagate,
-    gstime: ootk__WEBPACK_IMPORTED_MODULE_4__.Sgp4.gstime,
-    twoline2satrec: ootk__WEBPACK_IMPORTED_MODULE_4__.Sgp4.createSatrec,
-    geodeticToEcf: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.lla2ecf,
-    ecfToEci: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.ecf2eci,
-    eciToEcf: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.eci2ecf,
-    eciToGeodetic: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.eci2lla,
-    degreesLat: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.getDegLat,
-    degreesLong: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.getDegLon,
-    ecfToLookAngles: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.ecf2rae,
-    // New API
-    altitudeCheck,
-    calculateDops,
-    calculateLookAngles,
-    calculateSensorPos,
-    calculateVisMag,
-    checkIsInView,
-    createTle,
-    currentEpoch,
-    distance,
-    eci2ll,
-    eci2Rae,
-    findBestPass,
-    findBestPasses,
-    findCloseObjects,
-    findClosestApproachTime,
-    findNearbyObjectsByOrbit,
-    getDops,
-    getEci,
-    getlookangles,
-    getlookanglesMultiSite,
-    getOrbitByLatLon: _getOrbitByLatLon__WEBPACK_IMPORTED_MODULE_10__.getOrbitByLatLon,
-    getRae,
-    getSunTimes,
-    getTEARR,
-    isRiseSetLookangles: false,
-    lastlooksArray: [],
-    lastMultiSiteArray: [],
-    lookAngles2Ecf,
-    lookanglesInterval: 30,
-    lookanglesLength: 1,
-    map,
-    nextNpasses,
-    nextpass,
-    nextpassList,
-    obsmaxrange: 0,
-    obsminrange: 0,
-    sat2ric,
-    setobs,
-    setTEARR,
-    updateDopsTable,
-    currentTEARR: {
-        time: '',
-        az: 0,
-        el: 0,
-        rng: 0,
-        name: '',
-    },
-};
-window.satellite = satellite;
 const populateMultiSiteTable = (multiSiteArray) => {
-    // const { timeManager, sensorManager, objectManager, mainCamera, satSet } = keepTrackApi.programs;
     const tbl = document.getElementById('looksmultisite'); // Identify the table to update
     tbl.innerHTML = ''; // Clear the table from old object data
     let tr = tbl.insertRow();
@@ -44759,6 +44718,7 @@ const populateMultiSiteTable = (multiSiteArray) => {
         tdR.appendChild(document.createTextNode(multiSiteArray[i].rng.toFixed(0)));
         tdS = tr.insertCell();
         tdS.appendChild(document.createTextNode(multiSiteArray[i].name));
+        // TODO: Future feature
         // tdS.onclick = () => {
         //   timeManager.changeStaticOffset(new Date(multiSiteArray[i].time).getTime() - new Date().getTime());
         //   sensorManager.setSensor(sensorManager.sensorList[multiSiteArray[i].name]);
@@ -44766,6 +44726,70 @@ const populateMultiSiteTable = (multiSiteArray) => {
         // };
     }
 };
+const satellite = {
+    // Legacy API
+    sgp4: ootk__WEBPACK_IMPORTED_MODULE_4__.Sgp4.propagate,
+    gstime: ootk__WEBPACK_IMPORTED_MODULE_4__.Sgp4.gstime,
+    twoline2satrec: ootk__WEBPACK_IMPORTED_MODULE_4__.Sgp4.createSatrec,
+    geodeticToEcf: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.lla2ecf,
+    ecfToEci: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.ecf2eci,
+    eciToEcf: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.eci2ecf,
+    eciToGeodetic: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.eci2lla,
+    degreesLat: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.getDegLat,
+    degreesLong: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.getDegLon,
+    ecfToLookAngles: ootk__WEBPACK_IMPORTED_MODULE_4__.Transforms.ecf2rae,
+    // New API
+    altitudeCheck,
+    calculateDops,
+    calculateLookAngles,
+    calculateSensorPos,
+    calculateVisMag,
+    checkIsInView,
+    createTle,
+    currentEpoch,
+    distance,
+    eci2ll,
+    eci2Rae,
+    findBestPass,
+    findBestPasses,
+    findCloseObjects,
+    findClosestApproachTime,
+    findNearbyObjectsByOrbit,
+    getDops,
+    getEci,
+    getlookangles,
+    getlookanglesMultiSite,
+    getOrbitByLatLon: _getOrbitByLatLon__WEBPACK_IMPORTED_MODULE_10__.getOrbitByLatLon,
+    getRae,
+    getSunTimes,
+    getTEARR,
+    getTearData,
+    isRiseSetLookangles: false,
+    lastlooksArray: [],
+    lastMultiSiteArray: [],
+    lookAngles2Ecf,
+    lookanglesInterval: 30,
+    lookanglesLength: 1,
+    map,
+    nextNpasses,
+    nextpass,
+    nextpassList,
+    obsmaxrange: 0,
+    obsminrange: 0,
+    sat2ric,
+    setobs,
+    setTEARR,
+    updateDopsTable,
+    populateMultiSiteTable,
+    currentTEARR: {
+        time: '',
+        az: 0,
+        el: 0,
+        rng: 0,
+        name: '',
+    },
+};
+window.satellite = satellite;
 
 
 /***/ }),
@@ -44882,8 +44906,8 @@ __webpack_require__.r(__webpack_exports__);
 
 const getDayOfYear = (date) => {
     date = date || new Date();
-    const _isLeapYear = (date) => {
-        const year = date.getFullYear();
+    const _isLeapYear = (dateIn) => {
+        const year = dateIn.getUTCFullYear();
         if ((year & 3) !== 0)
             return false;
         return year % 100 !== 0 || year % 400 === 0;
@@ -44899,12 +44923,12 @@ const getDayOfYear = (date) => {
 const jday = (year, mon, day, hr, minute, sec) => {
     if (!year) {
         const now = new Date();
-        const jDayStart = new Date(now.getFullYear(), 0, 0);
+        const jDayStart = new Date(now.getUTCFullYear(), 0, 0);
         const jDayDiff = now.getDate() - jDayStart.getDate();
         return Math.floor(jDayDiff / _lib_constants__WEBPACK_IMPORTED_MODULE_0__.MILLISECONDS_PER_DAY);
     }
     else {
-        return 367.0 * year - Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) + Math.floor((275 * mon) / 9.0) + day + 1721013.5 + ((sec / 60.0 + minute) / 60.0 + hr) / 24.0;
+        return (367.0 * year - Math.floor(7 * (year + Math.floor((mon + 9) / 12.0)) * 0.25) + Math.floor((275 * mon) / 9.0) + day + 1721013.5 + ((sec / 60.0 + minute) / 60.0 + hr) / 24.0);
     }
 };
 const localToZulu = (date) => {
