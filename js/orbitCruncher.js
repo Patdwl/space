@@ -4352,7 +4352,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../lib/external/meuusjs */ "./src/js/lib/external/meuusjs.ts");
 /* harmony import */ var _timeManager_transforms__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../timeManager/transforms */ "./src/js/timeManager/transforms.ts");
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../constants */ "./src/js/webworker/constants.ts");
-
+ // NOSONAR
 
 
 
@@ -4392,17 +4392,17 @@ const propTime = (dynamicOffsetEpoch, staticOffset, propRate) => {
     return now;
 };
 const checkSunExclusion = (sensor, j, gmst, now) => {
-    var jdo = new _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.JulianDay(j); // now
-    var coord = _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.EclCoordfromWgs84(0, 0, 0);
-    var coord2 = _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.EclCoordfromWgs84(sensor.observerGd.latitude * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG, sensor.observerGd.longitude * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG, sensor.observerGd.height);
+    const jdo = new _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.JulianDay(j); // now
+    const coord = _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.EclCoordfromWgs84(0, 0, 0);
+    const coord2 = _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.EclCoordfromWgs84(sensor.observerGd.latitude * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG, sensor.observerGd.longitude * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG, sensor.observerGd.height);
     // AZ / EL Calculation
-    var tp = _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.Solar.topocentricPosition(jdo, coord, false);
-    var tpRel = _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.Solar.topocentricPosition(jdo, coord2, false);
+    const tp = _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.Solar.topocentricPosition(jdo, coord, false);
+    const tpRel = _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.Solar.topocentricPosition(jdo, coord2, false);
     const sunAz = tp.hz.az * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG + (180 % 360);
     const sunEl = (tp.hz.alt * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG) % 360;
     const sunElRel = (tpRel.hz.alt * _lib_constants__WEBPACK_IMPORTED_MODULE_2__.RAD2DEG) % 360;
     // Range Calculation
-    var T = new _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.JulianDay(_lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.JulianDay.dateToJD(now)).jdJ2000Century();
+    const T = new _lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.JulianDay(_lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.JulianDay.dateToJD(now)).jdJ2000Century();
     let sunG = (_lib_external_meuusjs__WEBPACK_IMPORTED_MODULE_3__.A.Solar.meanAnomaly(T) * 180) / _lib_constants__WEBPACK_IMPORTED_MODULE_2__.PI;
     sunG = sunG % 360.0;
     const sunR = 1.00014 - 0.01671 * Math.cos(sunG) - 0.00014 * Math.cos(2 * sunG);
