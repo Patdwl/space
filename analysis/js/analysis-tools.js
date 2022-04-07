@@ -41919,7 +41919,7 @@ __webpack_require__.r(__webpack_exports__);
 
 const sensorList = {
     COD: {
-        name: 'Cape Cod AFS, Massachusetts',
+        name: 'Cape Cod SFS, Massachusetts',
         shortName: 'COD',
         type: _app_js_api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_0__.SpaceObjectType.PHASED_ARRAY_RADAR,
         lat: 41.754785,
@@ -41964,7 +41964,7 @@ const sensorList = {
         volume: false,
     },
     CLR: {
-        name: 'Clear AFS, Alaska',
+        name: 'Clear SFS, Alaska',
         shortName: 'CLR',
         type: _app_js_api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_0__.SpaceObjectType.PHASED_ARRAY_RADAR,
         lat: 64.290556,
@@ -42029,7 +42029,7 @@ const sensorList = {
         volume: false,
     },
     CAV: {
-        name: 'Cavalier AFS, North Dakota',
+        name: 'Cavalier SFS, North Dakota',
         shortName: 'CAV',
         type: _app_js_api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_0__.SpaceObjectType.PHASED_ARRAY_RADAR,
         lat: 48.724567,
@@ -43256,6 +43256,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "sat2ric": () => (/* binding */ sat2ric),
 /* harmony export */   "getLlaTimeView": () => (/* binding */ getLlaTimeView),
 /* harmony export */   "map": () => (/* binding */ map),
+/* harmony export */   "getEciOfCurrentOrbit": () => (/* binding */ getEciOfCurrentOrbit),
+/* harmony export */   "getEcfOfCurrentOrbit": () => (/* binding */ getEcfOfCurrentOrbit),
+/* harmony export */   "getRicOfCurrentOrbit": () => (/* binding */ getRicOfCurrentOrbit),
+/* harmony export */   "getLlaOfCurrentOrbit": () => (/* binding */ getLlaOfCurrentOrbit),
 /* harmony export */   "calculateSensorPos": () => (/* binding */ calculateSensorPos),
 /* harmony export */   "createTle": () => (/* binding */ createTle),
 /* harmony export */   "populateMultiSiteTable": () => (/* binding */ populateMultiSiteTable),
@@ -43646,35 +43650,16 @@ const getlookangles = (sat) => {
         tdR.setAttribute('style', 'text-decoration: underline');
         for (let i = 0; i < looksArray.length; i++) {
             if (tbl.rows.length > 0) {
-                for (let r = 0; r < tbl.rows.length; r++) {
-                    let dateString = tbl.rows[r].cells[0].textContent;
-                    let sYear = parseInt(dateString.substr(0, 4)); // UTC Year
-                    let sMon = parseInt(dateString.substr(5, 2)) - 1; // UTC Month in MMM prior to converting
-                    let sDay = parseInt(dateString.substr(8, 2)); // UTC Day
-                    let sHour = parseInt(dateString.substr(11, 2)); // UTC Hour
-                    let sMin = parseInt(dateString.substr(14, 2)); // UTC Min
-                    let sSec = parseInt(dateString.substr(17, 2)); // UTC Sec
-                    let topTime = new Date(sYear, sMon, sDay, sHour, sMin, sSec); // New Date object of the future collision
-                    // Date object defaults to local time.
-                    topTime.setUTCDate(sDay); // Move to UTC day.
-                    topTime.setUTCHours(sHour); // Move to UTC Hour
-                    if (new Date(looksArray[i].time) < topTime) {
-                        tr = tbl.insertRow(i);
-                        break;
-                    }
-                }
-            }
-            if (tr == null) {
                 tr = tbl.insertRow();
+                tdT = tr.insertCell();
+                tdT.appendChild(document.createTextNode((0,_lib_external_dateFormat_js__WEBPACK_IMPORTED_MODULE_7__.dateFormat)(looksArray[i].time, 'isoDateTime', false)));
+                tdE = tr.insertCell();
+                tdE.appendChild(document.createTextNode(looksArray[i].el.toFixed(1)));
+                tdA = tr.insertCell();
+                tdA.appendChild(document.createTextNode(looksArray[i].az.toFixed(0)));
+                tdR = tr.insertCell();
+                tdR.appendChild(document.createTextNode(looksArray[i].rng.toFixed(0)));
             }
-            tdT = tr.insertCell();
-            tdT.appendChild(document.createTextNode((0,_lib_external_dateFormat_js__WEBPACK_IMPORTED_MODULE_7__.dateFormat)(looksArray[i].time, 'isoDateTime', false)));
-            tdE = tr.insertCell();
-            tdE.appendChild(document.createTextNode(looksArray[i].el.toFixed(1)));
-            tdA = tr.insertCell();
-            tdA.appendChild(document.createTextNode(looksArray[i].az.toFixed(0)));
-            tdR = tr.insertCell();
-            tdR.appendChild(document.createTextNode(looksArray[i].rng.toFixed(0)));
         }
     })();
     return looksArray;
@@ -44658,6 +44643,61 @@ const map = (sat, i) => {
     const now = timeManager.getOffsetTimeObj(offset, simulationTime);
     return getLlaTimeView(now, sat);
 };
+const getEciOfCurrentOrbit = (sat, points) => {
+    const { timeManager } = _api_keepTrackApi__WEBPACK_IMPORTED_MODULE_5__.keepTrackApi.programs;
+    // Set default timing settings. These will be changed to find look angles at different times in future.
+    const simulationTime = timeManager.calculateSimulationTime();
+    let eciPoints = [];
+    for (let i = 0; i < points; i++) {
+        let offset = ((i * sat.period) / points) * 60 * 1000; // Offset in seconds (msec * 1000)
+        const now = timeManager.getOffsetTimeObj(offset, simulationTime);
+        eciPoints.push(getEci(sat, now).position);
+    }
+    return eciPoints;
+};
+const getEcfOfCurrentOrbit = (sat, points) => {
+    const { timeManager } = _api_keepTrackApi__WEBPACK_IMPORTED_MODULE_5__.keepTrackApi.programs;
+    // Set default timing settings. These will be changed to find look angles at different times in future.
+    const simulationTime = timeManager.calculateSimulationTime();
+    let ecfPoints = [];
+    for (let i = 0; i < points; i++) {
+        let offset = ((i * sat.period) / points) * 60 * 1000; // Offset in seconds (msec * 1000)
+        const now = timeManager.getOffsetTimeObj(offset, simulationTime);
+        ecfPoints.push(satellite.ecfToEci(getEci(sat, now).position, -i * (sat.period / points) * _app_js_lib_constants__WEBPACK_IMPORTED_MODULE_0__.TAU / sat.period));
+    }
+    return ecfPoints;
+};
+const getRicOfCurrentOrbit = (sat, sat2, points, orbits) => {
+    const { timeManager } = _api_keepTrackApi__WEBPACK_IMPORTED_MODULE_5__.keepTrackApi.programs;
+    // Set default timing settings. These will be changed to find look angles at different times in future.
+    const simulationTime = timeManager.calculateSimulationTime();
+    orbits !== null && orbits !== void 0 ? orbits : (orbits = 1);
+    let ricPoints = [];
+    for (let i = 0; i < points; i++) {
+        let offset = ((i * sat.period * orbits) / points) * 60 * 1000; // Offset in seconds (msec * 1000)
+        const now = timeManager.getOffsetTimeObj(offset, simulationTime);
+        sat = Object.assign(Object.assign({}, sat), getEci(sat, now));
+        sat2 = Object.assign(Object.assign({}, sat2), getEci(sat2, now));
+        ricPoints.push(sat2ric(sat, sat2).position);
+    }
+    return ricPoints;
+};
+const getLlaOfCurrentOrbit = (sat, points) => {
+    const { timeManager } = _api_keepTrackApi__WEBPACK_IMPORTED_MODULE_5__.keepTrackApi.programs;
+    // Set default timing settings. These will be changed to find look angles at different times in future.
+    const simulationTime = timeManager.calculateSimulationTime();
+    let llaPoints = [];
+    for (let i = 0; i < points; i++) {
+        let offset = ((i * sat.period) / points) * 60 * 1000; // Offset in seconds (msec * 1000)
+        const now = timeManager.getOffsetTimeObj(offset, simulationTime);
+        const { gmst } = calculateTimeVariables(now);
+        const eci = getEci(sat, now).position;
+        const lla = satellite.eciToGeodetic(eci, gmst);
+        const llat = Object.assign(Object.assign({}, lla), { time: now.getTime() });
+        llaPoints.push(llat);
+    }
+    return llaPoints;
+};
 const calculateSensorPos = (sensors) => {
     const { timeManager, sensorManager } = _api_keepTrackApi__WEBPACK_IMPORTED_MODULE_5__.keepTrackApi.programs;
     sensors = verifySensors(sensors, sensorManager);
@@ -44791,6 +44831,10 @@ const satellite = {
     findNearbyObjectsByOrbit,
     getDops,
     getEci,
+    getEciOfCurrentOrbit,
+    getEcfOfCurrentOrbit,
+    getRicOfCurrentOrbit,
+    getLlaOfCurrentOrbit,
     getlookangles,
     getlookanglesMultiSite,
     getOrbitByLatLon: _getOrbitByLatLon__WEBPACK_IMPORTED_MODULE_10__.getOrbitByLatLon,
@@ -44803,7 +44847,7 @@ const satellite = {
     lastMultiSiteArray: [],
     lookAngles2Ecf,
     lookanglesInterval: 30,
-    lookanglesLength: 1,
+    lookanglesLength: 7,
     map,
     nextNpasses,
     nextpass,

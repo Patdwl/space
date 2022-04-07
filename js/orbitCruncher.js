@@ -4622,6 +4622,7 @@ const onmessageProcessing = (m) => {
         // TODO: figure out how to calculate the orbit points on constant
         // position slices, not timeslices (ugly perigees on HEOs)
         const satId = m.data.satId;
+        const isEcfOutput = m.data.isEcfOutput || false;
         const pointsOut = new Float32Array((NUM_SEGS + 1) * 4);
         const nowDate = (0,_positionCruncher_calculations__WEBPACK_IMPORTED_MODULE_3__.propTime)(dynamicOffsetEpoch, staticOffset, propRate);
         const nowJ = (0,_timeManager_transforms__WEBPACK_IMPORTED_MODULE_2__.jday)(nowDate.getUTCFullYear(), nowDate.getUTCMonth() + 1, nowDate.getUTCDate(), nowDate.getUTCHours(), nowDate.getUTCMinutes(), nowDate.getUTCSeconds()) +
@@ -4654,7 +4655,12 @@ const onmessageProcessing = (m) => {
             const timeslice = period / NUM_SEGS;
             while (i < len) {
                 const t = now + i * timeslice;
-                const p = (_a = satellite_js__WEBPACK_IMPORTED_MODULE_0__.sgp4(satCache[satId], t)) === null || _a === void 0 ? void 0 : _a.position;
+                let p;
+                p = (_a = satellite_js__WEBPACK_IMPORTED_MODULE_0__.sgp4(satCache[satId], t)) === null || _a === void 0 ? void 0 : _a.position;
+                // eslint-disable-next-line no-constant-condition
+                if (isEcfOutput) {
+                    p = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(p, -i * timeslice * _lib_constants__WEBPACK_IMPORTED_MODULE_1__.TAU / period);
+                }
                 if (p.x && p.y && p.z) {
                     pointsOut[i * 4] = p.x;
                     pointsOut[i * 4 + 1] = p.y;
