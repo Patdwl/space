@@ -4661,7 +4661,7 @@ const onmessageProcessing = (m) => {
                 if (isEcfOutput) {
                     p = satellite_js__WEBPACK_IMPORTED_MODULE_0__.ecfToEci(p, -i * timeslice * _lib_constants__WEBPACK_IMPORTED_MODULE_1__.TAU / period);
                 }
-                if (p.x && p.y && p.z) {
+                if ((p === null || p === void 0 ? void 0 : p.x) && (p === null || p === void 0 ? void 0 : p.y) && (p === null || p === void 0 ? void 0 : p.z)) {
                     pointsOut[i * 4] = p.x;
                     pointsOut[i * 4 + 1] = p.y;
                     pointsOut[i * 4 + 2] = p.z;

@@ -43236,6 +43236,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "nextNpasses": () => (/* binding */ nextNpasses),
 /* harmony export */   "getlookangles": () => (/* binding */ getlookangles),
 /* harmony export */   "getlookanglesMultiSite": () => (/* binding */ getlookanglesMultiSite),
+/* harmony export */   "findReentries": () => (/* binding */ findReentries),
 /* harmony export */   "findCloseObjects": () => (/* binding */ findCloseObjects),
 /* harmony export */   "calculateLookAngles": () => (/* binding */ calculateLookAngles),
 /* harmony export */   "findBestPasses": () => (/* binding */ findBestPasses),
@@ -43727,6 +43728,16 @@ const getSatPos = (offset, satrec) => {
     catch (_a) {
         return { position: { x: 0, y: 0, z: 0 }, velocity: { x: 0, y: 0, z: 0 } };
     }
+};
+const findReentries = () => {
+    const { satSet } = _api_keepTrackApi__WEBPACK_IMPORTED_MODULE_5__.keepTrackApi.programs;
+    const reentries = satSet.satData.filter((sat) => (sat.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_6__.SpaceObjectType.PAYLOAD || sat.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_6__.SpaceObjectType.ROCKET_BODY || sat.type === _api_SpaceObjectType__WEBPACK_IMPORTED_MODULE_6__.SpaceObjectType.DEBRIS));
+    const reentriesStr = reentries
+        .filter((sat) => sat.perigee > 0)
+        .sort((a, b) => a.perigee - b.perigee)
+        .slice(0, 100)
+        .map((sat) => sat.sccNum).join(',');
+    return reentriesStr;
 };
 /* istanbul ignore next */
 const findCloseObjects = () => {
@@ -44827,6 +44838,7 @@ const satellite = {
     findBestPass,
     findBestPasses,
     findCloseObjects,
+    findReentries,
     findClosestApproachTime,
     findNearbyObjectsByOrbit,
     getDops,
