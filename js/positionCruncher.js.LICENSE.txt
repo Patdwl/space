@@ -1,1 +1,0 @@
-/*! For license information please see ootk.js.LICENSE.txt */
