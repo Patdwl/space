@@ -62,6 +62,7 @@ import { HoverManager } from './singletons/hover-manager';
 import { InputManager } from './singletons/input-manager';
 import { mobileManager } from './singletons/mobileManager';
 import { StandardOrbitManager } from './singletons/orbitManager';
+import { ThreeManager } from './singletons/three-manager';
 import { TimeManager } from './singletons/time-manager';
 import { StandardUiManager } from './singletons/uiManager';
 import { CatalogLoader } from './static/catalog-loader';
@@ -141,6 +142,8 @@ export class KeepTrack {
     keepTrackContainer.registerSingleton(Singletons.MainCamera, mainCameraInstance);
     const hoverManagerInstance = new HoverManager();
     keepTrackContainer.registerSingleton(Singletons.HoverManager, hoverManagerInstance);
+    const threeManagerInstance = new ThreeManager();
+    keepTrackContainer.registerSingleton(Singletons.ThreeManager, threeManagerInstance);
 
     this.mainCameraInstance = mainCameraInstance;
     this.errorManager = errorManagerInstance;
@@ -397,6 +400,8 @@ theodore.kruczek at gmail dot com.
     }
 
     keepTrackApi.methods.endOfDraw(dt);
+
+    keepTrackApi.getThreeManager().draw();
   }
 
   public async init(): Promise<void> {
@@ -438,6 +443,8 @@ theodore.kruczek at gmail dot com.
       // Start initializing the rest of the website
       timeManagerInstance.init();
       uiManagerInstance.onReady();
+
+      keepTrackApi.getThreeManager().init();
 
       SplashScreen.loadStr(SplashScreen.msg.dots);
       // MobileManager.checkMobileMode();
@@ -568,6 +575,8 @@ theodore.kruczek at gmail dot com.
 
     // Update Draw Positions
     keepTrackApi.getDotsManager().updatePositionBuffer();
+
+    keepTrackApi.getThreeManager().update();
   }
 }
 

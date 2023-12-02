@@ -752,4 +752,5 @@ export enum Singletons {
   SensorMath = 'SensorMathManager',
   MainCamera = 'MainCamera',
   PersistenceManager = 'PersistenceManager',
+  ThreeManager = 'ThreeManager',
 }

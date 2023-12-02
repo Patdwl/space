@@ -26,7 +26,7 @@ export class Earth {
 
   private gl_: WebGL2RenderingContext;
   private glowDirection = 1;
-  private glowNumber = 0;
+  glowNumber = 0;
   private isLoaded_ = false;
   private isReadyBump_ = false;
   private isReadyDay_ = false;
@@ -163,6 +163,8 @@ export class Earth {
   }
 
   public drawOcclusion(pMatrix: mat4, camMatrix: mat4, occlusionPrgm: OcclusionProgram, tgtBuffer: WebGLFramebuffer): void {
+    return;
+    // eslint-disable-next-line no-unreachable
     const gl = this.gl_;
     // Change to the earth shader
     gl.useProgram(occlusionPrgm.program);
@@ -188,7 +190,7 @@ export class Earth {
   public async init(settings: SettingsManager, gl?: WebGL2RenderingContext): Promise<void> {
     try {
       if (!gl && !this.gl_) throw new Error('No WebGL context found');
-      this.gl_ ??= gl;
+      this.gl_ ??= (keepTrackApi.getThreeManager().renderer.getContext() as WebGL2RenderingContext) || gl;
       this.settings_ = settings;
 
       this.initProgram_();
@@ -259,6 +261,8 @@ export class Earth {
   }
 
   private drawBlackGpuPickingEarth_() {
+    return;
+    // eslint-disable-next-line no-unreachable
     const gl = this.gl_;
     const dotsManagerInstance = keepTrackApi.getDotsManager();
     // Switch to GPU Picking Shader

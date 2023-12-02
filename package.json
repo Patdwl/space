@@ -88,6 +88,7 @@
     "@types/materialize-css": "^1.0.11",
     "@types/node": "^20.7.0",
     "@types/numeric": "^1.2.2",
+    "@types/three": "^0.158.3",
     "@types/webgl2": "^0.0.6",
     "@typescript-eslint/eslint-plugin": "^6.7.3",
     "@typescript-eslint/parser": "^6.7.3",
@@ -157,6 +158,7 @@
     "ootk": "^3.0.0",
     "papaparse": "^5.4.1",
     "resizable": "^1.2.1",
+    "three": "^0.158.0",
     "ts-node": "^10.9.1",
     "urlon": "^3.1.0"
   }

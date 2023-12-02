@@ -26,6 +26,7 @@ import { errorManagerInstance } from './singletons/errorManager';
 import { HoverManager } from './singletons/hover-manager';
 import { InputManager } from './singletons/input-manager';
 import { StarManager } from './singletons/starManager';
+import { ThreeManager } from './singletons/three-manager';
 import { TimeManager } from './singletons/time-manager';
 import { SatMath } from './static/sat-math';
 import { SensorMath } from './static/sensor-math';
@@ -292,6 +293,7 @@ export const keepTrackApi = {
   getHoverManager: () => keepTrackContainer.get<HoverManager>(Singletons.HoverManager),
   getSelectSatManager: () => keepTrackContainer.get<SelectSatManager>(Singletons.SelectSatManager),
   getMainCamera: () => keepTrackContainer.get<Camera>(Singletons.MainCamera),
+  getThreeManager: () => keepTrackContainer.get<ThreeManager>(Singletons.ThreeManager),
 };
 
 /**
