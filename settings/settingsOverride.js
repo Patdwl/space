@@ -1,8 +1,8 @@
 /**
-// /////////////////////////////////////////////////////////////////////////////
-
- * @Copyright (C) 2016-2023 Theodore Kruczek
- * @Copyright (C) 2020-2023 Heather Kruczek
+ * // /////////////////////////////////////////////////////////////////////////////
+ *
+ * @Copyright (C) 2016-2024 Theodore Kruczek
+ * @Copyright (C) 2020-2024 Heather Kruczek
  *
  * KeepTrack is free software: you can redistribute it and/or modify it under the
  * terms of the GNU Affero General Public License as published by the Free Software
@@ -70,9 +70,11 @@ const settingsOverride = {
     debrisScreening: true,
     videoDirector: false,
   },
-  // searchLimit: 150,
-  // isDisableCss: false,
-  // isShowSplashScreen: true,
+  /*
+   * searchLimit: 150,
+   * isDisableCss: false,
+   * isShowSplashScreen: true,
+   */
 };
 
 // Expose these to the console
